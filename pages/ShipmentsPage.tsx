@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import {Package,Search,Filter,Download,Plus,Eye,RefreshCw,ChevronLeft,ChevronRight,TrendingUp,CheckCircle,Clock,X,Calendar as CalendarIcon,Upload,FileSpreadsheet,DollarSign,Truck,Receipt,Edit,UserPlus,EyeOff,FileText,} from 'lucide-react';
+import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, TrendingUp, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText, } from 'lucide-react';
 import { Shipment, ShipmentStatus } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { shipmentsAPI } from '../services/api';
@@ -10,9 +10,9 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
-import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from '../components/ui/select';
-import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow,} from '../components/ui/table';
-import {Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle,DialogFooter,} from '../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '../components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '../components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, } from '../components/ui/dialog';
 // import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,} from '../components/ui/alert-dialog';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
@@ -22,9 +22,9 @@ import { EditShipmentModal } from '../components/EditShipmentModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { StatCard } from '../components/StatCard';
-import { getStatusLabel, getStatusColor, getAvailableStatuses,isInProgressStatus,isCompletedStatus} from '../lib/statusUtils';
-import {exportShipmentsToExcel,importShipmentsFromExcel,downloadTemplate,} from '../lib/excelUtils';
-import axios from "axios";
+import { getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
+import { exportShipmentsToExcel, importShipmentsFromExcel, downloadTemplate, } from '../lib/excelUtils';
+// import axios from "axios";
 
 
 interface ShipmentsPageProps {
@@ -81,22 +81,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
 
   useEffect(() => {
-  const fetchShipmentsSummary = async () => {
-    try {
-      const { data } = await axios.get("http://91.98.160.24:5000/orders/summary");
-      // data = { totalOrder, totalPindingOrder, totalDeliveredOrder }
-      setTotalOrder(data.totalOrder);
-      setPackagesInProgres(data.totalPindingOrder);
-      setCompletedShipment(data.totalDeliveredOrder);
-    } catch (error) {
-      console.error("Failed to fetch shipments summary:", error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
 
-  // fetchShipmentsSummary();
-}, []);
+  }, []);
 
   // Load shipments
   useEffect(() => {
@@ -109,7 +95,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       const response = await shipmentsAPI.getAll();
       console.log(response)
       // let filteredData = response;
-      
+
       // Filter by role
       if (user?.role === 'seller') {
         // In production, backend should filter by seller ID
@@ -139,26 +125,26 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
   // Apply filters (and exclude hidden orders)
   const filteredShipments = visibleShipments.filter(s => {
-  const recipientName = s.clientName || s.recipient?.name || '';
-  const senderName = s.sellerName || s.sender?.name || '';
-  const status = s.statusOrder || s.status || '';
+    const recipientName = s.clientName || s.recipient?.name || '';
+    const senderName = s.sellerName || s.sender?.name || '';
+    const status = s.statusOrder || s.status || '';
 
-  const matchesSearch =
-    searchQuery === '' ||
-    recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    senderName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      searchQuery === '' ||
+      recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      senderName.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const matchesStatus =
-    statusFilter.length === 0 || statusFilter.includes(status);
+    const matchesStatus =
+      statusFilter.length === 0 || statusFilter.includes(status);
 
-  const matchesSeller =
-    sellerFilter === 'all' || senderName === sellerFilter;
+    const matchesSeller =
+      sellerFilter === 'all' || senderName === sellerFilter;
 
-  const matchesStore =
-    storeFilter === 'all' || s.branch === storeFilter;
+    const matchesStore =
+      storeFilter === 'all' || s.branch === storeFilter;
 
-  return matchesSearch && matchesStatus && matchesSeller && matchesStore;
-});
+    return matchesSearch && matchesStatus && matchesSeller && matchesStore;
+  });
 
 
   // Get unique sellers and stores for filter dropdowns (excluding hidden orders)
@@ -192,7 +178,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       toast.error('You cannot edit orders that have been processed by admin or agent');
       return;
     }
-    
+
     setSelectedShipment(shipment);
     setEditShipmentModalOpen(true);
   };
@@ -201,14 +187,14 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     try {
       // TODO: Connect to backend API
       // await shipmentsAPI.updateStatus(id, status);
-      
+
       // Update local state
       setShipments(prev =>
         prev.map(s =>
           s.id === id ? { ...s, status: status as ShipmentStatus, updatedAt: new Date().toISOString() } : s
         )
       );
-      
+
       toast.success('Shipment status updated successfully');
       setDetailsModalOpen(false);
       loadShipments();
@@ -220,7 +206,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   const handleExport = () => {
     // Export only selected shipments if any are selected, otherwise export filtered shipments
     let shipmentsToExport: Shipment[];
-    
+
     if (selectedOrderIds.size > 0) {
       // Export only selected shipments
       shipmentsToExport = shipments.filter(s => selectedOrderIds.has(s.id));
@@ -228,9 +214,9 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       // Export all filtered/visible shipments
       shipmentsToExport = filteredShipments.length > 0 ? filteredShipments : shipments;
     }
-    
+
     const result = exportShipmentsToExcel(shipmentsToExport);
-    
+
     if (result.success) {
       if (selectedOrderIds.size > 0) {
         toast.success(`Successfully exported ${result.count} selected shipment${result.count !== 1 ? 's' : ''}`);
@@ -256,7 +242,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
         return;
       }
     }
-    
+
     setHiddenOrderIds(prev => new Set([...prev, orderId]));
     toast.success('Order hidden successfully');
   };
@@ -281,20 +267,20 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     if (!file) return;
 
     setImportingFile(true);
-    
+
     try {
       const result = await importShipmentsFromExcel(file);
-      
+
       if (result.success && result.shipments) {
         // TODO: Send to backend API
         // await shipmentsAPI.importBulk(result.shipments);
-        
+
         // For now, add to existing shipments (frontend only)
         setShipments(prev => [...prev, ...result.shipments as Shipment[]]);
-        
+
         toast.success(`Successfully imported ${result.count} orders`);
         setImportDialogOpen(false);
-        
+
         // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -394,7 +380,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   const selectedTotalDeliveryCost = selectedShipments.reduce((sum, s) => sum + s.commission, 0);
   const selectedTotalAmount = selectedTotalProductCost + selectedTotalDeliveryCost;
 
-  const isAllSelected = paginatedShipments.length > 0 && 
+  const isAllSelected = paginatedShipments.length > 0 &&
     paginatedShipments.every(s => selectedOrderIds.has(s.id));
 
   // Bulk action handlers
@@ -404,20 +390,20 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       toast.error('You do not have permission to change order status');
       return;
     }
-    
+
     try {
       // TODO: Connect to backend API
       // await shipmentsAPI.bulkUpdateStatus(Array.from(selectedOrderIds), bulkStatus);
-      
+
       // Update local state
       setShipments(prev =>
         prev.map(s =>
-          selectedOrderIds.has(s.id) 
-            ? { ...s, status: bulkStatus, updatedAt: new Date().toISOString() } 
+          selectedOrderIds.has(s.id)
+            ? { ...s, status: bulkStatus, updatedAt: new Date().toISOString() }
             : s
         )
       );
-      
+
       toast.success(`Successfully updated status for ${selectedOrderIds.size} orders`);
       setChangeStatusDialogOpen(false);
       setSelectedOrderIds(new Set());
@@ -432,7 +418,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       toast.error('You do not have permission to assign agents');
       return;
     }
-    
+
     if (!selectedAgentId) {
       toast.error('Please select an agent');
       return;
@@ -441,22 +427,22 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     try {
       // TODO: Connect to backend API
       // await shipmentsAPI.bulkAssignAgent(Array.from(selectedOrderIds), selectedAgentId);
-      
+
       // TODO: Get agent details from backend API
       // const agentResponse = await agentsAPI.getById(selectedAgentId);
       // const selectedAgent = agentResponse.data;
-      
+
       const selectedAgent = { id: selectedAgentId, name: 'Agent', phone: 'N/A' };
-      
+
       // Update local state
       setShipments(prev =>
         prev.map(s =>
-          selectedOrderIds.has(s.id) 
-            ? { ...s, assignedAgent: selectedAgent, updatedAt: new Date().toISOString() } 
+          selectedOrderIds.has(s.id)
+            ? { ...s, assignedAgent: selectedAgent, updatedAt: new Date().toISOString() }
             : s
         )
       );
-      
+
       toast.success(`Successfully assigned ${selectedOrderIds.size} orders to ${selectedAgent?.name}`);
       setAssignAgentDialogOpen(false);
       setSelectedOrderIds(new Set());
@@ -483,7 +469,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   // Load agents when component mounts
   const agents: any[] = []; // Empty until backend is connected
 
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -516,7 +502,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
             Export
           </Button>
           {user?.role !== 'agent' && (
-            <Button 
+            <Button
               className="gap-2 bg-gradient-to-r from-blue-500 to-purple-600"
               onClick={() => setAddShipmentModalOpen(true)}
             >
@@ -529,33 +515,33 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-    <StatCard
-      title="Total Orders"
-      value={loadingStats ? "..." : totalOrder.toString()}
-      icon={Package}
-      // subtitle="Total shipments"
-    />
-  </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <StatCard
+            title="Total Orders"
+            value={loadingStats ? "..." : totalOrder.toString()}
+            icon={Package}
+          // subtitle="Total shipments"
+          />
+        </motion.div>
 
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-    <StatCard
-      title="Packages"
-      value={loadingStats ? "..." : packagesInProgres.toString()}
-      icon={Clock}
-      // subtitle="In progress"
-    />
-  </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <StatCard
+            title="Packages"
+            value={loadingStats ? "..." : packagesInProgres.toString()}
+            icon={Clock}
+          // subtitle="In progress"
+          />
+        </motion.div>
 
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-    <StatCard
-      title="Completed"
-      value={loadingStats ? "..." : completedShipment.toString()}
-      icon={CheckCircle}
-      // subtitle="Completed shipments"
-    />
-  </motion.div>
-</div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <StatCard
+            title="Completed"
+            value={loadingStats ? "..." : completedShipment.toString()}
+            icon={CheckCircle}
+          // subtitle="Completed shipments"
+          />
+        </motion.div>
+      </div>
 
       {/* Filter Button & Search Bar */}
       <motion.div
@@ -821,8 +807,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
                       Export {selectedOrderIds.size > 0 ? `(${selectedOrderIds.size})` : ''}
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={handleBulkPrint}
                       disabled={selectedOrderIds.size === 0}
@@ -834,8 +820,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                   </>
                 )}
                 {user?.role !== 'agent' && (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
                     onClick={() => setAddShipmentModalOpen(true)}
                   >
@@ -1259,9 +1245,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                     <div className="space-y-2">
                       <Label className="text-xs text-slate-600 dark:text-slate-400">Status</Label>
                       <Badge
-                        className={`${
-                          importingFile ? 'bg-blue-500' : 'bg-gray-500'
-                        } text-white`}
+                        className={`${importingFile ? 'bg-blue-500' : 'bg-gray-500'
+                          } text-white`}
                       >
                         {importingFile ? 'Importing...' : 'Ready'}
                       </Badge>

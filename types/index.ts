@@ -1,4 +1,4 @@
-export type ShipmentStatus = 
+export type ShipmentStatus =
   | 'new'
   | 'in_pickup_stage'
   | 'in_warehouse'
@@ -158,7 +158,7 @@ export interface User {
   deactivationTo?: string;
 }
 
-export type NotificationType = 
+export type NotificationType =
   | 'order_created'
   | 'order_assigned'
   | 'status_changed';
@@ -175,4 +175,10 @@ export interface Notification {
   changedBy?: string;
   timestamp: string;
   read: boolean;
+}
+
+export interface LoggedInUser {
+  email: "string",
+  name: "string",
+  token: "string"
 }
