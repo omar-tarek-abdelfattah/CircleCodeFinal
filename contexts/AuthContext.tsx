@@ -33,15 +33,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role?: UserRole) => {
     try {
-      const { token, role: apiRole } = await loginApi(email, password, role || 'admin');
+      const { token, role: apiRole, id } = await loginApi(email, password, role || 'admin');
 
       // Save token & role
       localStorage.setItem('token', token);
       localStorage.setItem('role', apiRole || role || 'admin');
+      localStorage.setItem('id', id);
 
       // Create minimal user object (could be enhanced with more info from backend)
       const loggedUser: User = {
-        id: 'unknown', // can be replaced with backend id
+        id, // can be replaced with backend id
         name: email,
         email,
         role: apiRole || role || 'admin',
@@ -49,6 +50,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(loggedUser);
       localStorage.setItem('user', JSON.stringify(loggedUser));
     } catch (error: any) {
+      if (error.statusCode == 401) {
+        throw new Error('Invalid Email or Password')
+      }
       throw new Error(error.message || 'Login failed');
     }
   };

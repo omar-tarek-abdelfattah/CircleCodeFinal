@@ -20,7 +20,7 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
-import { Shipment } from '../types';
+import { OrderResponseDetails, Shipment } from '../types';
 import { mockSellers } from '../lib/mockData';
 
 interface ProductItem {
@@ -31,7 +31,7 @@ interface ProductItem {
 }
 
 interface EditShipmentModalProps {
-  shipment: Shipment | null;
+  shipment: OrderResponseDetails | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -46,7 +46,7 @@ export function EditShipmentModal({
   userRole,
 }: EditShipmentModalProps) {
   const [loading, setLoading] = useState(false);
-  
+
   // Check if seller is trying to edit a processed order
   const canEdit = !userRole || userRole !== 'seller' || shipment?.status === 'new';
 

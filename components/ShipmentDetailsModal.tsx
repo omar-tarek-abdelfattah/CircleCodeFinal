@@ -13,7 +13,7 @@ import {
   Weight,
   FileText,
 } from 'lucide-react';
-import { Shipment } from '../types';
+import { OrderResponseDetails, Shipment, ShipmentStatus } from '../types';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import { Separator } from './ui/separator';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ShipmentDetailsModalProps {
-  shipment: Shipment | null;
+  shipment: OrderResponseDetails | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdateStatus?: (id: string, status: string) => void;
@@ -68,7 +68,7 @@ export function ShipmentDetailsModal({
   const canUpdateStatus = user?.role === 'agent' || user?.role === 'admin';
 
   const statusFlow = ['pending', 'picked_up', 'in_transit', 'delivered'];
-  const currentStatusIndex = statusFlow.indexOf(shipment.status);
+  const currentStatusIndex = statusFlow.indexOf(shipment.statusOrder as ShipmentStatus);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -81,7 +81,7 @@ export function ShipmentDetailsModal({
             </DialogTitle>
           </div>
           <DialogDescription className="sr-only">
-            View detailed information about shipment {shipment.trackingNumber}
+            View detailed information about shipment {shipment.id}
           </DialogDescription>
         </DialogHeader>
 
@@ -95,10 +95,10 @@ export function ShipmentDetailsModal({
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p className="text-sm text-blue-100">Tracking Number</p>
-                <p className="text-2xl font-mono">{shipment.trackingNumber}</p>
+                <p className="text-2xl font-mono">{shipment.id}</p>
               </div>
-              <Badge className={`${getStatusColor(shipment.status)} text-base px-4 py-2`}>
-                {shipment.status.replace('_', ' ').toUpperCase()}
+              <Badge className={`${getStatusColor(shipment.statusOrder as ShipmentStatus)} text-base px-4 py-2`}>
+                {shipment.statusOrder?.replace('_', ' ').toUpperCase()}
               </Badge>
             </div>
           </motion.div>
@@ -117,11 +117,10 @@ export function ShipmentDetailsModal({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      index <= currentStatusIndex
-                        ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
-                        : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
-                    }`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${index <= currentStatusIndex
+                      ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                      }`}
                   >
                     {index < currentStatusIndex ? '✓' : index + 1}
                   </motion.div>

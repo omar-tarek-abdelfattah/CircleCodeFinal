@@ -1,6 +1,6 @@
 // ✅ api.ts — Clean, TypeScript, Connected to .NET backend
 
-import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, User, LoggedInUser } from '../types';
+import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, LoggedInUser, OrderRequest, OrderResponse, OrderResponseDetails } from '../types';
 
 
 
@@ -10,6 +10,10 @@ const BASE_URLS = {
   seller: 'http://91.98.160.24:8080/api',
   agent: 'http://91.98.160.24:8081/api',
 };
+
+export enum apiMode {
+  LoginMode = 'Login'
+}
 
 // -------------------- Helpers --------------------
 function getBaseUrl(role?: 'admin' | 'seller' | 'agent'): string {
@@ -22,7 +26,8 @@ function getBaseUrl(role?: 'admin' | 'seller' | 'agent'): string {
 export async function apiCall<T>(
   endpoint: string,
   options?: RequestInit,
-  role?: 'admin' | 'seller' | 'agent'
+  role?: 'admin' | 'seller' | 'agent',
+  mode?: apiMode,
 ): Promise<T> {
   const token = localStorage.getItem('token');
   const baseUrl = getBaseUrl(role);
@@ -38,11 +43,18 @@ export async function apiCall<T>(
       },
     });
 
+    console.log(response);
+
+
     if (!response.ok) {
+      if (response.status == 401 && mode == apiMode.LoginMode) {
+        throw new Error('invalid email or password')
+      }
       const errorText = await response.text();
       console.error(`❌ API Error: ${response.status} - ${errorText}`);
       throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
     }
+
 
     return await response.json();
   } catch (error) {
@@ -59,14 +71,19 @@ export async function loginApi(
 ): Promise<LoggedInUser> {
 
   // const baseUrl = getBaseUrl(role);
-  const result = await apiCall<LoggedInUser>('/Authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) }, role)
+  try {
+    const result = await apiCall<LoggedInUser>('/Authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) }, role, apiMode.LoginMode)
 
-  if (result.token) localStorage.setItem('token', result.token)
+    if (result.token) localStorage.setItem('token', result.token)
 
-  localStorage.setItem('role', role);
+    localStorage.setItem('role', role);
 
-  return result
+    return result
 
+
+  } catch (error: any) {
+    throw new Error(error)
+  }
 }
 
 export async function forgetPasswordApi(email: string) {
@@ -92,36 +109,24 @@ export async function saveNewPasswordApi(email: string, newPassword: string) {
 // -------------------- Shipments (Orders) API --------------------
 export const shipmentsAPI = {
   // ✅ Get all orders
-  getAll: async (filters?: {
-    status?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-    agentId?: string;
-    sellerId?: string;
-  }): Promise<{ data: Shipment[]; total: number }> => {
-    const query = new URLSearchParams(
-      Object.entries(filters || {}).filter(([_, v]) => v !== undefined) as [string, string][]
-    );
-    return apiCall<{ data: Shipment[]; total: number }>(`/Order?${query.toString()}`);
+  getAll: async (): Promise<OrderResponse[]> => {
+    return apiCall<OrderResponse[]>(`/Order`);
   },
 
-  // ✅ Get by ID
-  getById: async (id: string): Promise<Shipment> => {
-    return apiCall<Shipment>(`/Order/${id}`);
+  // ✅ Get by ID *********
+  getById: async (id: string): Promise<OrderResponseDetails> => {
+    return apiCall<OrderResponseDetails>(`/Order/${id}`);
   },
 
   // ✅ Create new order (with notification)
   // api.ts
-  create: async (data: Partial<Shipment>): Promise<Shipment> => {
-    return apiCall<Shipment>('/Order', { method: 'POST', body: JSON.stringify(data) });
+  create: async (data: Partial<OrderRequest>): Promise<OrderResponse> => {
+    return apiCall<OrderResponse>('/Order', { method: 'POST', body: JSON.stringify(data) });
   },
 
   // ✅ Update existing order
-  update: async (id: string, data: Partial<Shipment>): Promise<Shipment> => {
-    return apiCall<Shipment>(`/Order/${id}`, { method: 'POST', body: JSON.stringify(data) });
+  update: async (id: string, data: Partial<OrderRequest>): Promise<OrderRequest> => {
+    return apiCall<OrderRequest>(`/Order/${id}`, { method: 'POST', body: JSON.stringify({ ...data, sellerId: 0 },) });
   },
 
   // ✅ Update status

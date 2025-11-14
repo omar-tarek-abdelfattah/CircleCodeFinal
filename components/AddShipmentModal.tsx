@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,13 +23,10 @@ import { Package, Loader2, Plus, Trash2 } from 'lucide-react';
 import { mockSellers, mockZones } from '../lib/mockData';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
+import { shipmentsAPI } from '@/services/api';
+import { ItemsRequest } from '@/types';
 
-interface ProductItem {
-  id: string;
-  itemName: string;
-  quantity: number;
-  price: number;
-}
+
 
 interface AddShipmentModalProps {
   isOpen: boolean;
@@ -41,6 +38,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   const [loading, setLoading] = useState(false);
   const { notifyOrderCreated } = useNotifications();
   const { user } = useAuth();
+
+
 
   // Customer Information
   const [formData, setFormData] = useState({
@@ -58,8 +57,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   });
 
   // Products
-  const [products, setProducts] = useState<ProductItem[]>([
-    { id: '1', itemName: '', quantity: 1, price: 0 },
+  const [products, setProducts] = useState<ItemsRequest[]>([
+    { id: '', name: '', quantity: 1, price: 0, description: '' },
   ]);
 
   const handleChange = (field: string, value: string | number) => {
@@ -72,7 +71,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   // Handle region change and auto-fill delivery fee
   const handleRegionChange = (regionId: string) => {
     handleChange('region', regionId);
-    
+
     // Find the selected zone
     const selectedZone = mockZones.find(z => z.id === formData.zone);
     if (selectedZone) {
@@ -87,9 +86,9 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   };
 
   const handleAddItem = () => {
-    const newProduct: ProductItem = {
+    const newProduct: ItemsRequest = {
       id: Date.now().toString(),
-      itemName: '',
+      name: '',
       quantity: 1,
       price: 0,
     };
@@ -104,7 +103,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
   const handleProductChange = (
     id: string,
-    field: keyof ProductItem,
+    field: keyof ItemsRequest,
     value: string | number
   ) => {
     setProducts(
@@ -158,7 +157,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       toast.error('Please select a seller');
       return;
     }
-    if (products.some((p) => !p.itemName || p.price <= 0)) {
+    if (products.some((p) => !p.name || p.price <= 0)) {
       toast.error('Please complete all product information');
       return;
     }
@@ -167,33 +166,33 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
     try {
       // TODO: Connect to backend API
-      // await shipmentsAPI.create({
-      //   customer: { name: formData.customerName, phone: formData.phone, phone2: formData.phone2 },
-      //   delivery: { address: formData.address, notes: formData.notes, zone: formData.zone, region: formData.region, apartmentNumber: formData.apartmentNumber, buildingNumber: formData.buildingNumber },
-      //   seller: formData.selectedSeller,
-      //   products,
-      //   deliveryFee: formData.deliveryFee,
-      //   total: calculateGrandTotal(),
-      // });
+      const result = await shipmentsAPI.create({
+        clientName: formData.customerName,
+        phone1: formData.phone,
+        phone2: formData.phone2,
+        apartmentNumber: formData.apartmentNumber,
+        address: formData.address,
+        zoneId: 1,
+        regionName: 'فرع الغربية',
+        bulidingNumber: formData.buildingNumber,
+        notes: formData.notes,
+        items: products,
+        sellerId: 1
+      });
 
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Generate tracking number (in real app, this comes from backend)
-      const trackingNumber = `CCT${Date.now()}`;
-      const orderId = `order-${Date.now()}`;
-      
+      // const trackingNumber = `CCT${Date.now()}`;
+      // const orderId = `order-${Date.now()}`;
+
       // Get seller name
-      const selectedSellerData = mockSellers.find(s => s.id === formData.selectedSeller);
-      const sellerName = selectedSellerData?.name || user?.name || 'Unknown Seller';
-      
+      // const selectedSellerData = mockSellers.find(s => s.id === formData.selectedSeller);
+      // const sellerName = selectedSellerData?.name || user?.name || 'Unknown Seller';
+
       // Notify admins about new order creation
-      await notifyOrderCreated(
-        orderId,
-        trackingNumber,
-        sellerName,
-        formData.selectedSeller || user?.id
-      );
+      // await notifyOrderCreated(,);
 
       toast.success('Shipment created successfully');
 
@@ -211,7 +210,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
         selectedSeller: '',
         deliveryFee: 0,
       });
-      setProducts([{ id: '1', itemName: '', quantity: 1, price: 0 }]);
+      setProducts([{ id: '1', name: '', quantity: 1, price: 0 }]);
 
       onClose();
 
@@ -463,9 +462,9 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                     <div className="col-span-5">
                       <Input
                         placeholder="Item name"
-                        value={product.itemName}
+                        value={product.name}
                         onChange={(e) =>
-                          handleProductChange(product.id, 'itemName', e.target.value)
+                          handleProductChange(product.id, 'name', e.target.value)
                         }
                         disabled={loading}
                       />

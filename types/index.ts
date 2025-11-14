@@ -13,12 +13,13 @@ export type ShipmentStatus =
   | 'rejected_by_us'
   | 'returned';
 
-export interface Shipment {
+export interface Shipment { // or order
   id: string;
   trackingNumber: string;
-  sender: {
+  clientName: {
     name: string;
-    phone: string;
+    phone1: string;
+    phone2: string;
     address: string;
   };
   recipient: {
@@ -41,6 +42,71 @@ export interface Shipment {
   weight?: number;
   description?: string;
   notes?: string;
+}
+
+export interface OrderRequest {
+  clientName: string;
+  phone1: string;
+  phone2?: string | null;
+  apartmentNumber: string;
+  address: string;
+  zoneId: number;
+  regionName: string;
+  bulidingNumber: string;
+  notes?: string | null;
+  items: ItemsRequest[];
+  sellerId: number
+}
+export interface ItemsRequest {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  description?: string;
+}
+
+export interface OrderResponse {
+  id: string;
+  clientName?: string | null;
+  statusOrder?: string | null;
+  sellerName?: string | null;
+  totalPrice: number;
+  regionName?: string | null;
+  agentName?: string | null;
+  dateCreated: string;
+
+}
+
+export interface OrderResponseDetails {
+  id: string;
+  clientName?: string | null;
+  phone1?: string | null;
+  phone2?: string | null;
+  dateCreated: string;
+  delivered_Agent_date?: string | null;
+  inWarehouseDate?: string | null;
+  inPickupStage?: string | null;
+  apartmentNumber: number;
+  delivered_date?: string | null;
+  address?: string | null;
+  country?: string | null;
+  bulidingNumber: number;
+  notes?: string | null;
+  statusOrder?: ShipmentStatus;
+  items?: ItemRespone[] | null;
+  sellerName?: string | null;
+  agentName?: string | null;
+  userCreateName?: string | null;
+  regionName?: string | null;
+  price: number;
+}
+
+export interface ItemRespone {
+  id: string;
+  name?: string | null;
+  price: number;
+  quantity: number;
+  description?: string | null;
 }
 
 export interface Transaction {
@@ -178,7 +244,9 @@ export interface Notification {
 }
 
 export interface LoggedInUser {
-  email: "string",
-  name: "string",
-  token: "string"
+  email: "string";
+  name: "string";
+  token: "string";
+  role: UserRole;
+  id: string
 }
