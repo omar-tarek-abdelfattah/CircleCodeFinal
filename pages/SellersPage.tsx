@@ -46,6 +46,8 @@ import { toast } from 'sonner';
 import { AddSellerModal } from '../components/AddSellerModal';
 import { EditSellerModal } from '../components/EditSellerModal';
 import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
+import { sellersAPI } from '../services/api.ts';
+
 
 export function SellersPage() {
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -68,14 +70,15 @@ export function SellersPage() {
     setLoading(true);
     try {
       // TODO: Connect to backend API
-      // const response = await sellersAPI.getAll();
-      // setSellers(response.data);
+      const response = await sellersAPI.getAll();
+      // setSellers(response);
+      console.log(response)
       
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // await new Promise(resolve => setTimeout(resolve, 800));
       
       // Empty state until backend is connected
-      setSellers([]);
+      setSellers(response);
     } catch (error) {
       console.error('Failed to load sellers:', error);
       toast.error('Failed to load sellers');
@@ -264,8 +267,6 @@ export function SellersPage() {
             title="Total Sellers"
             value={totalSellers.toString()}
             icon={Users}
-            trend={{ value: 8, isPositive: true }}
-            subtitle="Registered sellers"
           />
         </motion.div>
         <motion.div
@@ -277,7 +278,7 @@ export function SellersPage() {
             title="Active Sellers"
             value={activeSellers.toString()}
             icon={UserCheck}
-            subtitle="Active in last 7 days"
+            
           />
         </motion.div>
         <motion.div
@@ -289,8 +290,6 @@ export function SellersPage() {
             title="Total Revenue"
             value={formatCurrency(totalRevenue)}
             icon={DollarSign}
-            trend={{ value: 15, isPositive: true }}
-            subtitle="From all sellers"
           />
         </motion.div>
       </div>

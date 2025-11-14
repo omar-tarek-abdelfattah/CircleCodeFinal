@@ -1,4 +1,5 @@
 import { Transaction, WalletSummary } from '../types';
+import { apiCall } from './api.ts';
 
 /**
  * Wallet API Service
@@ -23,7 +24,7 @@ export const walletApi = {
   getSummary: async (): Promise<WalletSummary> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // TODO: Replace with actual API call
     // const response = await fetch(`${API_BASE_URL}/api/wallet/summary`, {
     //   headers: {
@@ -32,13 +33,21 @@ export const walletApi = {
     //   },
     // });
     // return await response.json();
-    
+    const {
+      assigned,
+      outstanding,
+      collected,
+    } = await apiCall('/Wallet') as any;
+    console.log('Wallet summary from backend:', assigned, outstanding, collected);
+    console.log('Type of data:');
+
+
     // Return empty data until backend is connected
     return {
-      balance: 0,
-      totalEarnings: 0,
-      totalWithdrawals: 0,
-      pendingAmount: 0,
+      balance: assigned,
+      totalEarnings: collected,
+      totalWithdrawals: outstanding,
+      pendingAmount: outstanding,
     };
   },
 
@@ -51,7 +60,7 @@ export const walletApi = {
   getTransactions: async (page: number = 1, limit: number = 10): Promise<Transaction[]> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // TODO: Replace with actual API call
     // const response = await fetch(
     //   `${API_BASE_URL}/api/wallet/transactions?page=${page}&limit=${limit}`,
@@ -63,7 +72,7 @@ export const walletApi = {
     //   }
     // );
     // return await response.json();
-    
+
     // Return empty array until backend is connected
     return [];
   },
@@ -77,7 +86,7 @@ export const walletApi = {
   getMonthlyRevenue: async (months: number = 12): Promise<Array<{ month: string; revenue: number }>> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // TODO: Replace with actual API call
     // const response = await fetch(
     //   `${API_BASE_URL}/api/wallet/monthly-revenue?months=${months}`,
@@ -89,7 +98,7 @@ export const walletApi = {
     //   }
     // );
     // return await response.json();
-    
+
     // Return empty array until backend is connected
     return [];
   },
@@ -103,7 +112,7 @@ export const walletApi = {
   refresh: async (): Promise<void> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // TODO: Replace with actual API call
     // await fetch(`${API_BASE_URL}/api/wallet/refresh`, {
     //   method: 'POST',
@@ -123,7 +132,7 @@ export const walletApi = {
   exportData: async (format: 'excel' | 'pdf' = 'excel'): Promise<void> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // TODO: Replace with actual API call
     // const response = await fetch(
     //   `${API_BASE_URL}/api/wallet/export?format=${format}`,

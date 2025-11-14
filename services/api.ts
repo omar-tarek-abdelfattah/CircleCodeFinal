@@ -55,7 +55,6 @@ export async function apiCall<T>(
       throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-
     return await response.json();
   } catch (error) {
     console.error('❌ API call failed:', error);
@@ -198,29 +197,34 @@ export const walletAPI = {
     // TODO: Replace with actual API call
     // return apiCall<WalletSummary>('/wallet/summary');
 
-    const { mockWalletSummary } = await import('../lib/mockData');
-    return mockWalletSummary;
+    const wallet = await apiCall<WalletSummary>('/Wallet');
+    console.log(wallet)
+
+    return wallet;
+   
+    // const { mockWalletSummary } = await import('../lib/mockData');
+    // return mockWalletSummary;
   },
 
   // GET /api/wallet/transactions - Get transaction history
-  getTransactions: async (filters?: {
-    type?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ data: Transaction[]; total: number }> => {
+  // getTransactions: async (filters?: {
+  //   type?: string;
+  //   dateFrom?: string;
+  //   dateTo?: string;
+  //   page?: number;
+  //   limit?: number;
+  // }): Promise<{ data: Transaction[]; total: number }> => {
     // TODO: Replace with actual API call
 
-    const { mockTransactions } = await import('../lib/mockData');
-    return { data: mockTransactions, total: mockTransactions.length };
-  },
+  //   const { mockTransactions } = await import('../lib/mockData');
+  //   return { data: mockTransactions, total: mockTransactions.length };
+  // },
 
   // POST /api/wallet/withdraw - Request withdrawal
-  withdraw: async (amount: number, bankDetails: any): Promise<Transaction> => {
-    // TODO: Replace with actual API call
-    throw new Error('Not implemented - connect to backend');
-  },
+  // withdraw: async (amount: number, bankDetails: any): Promise<Transaction> => {
+  //   // TODO: Replace with actual API call
+  //   throw new Error('Not implemented - connect to backend');
+  // },
 };
 
 // Agents API
@@ -295,57 +299,54 @@ export const agentsAPI = {
 
 // Sellers API
 export const sellersAPI = {
-  // GET /api/sellers - Get all sellers
+
+  // GET /api/sellers - Get all sellers (done)
   getAll: async (): Promise<Seller[]> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Seller[]>('/sellers');
-
-    const { mockSellers } = await import('../lib/mockData');
-    return mockSellers;
+    return await apiCall<Seller[]>('/Seller/all');
+    // const { mockSellers } = await import('../lib/mockData');
+    // return mockSellers;
   },
 
   // GET /api/sellers/:id - Get seller by ID
   getById: async (id: string): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Seller>(`/sellers/${id}`);
-
-    const { mockSellers } = await import('../lib/mockData');
-    const seller = mockSellers.find(s => s.id === id);
-    if (!seller) throw new Error('Seller not found');
-    return seller;
+    return await apiCall<Seller>(`/Seller/${id}`);
+    // const { mockSellers } = await import('../lib/mockData');
+    // const seller = mockSellers.find(s => s.id === id);
+    // if (!seller) throw new Error('Seller not found');
+    // return seller;
   },
 
   // POST /api/sellers - Create new seller
   create: async (sellerData: Partial<Seller>): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Seller>('/sellers', {
-    //   method: 'POST',
-    //   body: JSON.stringify(sellerData),
-    // });
-
-    console.log('Backend API: Create seller', sellerData);
-    throw new Error('Not implemented - connect to backend');
+    console.log(sellerData)
+    return await apiCall<Seller>('/Seller/add', {
+      method: 'POST',
+      body: JSON.stringify(sellerData),
+    });
+    const { mockSellers } = await import('../lib/mockData');
+    // const newSeller = { id: Date.now().toString(), ...sellerData } as Seller;
+    // return newSeller;
+    // console.log('Backend API: Create seller', sellerData);
+    // throw new Error('Not implemented - connect to backend');
   },
 
   // PUT /api/sellers/:id - Update seller
   update: async (id: string, sellerData: Partial<Seller>): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Seller>(`/sellers/${id}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify(sellerData),
-    // });
-
-    console.log('Backend API: Update seller', { id, sellerData });
-    throw new Error('Not implemented - connect to backend');
+    return await apiCall<Seller>(`/Seller/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(sellerData),
+    });
+    // console.log('Backend API: Update seller', { id, sellerData });
+    // throw new Error('Not implemented - connect to backend');
   },
 
   // DELETE /api/sellers/:id - Delete seller
   delete: async (id: string): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<void>(`/sellers/${id}`, {
-    //   method: 'DELETE',
-    // });
-
     console.log('Backend API: Delete seller', id);
     throw new Error('Not implemented - connect to backend');
   },
@@ -360,11 +361,9 @@ export const sellersAPI = {
 
     // Mock implementation
     await new Promise(resolve => setTimeout(resolve, 300));
-
     const { mockSellers } = await import('../lib/mockData');
     const seller = mockSellers.find(s => s.id === id);
     if (!seller) throw new Error('Seller not found');
-
     seller.status = status;
     return seller;
   },
@@ -383,15 +382,31 @@ export const sellersAPI = {
 
     // Mock implementation
     await new Promise(resolve => setTimeout(resolve, 300));
-
     const { mockSellers } = await import('../lib/mockData');
     const seller = mockSellers.find(s => s.id === id);
     if (!seller) throw new Error('Seller not found');
-
     seller.deactivationFrom = fromDate;
     seller.deactivationTo = toDate;
     return seller;
   },
+
+  // GET /api/Seller/lockout/all
+  getHiddenSellers: async (): Promise<Seller[]> => {
+    return await apiCall<Seller[]>('/Seller/lockout/all');
+  },
+
+  // GET /api/Seller/active-count
+  getActiveCount: async (): Promise<number> => {
+    const res = await apiCall<{ count: number }>('/Seller/active-count');
+    return res.count;
+  },
+
+  // GET /api/Seller/total-count
+  getTotalCount: async (): Promise<number> => {
+    const res = await apiCall<{ count: number }>('/Seller/total-count');
+    return res.count;
+  },
+
 
   // DELETE /api/sellers/:id/deactivation-period - Clear deactivation period
   clearDeactivationPeriod: async (id: string): Promise<Seller> => {
@@ -473,48 +488,32 @@ export const branchesAPI = {
 
 // Zones API
 export const zonesAPI = {
-  // GET /api/zones - Get all zones
+
+  // GET /api/Zone - Get all zones
   getAll: async (): Promise<Zone[]> => {
-    // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Zone[]>('/zones');
-
-    const { mockZones } = await import('../lib/mockData');
-    return mockZones;
+    return apiCall<Zone[]>('/Zone');
   },
 
-  // GET /api/zones/:id - Get zone by ID
-  getById: async (id: string): Promise<Zone> => {
-    // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Zone>(`/zones/${id}`);
-
-    const { mockZones } = await import('../lib/mockData');
-    const zone = mockZones.find(z => z.id === id);
-    if (!zone) throw new Error('Zone not found');
-    return zone;
+  // GET /api/Zone/{id} - Get zone by ID
+  getById: async (id: number): Promise<Zone> => {
+    return apiCall<Zone>(`/Zone/${id}`);
   },
 
-  // POST /api/zones - Create new zone
-  create: async (zoneData: Partial<Zone>): Promise<Zone> => {
-    // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Zone>('/zones', {
-    //   method: 'POST',
-    //   body: JSON.stringify(zoneData),
-    // });
-
-    console.log('Backend API: Create zone', zoneData);
-    throw new Error('Not implemented - connect to backend');
+  // POST /api/Zone - Create new zone
+  // backend expects:  { zoneRequest: { name, regions[], branchId[] } }
+  create: async (payload: any): Promise<any> => {
+    return apiCall('/Zone', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 
-  // PUT /api/zones/:id - Update zone
-  update: async (id: string, zoneData: Partial<Zone>): Promise<Zone> => {
-    // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Zone>(`/zones/${id}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify(zoneData),
-    // });
-
-    console.log('Backend API: Update zone', { id, zoneData });
-    throw new Error('Not implemented - connect to backend');
+  // PUT /api/Zone/{id} - Update zone
+  update: async (id: number, payload: any): Promise<Zone> => {
+    return apiCall<Zone>(`/Zone/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
   },
 
   // DELETE /api/zones/:id - Delete zone

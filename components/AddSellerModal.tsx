@@ -12,6 +12,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
+import { sellersAPI } from '../services/api';
 
 interface AddSellerModalProps {
   open: boolean;
@@ -26,6 +27,11 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
     email: '',
     phone: '',
     storeName: '',
+    address:'',
+    password:'',
+    confirmPassword:'',
+    branchId:0 ,
+    vip:true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,8 +64,14 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
       // TODO: Connect to backend API
       // await sellersAPI.create(formData);
 
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+
+      console.log('Form Data Submitted:', formData);
+
+      const addedSeller = await sellersAPI.create(formData);
+      console.log('Added Seller:', addedSeller);
 
       toast.success('Seller added successfully');
       
@@ -69,6 +81,11 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
         email: '',
         phone: '',
         storeName: '',
+        address:'',
+        password:'',
+        confirmPassword:'',
+        branchId: 0,
+        vip: true,
       });
       
       onOpenChange(false);
@@ -161,6 +178,71 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
                 placeholder="My Store"
                 value={formData.storeName}
                 onChange={(e) => handleChange('storeName', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                 Address <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="address"
+                type="text"
+                placeholder="123 Main St, City, Country"
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="passowrd">
+                  Passowrd <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="passowrd"
+                type="passowrd"
+                placeholder="Enter password"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">
+                 Confirm Passowrd <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="passowrd"
+                placeholder="Confirm password"
+                value={formData.confirmPassword}
+                onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="branchId">
+                 BranchId <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="branchId"
+                type="number"
+                placeholder="123 Main St, City, Country"
+                value={formData.branchId}
+                onChange={(e) => handleChange('branchId', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vip">
+                 Vip <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="vip"
+                type="text"
+                placeholder="true,false"
+                // value={formData.vip}
+                onChange={(e) => handleChange('vip', e.target.value)}
                 disabled={loading}
               />
             </div>

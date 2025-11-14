@@ -46,9 +46,8 @@ export function EditShipmentModal({
   userRole,
 }: EditShipmentModalProps) {
   const [loading, setLoading] = useState(false);
-
   // Check if seller is trying to edit a processed order
-  const canEdit = !userRole || userRole !== 'seller' || shipment?.status === 'new';
+  const canEdit = !userRole || userRole !== 'seller' || shipment?.statusOrder === 'new';
 
   // Form Data
   const [formData, setFormData] = useState({

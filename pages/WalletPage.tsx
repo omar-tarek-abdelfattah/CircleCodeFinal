@@ -42,6 +42,7 @@ import {
 } from 'recharts';
 import { toast } from 'sonner';
 import { walletApi } from '../services/walletApi';
+import { walletAPI } from '../services/api';
 import { Transaction, WalletSummary } from '../types';
 
 type DateFilterType = 'today' | 'lastWeek' | 'lastMonth' | 'last3Months' | 'custom' | null;
@@ -225,52 +226,52 @@ const WalletPage: React.FC = () => {
   };
 
   // Get period label for the 4th card
-  const getPeriodLabel = () => {
-    if (!dateFilter) return 'This Month';
+  // const getPeriodLabel = () => {
+  //   if (!dateFilter) return 'This Month';
     
-    switch (dateFilter) {
-      case 'today':
-        return 'Today';
-      case 'lastWeek':
-        return 'Last Week';
-      case 'lastMonth':
-        return 'Last Month';
-      case 'last3Months':
-        return 'Last 3 Months';
-      case 'custom':
-        return 'Selected Period';
-      default:
-        return 'This Month';
-    }
-  };
+  //   switch (dateFilter) {
+  //     case 'today':
+  //       return 'Today';
+  //     case 'lastWeek':
+  //       return 'Last Week';
+  //     case 'lastMonth':
+  //       return 'Last Month';
+  //     case 'last3Months':
+  //       return 'Last 3 Months';
+  //     case 'custom':
+  //       return 'Selected Period';
+  //     default:
+  //       return 'This Month';
+  //   }
+  // };
 
-  // Clear filter
-  const clearFilter = () => {
-    setDateFilter(null);
-    setCustomDateRange({ from: undefined, to: undefined });
-  };
+  // // Clear filter
+  // const clearFilter = () => {
+  //   setDateFilter(null);
+  //   setCustomDateRange({ from: undefined, to: undefined });
+  // };
 
-  // Handle filter selection
-  const handleFilterSelect = (filter: DateFilterType) => {
-    setDateFilter(filter);
-    if (filter !== 'custom') {
-      setIsFilterOpen(false);
-    }
-  };
+  // // Handle filter selection
+  // const handleFilterSelect = (filter: DateFilterType) => {
+  //   setDateFilter(filter);
+  //   if (filter !== 'custom') {
+  //     setIsFilterOpen(false);
+  //   }
+  // };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await walletApi.refresh();
-      await loadWalletData();
-      toast.success('Wallet data refreshed');
-    } catch (error) {
-      console.error('Error refreshing wallet data:', error);
-      toast.error('Failed to refresh wallet data');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // const handleRefresh = async () => {
+  //   setIsRefreshing(true);
+  //   try {
+  //     await walletApi.refresh();
+  //     await loadWalletData();
+  //     toast.success('Wallet data refreshed');
+  //   } catch (error) {
+  //     console.error('Error refreshing wallet data:', error);
+  //     toast.error('Failed to refresh wallet data');
+  //   } finally {
+  //     setIsRefreshing(false);
+  //   }
+  // };
 
   const handleExport = async () => {
     try {
@@ -294,7 +295,7 @@ const WalletPage: React.FC = () => {
                 <Filter className="w-3.5 h-3.5" />
                 <span>{getFilterLabel()}</span>
                 <button
-                  onClick={clearFilter}
+                  // onClick={clearFilter}
                   className="hover:bg-blue-200 dark:hover:bg-blue-900/40 rounded-full p-0.5 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -310,7 +311,7 @@ const WalletPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          {/* <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline">
                 <Calendar className="w-4 h-4 mr-2" />
@@ -479,11 +480,11 @@ const WalletPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+            disabled={isRefreshing} */}
+          {/* > */}
+            {/* <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> */}
+            {/* Refresh */}
+          {/* </Button> */}
           <Button variant="outline" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
@@ -577,7 +578,7 @@ const WalletPage: React.FC = () => {
           </Card>
         </motion.div>
 
-        {/* This Month's Earnings Card */}
+        {/* This Month's Earnings Card
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -606,11 +607,11 @@ const WalletPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       {/* Monthly Revenue Tracking Chart */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.4 }}
@@ -691,7 +692,7 @@ const WalletPage: React.FC = () => {
             )}
           </CardContent>
         </Card>
-      </motion.div>
+      </motion.div> */}
 
       {/* Recent Transactions */}
       <motion.div
@@ -725,9 +726,9 @@ const WalletPage: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Type</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Reference</TableHead>
+                        {/* <TableHead>Description</TableHead> */}
+                        {/* <TableHead>Date</TableHead> */}
+                        {/* <TableHead>Reference</TableHead> */}
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>

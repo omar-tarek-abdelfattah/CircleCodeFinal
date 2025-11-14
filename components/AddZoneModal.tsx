@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus, X } from 'lucide-react';
 import { Zone, ZoneRegion } from '../types';
 import { mockBranches } from '../lib/mockData';
+import { zonesAPI } from '../services/api';
 
 interface AddZoneModalProps {
   open: boolean;
@@ -82,7 +83,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
     try {
       // TODO: Connect to backend API
-      // await zonesAPI.create({ zoneName, regions: validRegions, branchId: selectedBranch });
+      await zonesAPI.create({ zoneName, regions: validRegions, branchId: selectedBranch });
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
