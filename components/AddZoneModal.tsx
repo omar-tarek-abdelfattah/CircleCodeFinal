@@ -83,34 +83,34 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
     try {
       // TODO: Connect to backend API
-      await zonesAPI.create({ zoneName, regions: validRegions, branchId: selectedBranch });
+      const newZone = await zonesAPI.create({ zoneName, regions: validRegions, branchId: selectedBranch });
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const newZone: Zone = {
-        id: `ZON-${Date.now()}`,
-        name: zoneName,
-        regions: validRegions.map((r, idx) => ({
-          id: `REG-${Date.now()}-${idx}`,
-          name: r.name,
-          price: r.price,
-        })),
-        associatedBranches: [selectedBranch],
-        orders: 0,
-        activeAgents: 0,
-        status: 'active',
-        color: '#3B82F6',
-        position: {
-          lat: 30.0444,
-          lng: 31.2357,
-        },
-        createdAt: new Date().toISOString(),
-      };
+      // const newZone: Zone = {
+      //   id: `ZON-${Date.now()}`,
+      //   name: zoneName,
+      //   regions: validRegions.map((r, idx) => ({
+      //     id: `REG-${Date.now()}-${idx}`,
+      //     name: r.name,
+      //     price: r.price,
+      //   })),
+      //   associatedBranches: [selectedBranch],
+      //   orders: 0,
+      //   activeAgents: 0,
+      //   status: 'active',
+      //   color: '#3B82F6',
+      //   position: {
+      //     lat: 30.0444,
+      //     lng: 31.2357,
+      //   },
+      //   createdAt: new Date().toISOString(),
+      // };
 
       onSuccess(newZone);
-      toast.success('Zone created successfully');
-      onOpenChange(false);
+      // toast.success('Zone created successfully');
+      // onOpenChange(false);
 
       // Reset form
       setZoneName('');
@@ -231,9 +231,9 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={loading} 
+            <Button
+              type="submit"
+              disabled={loading}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

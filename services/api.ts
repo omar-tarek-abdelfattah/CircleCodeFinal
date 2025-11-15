@@ -1,6 +1,6 @@
 // ✅ api.ts — Clean, TypeScript, Connected to .NET backend
 
-import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, LoggedInUser, OrderRequest, OrderResponse, OrderResponseDetails } from '../types';
+import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, LoggedInUser, OrderRequest, OrderResponse, OrderResponseDetails, ZoneRequest, ZoneResponseDetails } from '../types';
 
 
 
@@ -201,7 +201,7 @@ export const walletAPI = {
     console.log(wallet)
 
     return wallet;
-   
+
     // const { mockWalletSummary } = await import('../lib/mockData');
     // return mockWalletSummary;
   },
@@ -214,7 +214,7 @@ export const walletAPI = {
   //   page?: number;
   //   limit?: number;
   // }): Promise<{ data: Transaction[]; total: number }> => {
-    // TODO: Replace with actual API call
+  // TODO: Replace with actual API call
 
   //   const { mockTransactions } = await import('../lib/mockData');
   //   return { data: mockTransactions, total: mockTransactions.length };
@@ -501,8 +501,8 @@ export const zonesAPI = {
 
   // POST /api/Zone - Create new zone
   // backend expects:  { zoneRequest: { name, regions[], branchId[] } }
-  create: async (payload: any): Promise<any> => {
-    return apiCall('/Zone', {
+  create: async (payload: ZoneRequest): Promise<ZoneResponseDetails> => {
+    return apiCall<ZoneResponseDetails>('/Zone', {
       method: 'POST',
       body: JSON.stringify(payload),
     });

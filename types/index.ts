@@ -200,12 +200,19 @@ export interface Zone {
   orders: number;
   activeAgents?: number;
   status: 'active' | 'inactive';
-  color: string;
-  position?: {
-    lat: number;
-    lng: number;
-  };
-  createdAt: string;
+
+}
+export interface ZoneRequest {
+  name: string
+  regions: ZoneRegion[]
+  branchId: string
+}
+export interface ZoneResponseDetails {
+  id: string
+  name: string
+  regions: ZoneRegion[]
+  branchName: string
+  isActive: boolean
 }
 
 export type UserRole = 'admin' | 'seller' | 'agent';

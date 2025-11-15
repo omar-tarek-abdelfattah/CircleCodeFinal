@@ -65,17 +65,17 @@ export function ZonesPage() {
 
   const handleToggleStatus = async (zoneId: string, currentStatus: 'active' | 'inactive') => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
+
     try {
       // TODO: Connect to backend API
       // await zonesAPI.updateStatus(zoneId, newStatus);
-      
+
       setZones(prev =>
         prev.map(z =>
           z.id === zoneId ? { ...z, status: newStatus } : z
         )
       );
-      
+
       toast.success(`Zone ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
       toast.error('Failed to update zone status');
@@ -273,12 +273,12 @@ export function ZonesPage() {
                       <div key={zone.id} className="flex items-center gap-2 text-xs">
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-slate-800"
-                          style={{ backgroundColor: zone.color }}
+                          
                         />
                         <span className="text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
                           {zone.name}
                         </span>
-                        <span className="text-slate-500 text-[10px]">({zone.orders})</span>
+                        
                       </div>
                     ))}
                   </div>
@@ -302,10 +302,10 @@ export function ZonesPage() {
                       >
                         <defs>
                           <filter id={`glow-${zone.id}`}>
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
                             <feMerge>
-                              <feMergeNode in="coloredBlur"/>
-                              <feMergeNode in="SourceGraphic"/>
+                              <feMergeNode in="coloredBlur" />
+                              <feMergeNode in="SourceGraphic" />
                             </feMerge>
                           </filter>
                         </defs>
@@ -314,12 +314,12 @@ export function ZonesPage() {
                             index === 0
                               ? "10,15 35,10 40,35 15,40"
                               : index === 1
-                              ? "42,20 65,25 60,50 38,45"
-                              : "68,35 90,40 85,65 70,60"
+                                ? "42,20 65,25 60,50 38,45"
+                                : "68,35 90,40 85,65 70,60"
                           }
-                          fill={zone.color}
+                          
                           fillOpacity="0.15"
-                          stroke={zone.color}
+                         
                           strokeWidth="2"
                           strokeDasharray="5,5"
                           filter={`url(#glow-${zone.id})`}
@@ -331,8 +331,8 @@ export function ZonesPage() {
                       <motion.div
                         className="absolute z-20 cursor-pointer"
                         style={{
-                          left: pos.left,
-                          top: pos.top,
+                          left: pos?.left,
+                          top: pos?.top,
                           transform: 'translate(-50%, -50%)',
                         }}
                         whileHover={{ scale: 1.1 }}
@@ -341,17 +341,13 @@ export function ZonesPage() {
                         {/* Main Zone Circle */}
                         <div
                           className="relative rounded-full shadow-xl backdrop-blur-sm transition-all duration-300 hover:shadow-2xl"
-                          style={{
-                            backgroundColor: zone.color,
-                            width: zone.orders > 5 ? '90px' : '70px',
-                            height: zone.orders > 5 ? '90px' : '70px',
-                          }}
+                          style={{}}
                         >
                           {/* Pulsing Ring */}
                           {zone.status === 'active' && (
                             <div
                               className="absolute inset-0 rounded-full animate-ping opacity-20"
-                              style={{ backgroundColor: zone.color }}
+                              style={{}}
                             />
                           )}
 
@@ -359,22 +355,13 @@ export function ZonesPage() {
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                             <div className="flex items-center gap-1 mb-0.5">
                               <Package className="w-3 h-3" />
-                              <span className="text-sm font-bold">{zone.orders}</span>
+                              
                             </div>
                             <div className="text-[10px] opacity-90">orders</div>
                           </div>
 
                           {/* Agents Indicator */}
-                          {zone.activeAgents && zone.activeAgents > 0 && (
-                            <div className="absolute -top-1 -right-1 bg-white dark:bg-slate-800 rounded-full p-1 shadow-md">
-                              <div className="flex items-center gap-0.5 px-1">
-                                <Users className="w-2.5 h-2.5 text-green-600" />
-                                <span className="text-[10px] font-medium text-green-600">
-                                  {zone.activeAgents}
-                                </span>
-                              </div>
-                            </div>
-                          )}
+                         
                         </div>
 
                         {/* Zone Label */}
@@ -391,28 +378,7 @@ export function ZonesPage() {
                       </motion.div>
 
                       {/* Agent Markers within Zone */}
-                      {zone.activeAgents && zone.activeAgents > 0 && (
-                        <>
-                          {[...Array(Math.min(zone.activeAgents, 3))].map((_, agentIdx) => {
-                            const offsetX = (agentIdx - 1) * 15;
-                            const offsetY = (agentIdx % 2) * 10;
-                            return (
-                              <div
-                                key={`agent-${zone.id}-${agentIdx}`}
-                                className="absolute z-10 w-6 h-6 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 shadow-md flex items-center justify-center animate-pulse"
-                                style={{
-                                  left: `calc(${pos.left} + ${offsetX}px)`,
-                                  top: `calc(${pos.top} + ${offsetY + 40}px)`,
-                                  transform: 'translate(-50%, -50%)',
-                                }}
-                                title={`Active Agent ${agentIdx + 1}`}
-                              >
-                                <Users className="w-3 h-3 text-white" />
-                              </div>
-                            );
-                          })}
-                        </>
-                      )}
+                     
                     </div>
                   );
                 })}
@@ -474,9 +440,9 @@ export function ZonesPage() {
                         {/* Color Indicator */}
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: zone.color }}
+                          // style={{ backgroundColor: zone.color }}
                         />
-                        
+
                         {/* Zone Info */}
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium mb-1">{zone.name}</h4>
@@ -498,7 +464,7 @@ export function ZonesPage() {
                           </div>
                           {zone.associatedBranches.length > 0 && (
                             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                              Branch: {getBranchName(zone.associatedBranches[0])}
+                              Branch: {getBranchName(zone.associatedBranches[0] as string)}
                             </p>
                           )}
                         </div>
@@ -596,14 +562,14 @@ export function ZonesPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${zone.color}20` }}
+                        // style={{ backgroundColor: `${zone.color}20` }}
                       >
-                        <MapPin className="w-5 h-5" style={{ color: zone.color }} />
+                        {/* <MapPin className="w-5 h-5" style={{ color: zone.color }} /> */}
                       </div>
                       <div>
                         <p className="font-medium">{zone.name}</p>
                         <p className="text-sm text-slate-500">
-                          {zone.regions.length} regions · {zone.orders} orders · Branch: {getBranchName(zone.associatedBranches[0])}
+                          {zone.regions.length} regions · {zone.orders} orders · Branch: {getBranchName(zone.associatedBranches[0] as string)}
                         </p>
                       </div>
                     </div>
