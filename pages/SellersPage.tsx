@@ -70,7 +70,7 @@ export function SellersPage() {
     setLoading(true);
     try {
       // TODO: Connect to backend API
-      const response = await sellersAPI.getAll();
+      const response = await sellersAPI.getAll(); 
       // setSellers(response);
       console.log(response)
       

@@ -27,16 +27,16 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
     email: '',
     phone: '',
     storeName: '',
-    address:'',
-    password:'',
-    confirmPassword:'',
-    branchId:0 ,
-    vip:true,
+    address: '',
+    password: '',
+    confirmPassword: '',
+    branchId: 0,
+    vip: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.name.trim()) {
       toast.error('Please enter seller name');
@@ -74,22 +74,22 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
       console.log('Added Seller:', addedSeller);
 
       toast.success('Seller added successfully');
-      
+
       // Reset form
       setFormData({
         name: '',
         email: '',
         phone: '',
         storeName: '',
-        address:'',
-        password:'',
-        confirmPassword:'',
+        address: '',
+        password: '',
+        confirmPassword: '',
         branchId: 0,
         vip: true,
       });
-      
+
       onOpenChange(false);
-      
+
       // Refresh the sellers list
       if (onSuccess) {
         onSuccess();
@@ -183,7 +183,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">
-                 Address <span className="text-red-500">*</span>
+                Address <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="address"
@@ -196,7 +196,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="passowrd">
-                  Passowrd <span className="text-red-500">*</span>
+                Passowrd <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="passowrd"
@@ -209,7 +209,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">
-                 Confirm Passowrd <span className="text-red-500">*</span>
+                Confirm Passowrd <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="confirmPassword"
@@ -222,7 +222,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="branchId">
-                 BranchId <span className="text-red-500">*</span>
+                BranchId <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="branchId"
@@ -235,14 +235,14 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="vip">
-                 Vip <span className="text-red-500">*</span>
+                Vip <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="vip"
                 type="text"
                 placeholder="true,false"
                 // value={formData.vip}
-                onChange={(e) => handleChange('vip', e.target.value)}
+                onChange={(e) => handleChange('vip', e.target.value === 'true' ? true as string : false as string)}
                 disabled={loading}
               />
             </div>

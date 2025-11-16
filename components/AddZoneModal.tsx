@@ -33,12 +33,12 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
   const [loading, setLoading] = useState(false);
   const [zoneName, setZoneName] = useState('');
   const [regions, setRegions] = useState<ZoneRegion[]>([
-    { id: 'temp-1', name: '', price: 0 }
+    { name: '', price: 0 }
   ]);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
 
   const handleAddRegion = () => {
-    setRegions([...regions, { id: `temp-${Date.now()}`, name: '', price: 0 }]);
+    setRegions([...regions, {  name: '', price: 0 }]);
   };
 
   const handleRemoveRegion = (index: number) => {
@@ -85,7 +85,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
     try {
       // TODO: Connect to backend API
-      const response = await zonesAPI.create({ name: zoneName, branchId: [9], regions: validRegions });
+      const response = await zonesAPI.create({ name: zoneName, branchId: [2], regions: validRegions });
 
       // Map ZoneResponseDetails to Zone format
       const newZone: Zone = {
@@ -103,7 +103,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
       // Reset form
       setZoneName('');
-      setRegions([{ id: 'temp-1', name: '', price: 0 }]);
+      setRegions([{ name: '', price: 0 }]);
       setSelectedBranch('');
     } catch (error) {
       console.error('Failed to create zone:', error);
@@ -156,7 +156,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
                 <div className="space-y-2">
                   {regions.map((region, index) => (
-                    <div key={region.id} className="flex gap-2 items-start">
+                    <div  className="flex gap-2 items-start">
                       <div className="flex-1">
                         <Input
                           value={region.name}

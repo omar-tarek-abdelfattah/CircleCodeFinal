@@ -38,6 +38,7 @@ import {
   User,
   Package,
   Clock,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { branchesAPI } from '@/services/api';
@@ -45,6 +46,7 @@ import { branchesAPI } from '@/services/api';
 export function BranchesPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -71,21 +73,26 @@ export function BranchesPage() {
     status: branchData.isActive ? 'active' : 'inactive',
     createdAt: new Date().toISOString(), // Default value
   });
-
+  const getAllBranches = async () => {
+    setLoading(true)
+    try {
+      const result = await branchesAPI.getAll();
+      const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
+      setBranches(mappedBranches);
+    } catch (error) {
+      console.error('Failed to fetch branches:', error);
+      toast.error('Failed to load branches');
+    }
+    finally { setLoading(false) }
+  };
   // Fetch branches on component mount
   useEffect(() => {
-    const getAllBranches = async () => {
-      try {
-        const result = await branchesAPI.getAll();
-        const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
-        setBranches(mappedBranches);
-      } catch (error) {
-        console.error('Failed to fetch branches:', error);
-        toast.error('Failed to load branches');
-      }
-    };
     getAllBranches();
   }, []);
+
+  const handleRefresh = () => {
+    getAllBranches()
+  }
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -287,6 +294,16 @@ export function BranchesPage() {
                 Manage and track your branches ({filteredBranches.length})
               </p>
             </div>
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              className="gap-2"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+
           </div>
 
           {/* Search */}

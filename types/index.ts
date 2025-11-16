@@ -217,7 +217,7 @@ export interface BranchResponse {
   data: BranchData[]
 }
 export interface ZoneRegion {
-  id: string;
+  // id: string;
   name: string;
   price: number;
 }

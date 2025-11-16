@@ -43,7 +43,6 @@ export async function apiCall<T>(
       },
     });
 
-    console.log(response);
 
 
     if (!response.ok) {
