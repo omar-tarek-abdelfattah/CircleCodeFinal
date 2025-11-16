@@ -14,6 +14,7 @@ import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { Branch } from '../types';
+import { branchesAPI } from '@/services/api';
 
 interface EditBranchModalProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface EditBranchModalProps {
 export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditBranchModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    id: parseInt(''),
     name: '',
     managerId: '',
     address: '',
@@ -48,6 +50,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
       }
 
       setFormData({
+        id: parseInt(branch.id),
         name: branch.name,
         managerId: branch.managerId || '',
         address: branch.address,
@@ -94,15 +97,24 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
 
     try {
       // TODO: Connect to backend API
-      // await branchesAPI.update(branch.id, formData);
+      try {
+        const result = await branchesAPI.update(branch.id, formData);
+
+        onSuccess(result)
+
+        onOpenChange(false)
+      } catch (error) {
+        console.error('failed to edit branch', error)
+        toast.error('failed to edit branch')
+      }
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Format times to display format
       const formatTime = (time: string) => {
         const [hours, minutes] = time.split(':');
-        const hour = parseInt(hours);
+        const hour = parseInt(hours as string);
         const ampm = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour % 12 || 12;
         return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
@@ -110,6 +122,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
 
       const updatedBranch: Branch = {
         ...branch,
+        id: branch.id,
         name: formData.name,
         managerId: formData.managerId,
         address: formData.address,
@@ -199,7 +212,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
                 <Checkbox
                   id="status"
                   checked={formData.status}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData({ ...formData, status: checked as boolean })
                   }
                 />

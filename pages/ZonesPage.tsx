@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Zone } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Switch } from '../components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -25,10 +24,10 @@ import {
   Package,
   Navigation,
   Map as MapIcon,
-  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { zonesAPI } from '@/services/api';
 
 export function ZonesPage() {
   const [zones, setZones] = useState<Zone[]>([]);
@@ -40,10 +39,36 @@ export function ZonesPage() {
   const [hiddenZonesDialogOpen, setHiddenZonesDialogOpen] = useState(false);
   const [mapCentered, setMapCentered] = useState(true);
 
+  // Fetch zones on component mount
+  useEffect(() => {
+    const fetchZones = async () => {
+      try {
+        const response = await zonesAPI.getAll();
+        // Map ZoneResponse to Zone format
+        const mappedZones: Zone[] = response.map((zone) => ({
+          id: zone.id,
+          name: zone.name,
+          regions: [], // ZoneResponse doesn't include regions, will be empty initially
+          associatedBranches: [], // ZoneResponse doesn't include branches, will be empty initially
+          orders: zone.noOrders,
+          status: zone.isActive ? 'active' : 'inactive',
+        }));
+        setZones(mappedZones);
+      } catch (error) {
+        console.error('Failed to fetch zones:', error);
+        toast.error('Failed to load zones');
+      }
+    };
+
+    fetchZones();
+  }, []);
+
   // Helper function to get branch name
   const getBranchName = (branchId: string) => {
     return branches.find(b => b.id === branchId)?.name || 'Unknown Branch';
   };
+
+
 
   // Calculate statistics
   const totalZones = zones.filter(z => !hiddenZoneIds.has(z.id)).length;
@@ -273,12 +298,12 @@ export function ZonesPage() {
                       <div key={zone.id} className="flex items-center gap-2 text-xs">
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-slate-800"
-                          
+
                         />
                         <span className="text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
                           {zone.name}
                         </span>
-                        
+
                       </div>
                     ))}
                   </div>
@@ -317,9 +342,9 @@ export function ZonesPage() {
                                 ? "42,20 65,25 60,50 38,45"
                                 : "68,35 90,40 85,65 70,60"
                           }
-                          
+
                           fillOpacity="0.15"
-                         
+
                           strokeWidth="2"
                           strokeDasharray="5,5"
                           filter={`url(#glow-${zone.id})`}
@@ -355,13 +380,13 @@ export function ZonesPage() {
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                             <div className="flex items-center gap-1 mb-0.5">
                               <Package className="w-3 h-3" />
-                              
+
                             </div>
                             <div className="text-[10px] opacity-90">orders</div>
                           </div>
 
                           {/* Agents Indicator */}
-                         
+
                         </div>
 
                         {/* Zone Label */}
@@ -378,7 +403,7 @@ export function ZonesPage() {
                       </motion.div>
 
                       {/* Agent Markers within Zone */}
-                     
+
                     </div>
                   );
                 })}
@@ -440,7 +465,7 @@ export function ZonesPage() {
                         {/* Color Indicator */}
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0"
-                          // style={{ backgroundColor: zone.color }}
+                        // style={{ backgroundColor: zone.color }}
                         />
 
                         {/* Zone Info */}
@@ -562,7 +587,7 @@ export function ZonesPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        // style={{ backgroundColor: `${zone.color}20` }}
+                      // style={{ backgroundColor: `${zone.color}20` }}
                       >
                         {/* <MapPin className="w-5 h-5" style={{ color: zone.color }} /> */}
                       </div>
@@ -604,5 +629,6 @@ export function ZonesPage() {
         </DialogContent>
       </Dialog>
     </div>
+
   );
 }

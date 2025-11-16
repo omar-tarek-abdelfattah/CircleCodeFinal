@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -20,25 +19,26 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { Branch } from '../types';
+import { NewBranchRequest } from '../types';
 import { mockUsers } from '../lib/mockData';
+import { branchesAPI } from '@/services/api';
 
 interface AddBranchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (branch: Branch) => void;
+  onSuccess: (newBranch: NewBranchRequest) => void;
 }
 
 export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModalProps) {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NewBranchRequest>({
     name: '',
-    managerId: '',
+    managerId: 1,
     address: '',
     country: '',
-    openingTime: '09:00',
-    closingTime: '17:00',
-    status: true,
+    open: '09:00',
+    close: '17:00',
+    isActive: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +49,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
       toast.error('Branch name is required');
       return;
     }
-    if (!formData.managerId.trim()) {
+    if (!formData.managerId) {
       toast.error('Manager ID is required');
       return;
     }
@@ -61,11 +61,11 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
       toast.error('Country is required');
       return;
     }
-    if (!formData.openingTime) {
+    if (!formData.open) {
       toast.error('Opening time is required');
       return;
     }
-    if (!formData.closingTime) {
+    if (!formData.close) {
       toast.error('Closing time is required');
       return;
     }
@@ -73,40 +73,29 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
     setLoading(true);
 
     try {
-      // TODO: Connect to backend API
-      // await branchesAPI.create(formData);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Format times to display format
-      const formatTime = (time: string) => {
-        const [hours, minutes] = time.split(':');
-        const hour = parseInt(hours);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour % 12 || 12;
-        return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+      // Format times to .NET System.TimeOnly format (HH:mm:ss)
+      const formatTimeOnly = (time: string): string => {
+        // If time is already in HH:mm:ss format, return as is
+        if (time.split(':').length === 3) {
+          return time;
+        }
+        // If time is in HH:mm format, add :00 for seconds
+        if (time.split(':').length === 2) {
+          return `${time}:00`;
+        }
+        return time;
       };
 
-      // Find the selected manager's name
-      const selectedManager = mockUsers.find(u => u.id === formData.managerId);
-
-      const newBranch: Branch = {
-        id: `${Date.now()}`,
+      const newBranch: NewBranchRequest = {
         name: formData.name,
         address: formData.address,
         country: formData.country,
         managerId: formData.managerId,
-        manager: selectedManager?.name || '',
-        phone: '', // Set default or get from backend
-        totalOrders: 0,
-        totalAgents: 0,
-        openingTime: formData.openingTime,
-        closingTime: formData.closingTime,
-        businessHours: `${formatTime(formData.openingTime)} - ${formatTime(formData.closingTime)}`,
-        status: formData.status ? 'active' : 'inactive',
-        createdAt: new Date().toISOString(),
+        open: formatTimeOnly(formData.open),
+        close: formatTimeOnly(formData.close),
+        isActive: formData.isActive ? true : false,
       };
+      await branchesAPI.create(newBranch)
 
       onSuccess(newBranch);
       toast.success('Branch added successfully');
@@ -115,12 +104,12 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
       // Reset form
       setFormData({
         name: '',
-        managerId: '',
+        managerId: 0,
         address: '',
         country: '',
-        openingTime: '09:00',
-        closingTime: '17:00',
-        status: true,
+        open: '09:00',
+        close: '17:00',
+        isActive: true,
       });
     } catch (error) {
       console.error('Failed to add branch:', error);
@@ -157,8 +146,8 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
                 Manager <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={formData.managerId}
-                onValueChange={(value) => setFormData({ ...formData, managerId: value })}
+                value={String(formData.managerId)}
+                onValueChange={(value) => setFormData({ ...formData, managerId: parseInt(value) })}
               >
                 <SelectTrigger id="managerId">
                   <SelectValue placeholder="Select Manager" />
@@ -208,9 +197,9 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
               <div className="flex items-center h-10 space-x-2">
                 <Checkbox
                   id="status"
-                  checked={formData.status}
-                  onCheckedChange={(checked) => 
-                    setFormData({ ...formData, status: checked as boolean })
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isActive: checked as boolean })
                   }
                 />
                 <label
@@ -232,8 +221,8 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
               <Input
                 id="openingTime"
                 type="time"
-                value={formData.openingTime}
-                onChange={(e) => setFormData({ ...formData, openingTime: e.target.value })}
+                value={formData.open}
+                onChange={(e) => setFormData({ ...formData, open: e.target.value })}
               />
             </div>
 
@@ -244,8 +233,8 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
               <Input
                 id="closingTime"
                 type="time"
-                value={formData.closingTime}
-                onChange={(e) => setFormData({ ...formData, closingTime: e.target.value })}
+                value={formData.close}
+                onChange={(e) => setFormData({ ...formData, close: e.target.value })}
               />
             </div>
           </div>

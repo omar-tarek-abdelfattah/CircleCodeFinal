@@ -49,12 +49,14 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
   const handleRegionChange = (index: number, field: 'name' | 'price', value: string | number) => {
     const newRegions = [...regions];
-    if (field === 'name') {
-      newRegions[index].name = value as string;
-    } else {
-      newRegions[index].price = parseFloat(value as string) || 0;
+    if (newRegions[index]) {
+      if (field === 'name') {
+        newRegions[index] = { ...newRegions[index], name: value as string };
+      } else {
+        newRegions[index] = { ...newRegions[index], price: parseFloat(value as string) || 0 };
+      }
+      setRegions(newRegions);
     }
-    setRegions(newRegions);
   };
 
 
@@ -83,30 +85,17 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
     try {
       // TODO: Connect to backend API
-      const newZone = await zonesAPI.create({ zoneName, regions: validRegions, branchId: selectedBranch });
+      const response = await zonesAPI.create({ name: zoneName, branchId: [9], regions: validRegions });
 
-      // Simulate API call
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // const newZone: Zone = {
-      //   id: `ZON-${Date.now()}`,
-      //   name: zoneName,
-      //   regions: validRegions.map((r, idx) => ({
-      //     id: `REG-${Date.now()}-${idx}`,
-      //     name: r.name,
-      //     price: r.price,
-      //   })),
-      //   associatedBranches: [selectedBranch],
-      //   orders: 0,
-      //   activeAgents: 0,
-      //   status: 'active',
-      //   color: '#3B82F6',
-      //   position: {
-      //     lat: 30.0444,
-      //     lng: 31.2357,
-      //   },
-      //   createdAt: new Date().toISOString(),
-      // };
+      // Map ZoneResponseDetails to Zone format
+      const newZone: Zone = {
+        id: response.id,
+        name: response.name,
+        regions: response.regions,
+        associatedBranches: [selectedBranch],
+        orders: 0,
+        status: response.isActive ? 'active' : 'inactive',
+      };
 
       onSuccess(newZone);
       // toast.success('Zone created successfully');

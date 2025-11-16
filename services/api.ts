@@ -1,6 +1,6 @@
 // ✅ api.ts — Clean, TypeScript, Connected to .NET backend
 
-import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, LoggedInUser, OrderRequest, OrderResponse, OrderResponseDetails, ZoneRequest, ZoneResponseDetails } from '../types';
+import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, LoggedInUser, OrderRequest, OrderResponse, OrderResponseDetails, ZoneRequest, ZoneResponseDetails, ZoneResponse, NewBranchRequest, BranchResponse, BranchData } from '../types';
 
 
 
@@ -431,12 +431,12 @@ export const sellersAPI = {
 // Branches API
 export const branchesAPI = {
   // GET /api/branches - Get all branches
-  getAll: async (): Promise<Branch[]> => {
+  getAll: async (): Promise<BranchResponse> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Branch[]>('/branches');
+    return apiCall<BranchResponse>('/Branch');
 
-    const { mockBranches } = await import('../lib/mockData');
-    return mockBranches;
+    // const { mockBranches } = await import('../lib/mockData');
+    // return mockBranches;
   },
 
   // GET /api/branches/:id - Get branch by ID
@@ -451,27 +451,27 @@ export const branchesAPI = {
   },
 
   // POST /api/branches - Create new branch
-  create: async (branchData: Partial<Branch>): Promise<Branch> => {
+  create: async (branchData: Partial<NewBranchRequest>): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Branch>('/branches', {
-    //   method: 'POST',
-    //   body: JSON.stringify(branchData),
-    // });
+    return apiCall<void>('/Branch', {
+      method: 'POST',
+      body: JSON.stringify(branchData),
+    });
 
     console.log('Backend API: Create branch', branchData);
     throw new Error('Not implemented - connect to backend');
   },
 
   // PUT /api/branches/:id - Update branch
-  update: async (id: string, branchData: Partial<Branch>): Promise<Branch> => {
+  update: async (id: string, branchData: Partial<BranchData>): Promise<Branch> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Branch>(`/branches/${id}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify(branchData),
-    // });
+    return apiCall<Branch>(`/Branch/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(branchData),
+    });
 
-    console.log('Backend API: Update branch', { id, branchData });
-    throw new Error('Not implemented - connect to backend');
+    // console.log('Backend API: Update branch', { id, branchData });
+    // throw new Error('Not implemented - connect to backend');
   },
 
   // DELETE /api/branches/:id - Delete branch
@@ -490,8 +490,8 @@ export const branchesAPI = {
 export const zonesAPI = {
 
   // GET /api/Zone - Get all zones
-  getAll: async (): Promise<Zone[]> => {
-    return apiCall<Zone[]>('/Zone');
+  getAll: async (): Promise<ZoneResponse[]> => {
+    return apiCall<ZoneResponse[]>('/Zone');
   },
 
   // GET /api/Zone/{id} - Get zone by ID

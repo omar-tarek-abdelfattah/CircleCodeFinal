@@ -1,3 +1,4 @@
+import { OTPInputContext } from 'input-otp';
 export type ShipmentStatus =
   | 'new'
   | 'in_pickup_stage'
@@ -186,6 +187,35 @@ export interface Branch {
   createdAt: string;
 }
 
+export interface NewBranchRequest {
+  name: string;
+  address: string;
+  country: string;
+  isActive: boolean;
+  managerId: number
+  open: string;
+  close: string
+}
+
+export interface BranchData {
+  id: number
+  name: string
+  ordersNumber: number
+  address?: string
+  country?: string
+  agentsNumber: number
+  managerName?: string
+  isActive: boolean
+}
+
+export interface BranchResponse {
+  totalBranch: number
+  activeBranchNumber: number
+  inactiveBranchNumber: number
+  totalOrders: number
+  totalAgents: number
+  data: BranchData[]
+}
 export interface ZoneRegion {
   id: string;
   name: string;
@@ -205,7 +235,14 @@ export interface Zone {
 export interface ZoneRequest {
   name: string
   regions: ZoneRegion[]
-  branchId: string
+
+  branchId: number[]
+}
+export interface ZoneResponse {
+  id: string
+  name: string
+  noOrders: number
+  isActive: boolean
 }
 export interface ZoneResponseDetails {
   id: string

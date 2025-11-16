@@ -1,5 +1,5 @@
-import  { useState, useMemo } from 'react';
-import { Branch } from '../types';
+import { useState, useMemo, useEffect } from 'react';
+import { Branch, NewBranchRequest, BranchData } from '../types';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -40,6 +40,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { branchesAPI } from '@/services/api';
 
 export function BranchesPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -52,6 +53,39 @@ export function BranchesPage() {
   const [hiddenBranchesDialogOpen, setHiddenBranchesDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Helper function to map BranchData[] to Branch[]
+  const mapBranchDataToBranch = (branchData: BranchData): Branch => ({
+    id: String(branchData.id),
+    name: branchData.name,
+    address: branchData.address || '',
+    country: branchData.country || '',
+    phone: '', // Not provided in API response
+    manager: branchData.managerName,
+    managerId: undefined, // Not provided in API response
+    totalOrders: branchData.ordersNumber,
+    totalAgents: branchData.agentsNumber,
+    businessHours: undefined, // Not provided in API response
+    openingTime: undefined, // Not provided in API response
+    closingTime: undefined, // Not provided in API response
+    status: branchData.isActive ? 'active' : 'inactive',
+    createdAt: new Date().toISOString(), // Default value
+  });
+
+  // Fetch branches on component mount
+  useEffect(() => {
+    const getAllBranches = async () => {
+      try {
+        const result = await branchesAPI.getAll();
+        const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
+        setBranches(mappedBranches);
+      } catch (error) {
+        console.error('Failed to fetch branches:', error);
+        toast.error('Failed to load branches');
+      }
+    };
+    getAllBranches();
+  }, []);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -71,7 +105,7 @@ export function BranchesPage() {
   const filteredBranches = useMemo(() => {
     // First filter out hidden branches
     const visibleBranches = branches.filter(branch => !hiddenBranchIds.has(branch.id));
-    
+
     if (!searchQuery.trim()) return visibleBranches;
 
     const query = searchQuery.toLowerCase();
@@ -106,8 +140,8 @@ export function BranchesPage() {
       )
     );
     toast.success(
-      currentStatus === 'active' 
-        ? 'Branch deactivated successfully' 
+      currentStatus === 'active'
+        ? 'Branch deactivated successfully'
         : 'Branch activated successfully'
     );
   };
@@ -146,8 +180,18 @@ export function BranchesPage() {
     toast.success('All branches restored successfully');
   };
 
-  const handleAddSuccess = (newBranch: Branch) => {
-    setBranches(prevBranches => [newBranch, ...prevBranches]);
+  const handleAddSuccess = (_newBranch: NewBranchRequest): void => {
+    // Refresh branches list after adding a new branch
+    const getAllBranches = async () => {
+      try {
+        const result = await branchesAPI.getAll();
+        const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
+        setBranches(mappedBranches);
+      } catch (error) {
+        console.error('Failed to refresh branches:', error);
+      }
+    };
+    getAllBranches();
   };
 
   const handleEditSuccess = (updatedBranch: Branch) => {
