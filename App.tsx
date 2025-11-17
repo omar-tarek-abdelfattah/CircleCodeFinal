@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState, type ComponentType } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth, UserRole } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { LoginPage } from './components/LoginPage';
 import { Layout } from './components/Layout';
@@ -19,26 +19,33 @@ import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 import ProfilePage from './pages/ProfilePage';
 import { Toaster } from './components/ui/sonner';
-import { Shipment } from './types';
+import { OrderResponseDetails } from './types';
+
+type ShipmentsNavigationHandlers = {
+  onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
+  onNavigateToBulkBillOfLading?: (shipments: OrderResponseDetails[]) => void;
+};
+
+const ShipmentsPageComponent = ShipmentsPage as unknown as ComponentType<ShipmentsNavigationHandlers>;
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [previousPage, setPreviousPage] = useState('dashboard');
-  const [selectedShipmentForBill, setSelectedShipmentForBill] = useState<Shipment | null>(null);
-  const [selectedShipmentsForBulkBill, setSelectedShipmentsForBulkBill] = useState<Shipment[]>([]);
+  const [selectedShipmentForBill, setSelectedShipmentForBill] = useState<OrderResponseDetails | null>(null);
+  const [selectedShipmentsForBulkBill, setSelectedShipmentsForBulkBill] = useState<OrderResponseDetails[]>([]);
 
   if (!user) {
     return <LoginPage />;
   }
 
-  const handleNavigateToBillOfLading = (shipment: Shipment) => {
+  const handleNavigateToBillOfLading = (shipment: OrderResponseDetails) => {
     setPreviousPage(currentPage);
     setSelectedShipmentForBill(shipment);
     setCurrentPage('bill-of-lading');
   };
 
-  const handleNavigateToBulkBillOfLading = (shipments: Shipment[]) => {
+  const handleNavigateToBulkBillOfLading = (shipments: OrderResponseDetails[]) => {
     setPreviousPage(currentPage);
     setSelectedShipmentsForBulkBill(shipments);
     setCurrentPage('bulk-bill-of-lading');
@@ -58,7 +65,7 @@ function AppContent() {
     // Bill of Lading Page
     if (currentPage === 'bill-of-lading') {
       return (
-        <BillOfLadingPage 
+        <BillOfLadingPage
           shipment={selectedShipmentForBill}
           onBack={handleBackFromBillOfLading}
         />
@@ -68,7 +75,7 @@ function AppContent() {
     // Bulk Bill of Lading Page
     if (currentPage === 'bulk-bill-of-lading') {
       return (
-        <BulkBillOfLadingPage 
+        <BulkBillOfLadingPage
           shipments={selectedShipmentsForBulkBill}
           onBack={handleBackFromBulkBillOfLading}
         />
@@ -77,38 +84,38 @@ function AppContent() {
 
     // Dashboard
     if (currentPage === 'dashboard') {
-      if (user.role === 'seller') return <SellerDashboard onNavigate={setCurrentPage} />;
-      if (user.role === 'agent') return <AgentDashboard onNavigate={setCurrentPage} />;
-      if (user.role === 'admin') return <AdminDashboard onNavigate={setCurrentPage} />;
+      if (role === UserRole.seller) return <SellerDashboard onNavigate={setCurrentPage} />;
+      if (role === UserRole.agent) return <AgentDashboard onNavigate={setCurrentPage} />;
+      if (role === UserRole.Admin) return <AdminDashboard onNavigate={setCurrentPage} />;
     }
 
     // Shipments (for Seller and Admin)
-    if (currentPage === 'shipments' && (user.role === 'seller' || user.role === 'admin')) {
-      return <ShipmentsPage onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
+    if (currentPage === 'shipments' && (role === UserRole.seller || role === UserRole.Admin)) {
+      return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
     }
 
     // Assigned Shipments (for Agent)
-    if (currentPage === 'assigned-shipments' && user.role === 'agent') {
-      return <ShipmentsPage onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
+    if (currentPage === 'assigned-shipments' && role === 'agent') {
+      return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
     }
 
     // Sellers (for Admin only)
-    if (currentPage === 'sellers' && user.role === 'admin') {
+    if (currentPage === UserRole.seller && role === UserRole.Admin) {
       return <SellersPage />;
     }
 
     // Agents (for Admin only)
-    if (currentPage === 'agents' && user.role === 'admin') {
+    if (currentPage === 'agents' && role === UserRole.Admin) {
       return <AgentsPage />;
     }
 
     // Branches (for Admin only)
-    if (currentPage === 'branches' && user.role === 'admin') {
+    if (currentPage === 'branches' && role === UserRole.Admin) {
       return <BranchesPage />;
     }
 
     // Zones (for Admin only)
-    if (currentPage === 'zones' && user.role === 'admin') {
+    if (currentPage === 'zones' && role === UserRole.Admin) {
       return <ZonesPage />;
     }
 
@@ -123,7 +130,7 @@ function AppContent() {
     }
 
     // Users (for Admin only)
-    if (currentPage === 'users' && user.role === 'admin') {
+    if (currentPage === 'users' && role === UserRole.Admin) {
       return <UsersPage />;
     }
 

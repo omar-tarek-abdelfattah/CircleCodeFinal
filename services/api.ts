@@ -1,62 +1,82 @@
 // ✅ api.ts — Clean, TypeScript, Connected to .NET backend
 
-import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, LoggedInUser, OrderRequest, OrderResponse, OrderResponseDetails, ZoneRequest, ZoneResponseDetails, ZoneResponse, NewBranchRequest, BranchResponse, BranchData } from '../types';
-
-
+import { UserRole } from "@/contexts/AuthContext";
+import {
+  Shipment,
+  WalletSummary,
+  Agent,
+  Seller,
+  Branch,
+  Zone,
+  LoggedInUser,
+  OrderRequest,
+  OrderResponse,
+  OrderResponseDetails,
+  ZoneRequest,
+  ZoneResponseDetails,
+  ZoneResponse,
+  NewBranchRequest,
+  BranchResponse,
+  BranchData,
+} from "../types";
 
 // -------------------- Base URLs --------------------
+
+const AUTH_BASE_URL = "http://91.98.160.24:5001/api"
+
 const BASE_URLS = {
-  admin: 'http://91.98.160.24:5000/api',
-  seller: 'http://91.98.160.24:8080/api',
-  agent: 'http://91.98.160.24:8081/api',
+  Admin: "http://91.98.160.24:5000/api",
+  seller: "http://91.98.160.24:8080/api",
+  agent: "http://91.98.160.24:8081/api",
 };
 
 export enum apiMode {
-  LoginMode = 'Login'
+  auth = "auth",
 }
 
 // -------------------- Helpers --------------------
-function getBaseUrl(role?: 'admin' | 'seller' | 'agent'): string {
+function getBaseUrl(role?: 'Admin' | 'seller' | 'agent'): string {
   if (role && BASE_URLS[role]) return BASE_URLS[role];
-  const savedRole = localStorage.getItem('role') as 'admin' | 'seller' | 'agent' | null;
-  return savedRole ? BASE_URLS[savedRole] : BASE_URLS.admin;
+  const savedRole = localStorage.getItem('role') as 'Admin' | 'seller' | 'agent' | null;
+  return savedRole ? BASE_URLS[savedRole] : BASE_URLS.agent;
 }
 
 // -------------------- Generic API Call --------------------
 export async function apiCall<T>(
   endpoint: string,
   options?: RequestInit,
-  role?: 'admin' | 'seller' | 'agent',
-  mode?: apiMode,
+  role?: "Admin" | "seller" | "agent",
+  mode?: apiMode
 ): Promise<T> {
-  const token = localStorage.getItem('token');
-  const baseUrl = getBaseUrl(role);
-  const finalUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const token = localStorage.getItem("token");
+  const baseUrl = mode === apiMode.auth ? AUTH_BASE_URL : getBaseUrl(role);
+  const finalUrl = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`
+    }`;
 
   try {
     const response = await fetch(finalUrl, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+        ...(token && mode !== apiMode.auth ? { Authorization: `Bearer ${token}` } : {}),
         ...options?.headers,
       },
     });
 
-
-
     if (!response.ok) {
-      if (response.status == 401 && mode == apiMode.LoginMode) {
-        throw new Error('invalid email or password')
+      if (response.status == 401 && mode == apiMode.auth) {
+        throw new Error("invalid Credentials");
       }
       const errorText = await response.text();
       console.error(`❌ API Error: ${response.status} - ${errorText}`);
-      throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `API Error: ${response.status} ${response.statusText} - ${errorText}`
+      );
     }
 
     return await response.json();
   } catch (error) {
-    console.error('❌ API call failed:', error);
+    console.error("❌ API call failed:", error);
     throw error;
   }
 }
@@ -64,43 +84,49 @@ export async function apiCall<T>(
 // -------------------- Authentication APIs --------------------
 export async function loginApi(
   email: string,
-  password: string,
-  role: 'admin' | 'seller' | 'agent' = 'admin'
-): Promise<LoggedInUser> {
-
+  password: string
+): Promise<Partial<LoggedInUser>> {
   // const baseUrl = getBaseUrl(role);
   try {
-    const result = await apiCall<LoggedInUser>('/Authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) }, role, apiMode.LoginMode)
-
-    if (result.token) localStorage.setItem('token', result.token)
-
-    localStorage.setItem('role', role);
-
-    return result
-
-
+    const result = await apiCall<LoggedInUser>(
+      "/Authentication/login",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      },
+      undefined,
+      apiMode.auth
+    );
+    if (result.token) localStorage.setItem("token", result.token);
+    return result;
   } catch (error: any) {
-    throw new Error(error)
+    throw new Error(error);
   }
 }
 
 export async function forgetPasswordApi(email: string) {
-  const res = await fetch(`http://91.98.160.24:5000/api/Authentication/forget-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  });
-  if (!res.ok) throw new Error('Email not found or request failed');
+  const res = await fetch(
+    `http://91.98.160.24:5000/api/Authentication/forget-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }
+  );
+  if (!res.ok) throw new Error("Email not found or request failed");
   return await res.json();
 }
 
 export async function saveNewPasswordApi(email: string, newPassword: string) {
-  const res = await fetch(`http://91.98.160.24:5000/api/Authentication/save-new-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, newPassword }),
-  });
-  if (!res.ok) throw new Error('Failed to save new password');
+  const res = await fetch(
+    `http://91.98.160.24:5000/api/Authentication/save-new-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, newPassword }),
+    }
+  );
+  if (!res.ok) throw new Error("Failed to save new password");
   return await res.json();
 }
 
@@ -119,26 +145,43 @@ export const shipmentsAPI = {
   // ✅ Create new order (with notification)
   // api.ts
   create: async (data: Partial<OrderRequest>): Promise<OrderResponse> => {
-    return apiCall<OrderResponse>('/Order', { method: 'POST', body: JSON.stringify(data) });
+    return apiCall<OrderResponse>("/Order", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   // ✅ Update existing order
-  update: async (id: string, data: Partial<OrderRequest>): Promise<OrderRequest> => {
-    return apiCall<OrderRequest>(`/Order/${id}`, { method: 'POST', body: JSON.stringify({ ...data, sellerId: 0 },) });
+  update: async (
+    id: string,
+    data: Partial<OrderRequest>
+  ): Promise<OrderRequest> => {
+    return apiCall<OrderRequest>(`/Order/${id}`, {
+      method: "POST",
+      body: JSON.stringify({ ...data, sellerId: 0 }),
+    });
   },
 
   // ✅ Update status
-  updateStatus: async (id: string, status: string, notes?: string): Promise<Shipment> => {
+  updateStatus: async (
+    id: string,
+    status: string,
+    notes?: string
+  ): Promise<Shipment> => {
     return apiCall<Shipment>(`/Order/${id}/status`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ status, notes }),
     });
   },
 
   // ✅ Bulk status update
-  bulkUpdateStatus: async (ids: string[], status: string, notes?: string): Promise<void> => {
-    return apiCall<void>('/Order/bulk-status', {
-      method: 'PATCH',
+  bulkUpdateStatus: async (
+    ids: string[],
+    status: string,
+    notes?: string
+  ): Promise<void> => {
+    return apiCall<void>("/Order/bulk-status", {
+      method: "PATCH",
       body: JSON.stringify({ shipmentIds: ids, status, notes }),
     });
   },
@@ -146,15 +189,15 @@ export const shipmentsAPI = {
   // ✅ Assign agent
   assign: async (id: string, agentId: string): Promise<Shipment> => {
     return apiCall<Shipment>(`/Order/${id}/assign`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ agentId }),
     });
   },
 
   // ✅ Bulk assign
   bulkAssign: async (ids: string[], agentId: string): Promise<void> => {
-    return apiCall<void>('/Order/bulk-assign', {
-      method: 'PATCH',
+    return apiCall<void>("/Order/bulk-assign", {
+      method: "PATCH",
       body: JSON.stringify({ shipmentIds: ids, agentId }),
     });
   },
@@ -162,14 +205,14 @@ export const shipmentsAPI = {
   // ✅ Hide / Unhide
   hide: async (id: string, hidden: boolean): Promise<Shipment> => {
     return apiCall<Shipment>(`/Order/${id}/hide`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ hidden }),
     });
   },
 
   // ✅ Delete
   delete: async (id: string): Promise<void> => {
-    return apiCall<void>(`/Order/${id}`, { method: 'DELETE' });
+    return apiCall<void>(`/Order/${id}`, { method: "DELETE" });
   },
 
   // ✅ Stats
@@ -180,14 +223,19 @@ export const shipmentsAPI = {
     agentId?: string;
   }) => {
     const query = new URLSearchParams(
-      Object.entries(filters || {}).filter(([_, v]) => v !== undefined) as [string, string][]
+      Object.entries(filters || {}).filter(([_, v]) => v !== undefined) as [
+        string,
+        string
+      ][]
     );
-    return apiCall<{ total: number; inProgress: number; completed: number; revenue: number }>(
-      `/Order/stats?${query.toString()}`
-    );
+    return apiCall<{
+      total: number;
+      inProgress: number;
+      completed: number;
+      revenue: number;
+    }>(`/Order/stats?${query.toString()}`);
   },
 };
-
 
 // Wallet API
 export const walletAPI = {
@@ -196,8 +244,8 @@ export const walletAPI = {
     // TODO: Replace with actual API call
     // return apiCall<WalletSummary>('/wallet/summary');
 
-    const wallet = await apiCall<WalletSummary>('/Wallet');
-    console.log(wallet)
+    const wallet = await apiCall<WalletSummary>("/Wallet");
+    console.log(wallet);
 
     return wallet;
 
@@ -233,7 +281,7 @@ export const agentsAPI = {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<Agent[]>('/agents');
 
-    const { mockAgents } = await import('../lib/mockData');
+    const { mockAgents } = await import("../lib/mockData");
     return mockAgents;
   },
 
@@ -242,9 +290,9 @@ export const agentsAPI = {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<Agent>(`/agents/${id}`);
 
-    const { mockAgents } = await import('../lib/mockData');
-    const agent = mockAgents.find(a => a.id === id);
-    if (!agent) throw new Error('Agent not found');
+    const { mockAgents } = await import("../lib/mockData");
+    const agent = mockAgents.find((a) => a.id === id);
+    if (!agent) throw new Error("Agent not found");
     return agent;
   },
 
@@ -256,8 +304,8 @@ export const agentsAPI = {
     //   body: JSON.stringify(agentData),
     // });
 
-    console.log('Backend API: Create agent', agentData);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Create agent", agentData);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PUT /api/agents/:id - Update agent
@@ -268,8 +316,8 @@ export const agentsAPI = {
     //   body: JSON.stringify(agentData),
     // });
 
-    console.log('Backend API: Update agent', { id, agentData });
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Update agent", { id, agentData });
+    throw new Error("Not implemented - connect to backend");
   },
 
   // DELETE /api/agents/:id - Delete agent
@@ -279,30 +327,32 @@ export const agentsAPI = {
     //   method: 'DELETE',
     // });
 
-    console.log('Backend API: Delete agent', id);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Delete agent", id);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PATCH /api/agents/:id/status - Update agent status
-  updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<Agent> => {
+  updateStatus: async (
+    id: string,
+    status: "active" | "inactive"
+  ): Promise<Agent> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<Agent>(`/agents/${id}/status`, {
     //   method: 'PATCH',
     //   body: JSON.stringify({ status }),
     // });
 
-    console.log('Backend API: Update agent status', { id, status });
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Update agent status", { id, status });
+    throw new Error("Not implemented - connect to backend");
   },
 };
 
 // Sellers API
 export const sellersAPI = {
-
   // GET /api/sellers - Get all sellers (done)
   getAll: async (): Promise<Seller[]> => {
     // TODO: Replace with actual API call to .NET backend
-    return await apiCall<Seller[]>('/Seller/all');
+    return await apiCall<Seller[]>("/Seller/all");
     // const { mockSellers } = await import('../lib/mockData');
     // return mockSellers;
   },
@@ -320,12 +370,12 @@ export const sellersAPI = {
   // POST /api/sellers - Create new seller
   create: async (sellerData: Partial<Seller>): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
-    console.log(sellerData)
-    return await apiCall<Seller>('/Seller/add', {
-      method: 'POST',
+    console.log(sellerData);
+    return await apiCall<Seller>("/Seller/add", {
+      method: "POST",
       body: JSON.stringify(sellerData),
     });
-    const { mockSellers } = await import('../lib/mockData');
+    const { mockSellers } = await import("../lib/mockData");
     // const newSeller = { id: Date.now().toString(), ...sellerData } as Seller;
     // return newSeller;
     // console.log('Backend API: Create seller', sellerData);
@@ -336,7 +386,7 @@ export const sellersAPI = {
   update: async (id: string, sellerData: Partial<Seller>): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
     return await apiCall<Seller>(`/Seller/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(sellerData),
     });
     // console.log('Backend API: Update seller', { id, sellerData });
@@ -346,12 +396,15 @@ export const sellersAPI = {
   // DELETE /api/sellers/:id - Delete seller
   delete: async (id: string): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
-    console.log('Backend API: Delete seller', id);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Delete seller", id);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PATCH /api/sellers/:id/status - Update seller status
-  updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<Seller> => {
+  updateStatus: async (
+    id: string,
+    status: "active" | "inactive"
+  ): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<Seller>(`/sellers/${id}/status`, {
     //   method: 'PATCH',
@@ -359,10 +412,10 @@ export const sellersAPI = {
     // });
 
     // Mock implementation
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const { mockSellers } = await import('../lib/mockData');
-    const seller = mockSellers.find(s => s.id === id);
-    if (!seller) throw new Error('Seller not found');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const { mockSellers } = await import("../lib/mockData");
+    const seller = mockSellers.find((s) => s.id === id);
+    if (!seller) throw new Error("Seller not found");
     seller.status = status;
     return seller;
   },
@@ -380,10 +433,10 @@ export const sellersAPI = {
     // });
 
     // Mock implementation
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const { mockSellers } = await import('../lib/mockData');
-    const seller = mockSellers.find(s => s.id === id);
-    if (!seller) throw new Error('Seller not found');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const { mockSellers } = await import("../lib/mockData");
+    const seller = mockSellers.find((s) => s.id === id);
+    if (!seller) throw new Error("Seller not found");
     seller.deactivationFrom = fromDate;
     seller.deactivationTo = toDate;
     return seller;
@@ -391,21 +444,20 @@ export const sellersAPI = {
 
   // GET /api/Seller/lockout/all
   getHiddenSellers: async (): Promise<Seller[]> => {
-    return await apiCall<Seller[]>('/Seller/lockout/all');
+    return await apiCall<Seller[]>("/Seller/lockout/all");
   },
 
   // GET /api/Seller/active-count
   getActiveCount: async (): Promise<number> => {
-    const res = await apiCall<{ count: number }>('/Seller/active-count');
+    const res = await apiCall<{ count: number }>("/Seller/active-count");
     return res.count;
   },
 
   // GET /api/Seller/total-count
   getTotalCount: async (): Promise<number> => {
-    const res = await apiCall<{ count: number }>('/Seller/total-count');
+    const res = await apiCall<{ count: number }>("/Seller/total-count");
     return res.count;
   },
-
 
   // DELETE /api/sellers/:id/deactivation-period - Clear deactivation period
   clearDeactivationPeriod: async (id: string): Promise<Seller> => {
@@ -415,11 +467,11 @@ export const sellersAPI = {
     // });
 
     // Mock implementation
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const { mockSellers } = await import('../lib/mockData');
-    const seller = mockSellers.find(s => s.id === id);
-    if (!seller) throw new Error('Seller not found');
+    const { mockSellers } = await import("../lib/mockData");
+    const seller = mockSellers.find((s) => s.id === id);
+    if (!seller) throw new Error("Seller not found");
 
     delete seller.deactivationFrom;
     delete seller.deactivationTo;
@@ -432,7 +484,7 @@ export const branchesAPI = {
   // GET /api/branches - Get all branches
   getAll: async (): Promise<BranchResponse> => {
     // TODO: Replace with actual API call to .NET backend
-    return apiCall<BranchResponse>('/Branch');
+    return apiCall<BranchResponse>("/Branch");
 
     // const { mockBranches } = await import('../lib/mockData');
     // return mockBranches;
@@ -443,29 +495,32 @@ export const branchesAPI = {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<Branch>(`/branches/${id}`);
 
-    const { mockBranches } = await import('../lib/mockData');
-    const branch = mockBranches.find(b => b.id === id);
-    if (!branch) throw new Error('Branch not found');
+    const { mockBranches } = await import("../lib/mockData");
+    const branch = mockBranches.find((b) => b.id === id);
+    if (!branch) throw new Error("Branch not found");
     return branch;
   },
 
   // POST /api/branches - Create new branch
   create: async (branchData: Partial<NewBranchRequest>): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
-    return apiCall<void>('/Branch', {
-      method: 'POST',
+    return apiCall<void>("/Branch", {
+      method: "POST",
       body: JSON.stringify(branchData),
     });
 
-    console.log('Backend API: Create branch', branchData);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Create branch", branchData);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PUT /api/branches/:id - Update branch
-  update: async (id: string, branchData: Partial<BranchData>): Promise<Branch> => {
+  update: async (
+    id: string,
+    branchData: Partial<BranchData>
+  ): Promise<Branch> => {
     // TODO: Replace with actual API call to .NET backend
     return apiCall<Branch>(`/Branch/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(branchData),
     });
 
@@ -480,17 +535,16 @@ export const branchesAPI = {
     //   method: 'DELETE',
     // });
 
-    console.log('Backend API: Delete branch', id);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Delete branch", id);
+    throw new Error("Not implemented - connect to backend");
   },
 };
 
 // Zones API
 export const zonesAPI = {
-
   // GET /api/Zone - Get all zones
   getAll: async (): Promise<ZoneResponse[]> => {
-    return apiCall<ZoneResponse[]>('/Zone');
+    return apiCall<ZoneResponse[]>("/Zone");
   },
 
   // GET /api/Zone/{id} - Get zone by ID
@@ -501,8 +555,8 @@ export const zonesAPI = {
   // POST /api/Zone - Create new zone
   // backend expects:  { zoneRequest: { name, regions[], branchId[] } }
   create: async (payload: ZoneRequest): Promise<ZoneResponseDetails> => {
-    return apiCall<ZoneResponseDetails>('/Zone', {
-      method: 'POST',
+    return apiCall<ZoneResponseDetails>("/Zone", {
+      method: "POST",
       body: JSON.stringify(payload),
     });
   },
@@ -510,7 +564,7 @@ export const zonesAPI = {
   // PUT /api/Zone/{id} - Update zone
   update: async (id: number, payload: any): Promise<Zone> => {
     return apiCall<Zone>(`/Zone/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(payload),
     });
   },
@@ -522,8 +576,8 @@ export const zonesAPI = {
     //   method: 'DELETE',
     // });
 
-    console.log('Backend API: Delete zone', id);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Delete zone", id);
+    throw new Error("Not implemented - connect to backend");
   },
 };
 
@@ -541,7 +595,7 @@ export const usersAPI = {
     // );
     // return apiCall<any[]>(`/users?${queryParams.toString()}`);
 
-    console.log('Backend API: Get users', filters);
+    console.log("Backend API: Get users", filters);
     return [];
   },
 
@@ -550,7 +604,7 @@ export const usersAPI = {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<any>(`/users/${id}`);
 
-    throw new Error('Not implemented - connect to backend');
+    throw new Error("Not implemented - connect to backend");
   },
 
   // POST /api/users - Create new user
@@ -561,8 +615,8 @@ export const usersAPI = {
     //   body: JSON.stringify(userData),
     // });
 
-    console.log('Backend API: Create user', userData);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Create user", userData);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PUT /api/users/:id - Update user
@@ -573,8 +627,8 @@ export const usersAPI = {
     //   body: JSON.stringify(userData),
     // });
 
-    console.log('Backend API: Update user', { id, userData });
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Update user", { id, userData });
+    throw new Error("Not implemented - connect to backend");
   },
 
   // DELETE /api/users/:id - Delete user
@@ -584,20 +638,23 @@ export const usersAPI = {
     //   method: 'DELETE',
     // });
 
-    console.log('Backend API: Delete user', id);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Delete user", id);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PATCH /api/users/:id/status - Update user status
-  updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<any> => {
+  updateStatus: async (
+    id: string,
+    status: "active" | "inactive"
+  ): Promise<any> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<any>(`/users/${id}/status`, {
     //   method: 'PATCH',
     //   body: JSON.stringify({ status }),
     // });
 
-    console.log('Backend API: Update user status', { id, status });
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Update user status", { id, status });
+    throw new Error("Not implemented - connect to backend");
   },
 
   // GET /api/users/profile - Get current user profile
@@ -605,7 +662,7 @@ export const usersAPI = {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<any>('/users/profile');
 
-    throw new Error('Not implemented - connect to backend');
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PUT /api/users/profile - Update current user profile
@@ -616,35 +673,41 @@ export const usersAPI = {
     //   body: JSON.stringify(profileData),
     // });
 
-    console.log('Backend API: Update profile', profileData);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Update profile", profileData);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // PUT /api/users/password - Change password
-  changePassword: async (oldPassword: string, newPassword: string): Promise<void> => {
+  changePassword: async (
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<void>('/users/password', {
     //   method: 'PUT',
     //   body: JSON.stringify({ oldPassword, newPassword }),
     // });
 
-    console.log('Backend API: Change password');
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Change password");
+    throw new Error("Not implemented - connect to backend");
   },
 };
 
 // Auth API
 export const authAPI = {
   // POST /api/auth/login - User login
-  login: async (email: string, password: string): Promise<{ token: string; user: any }> => {
+  login: async (
+    email: string,
+    password: string
+  ): Promise<{ token: string; user: any }> => {
     // TODO: Replace with actual API call to .NET backend
-    return apiCall<{ token: string; user: any }>('/Authentication/login', {
-      method: 'POST',
+    return apiCall<{ token: string; user: any }>("/Authentication/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
-    console.log('Backend API: Login', email);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Login", email);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // POST /api/auth/logout - User logout
@@ -654,7 +717,7 @@ export const authAPI = {
     //   method: 'POST',
     // });
 
-    console.log('Backend API: Logout');
+    console.log("Backend API: Logout");
   },
 
   // POST /api/auth/refresh - Refresh token
@@ -665,7 +728,7 @@ export const authAPI = {
     //   body: JSON.stringify({ refreshToken }),
     // });
 
-    throw new Error('Not implemented - connect to backend');
+    throw new Error("Not implemented - connect to backend");
   },
 
   // POST /api/auth/forgot-password - Request password reset
@@ -676,8 +739,8 @@ export const authAPI = {
     //   body: JSON.stringify({ email }),
     // });
 
-    console.log('Backend API: Forgot password', email);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Forgot password", email);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // POST /api/auth/reset-password - Reset password with token
@@ -688,8 +751,8 @@ export const authAPI = {
     //   body: JSON.stringify({ token, newPassword }),
     // });
 
-    console.log('Backend API: Reset password');
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Reset password");
+    throw new Error("Not implemented - connect to backend");
   },
 };
 
@@ -709,8 +772,8 @@ export const reportsAPI = {
     // );
     // return apiCall<any>(`/reports/sales?${queryParams.toString()}`);
 
-    console.log('Backend API: Get sales report', filters);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Get sales report", filters);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // GET /api/reports/performance - Get performance report
@@ -725,8 +788,8 @@ export const reportsAPI = {
     // );
     // return apiCall<any>(`/reports/performance?${queryParams.toString()}`);
 
-    console.log('Backend API: Get performance report', filters);
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Get performance report", filters);
+    throw new Error("Not implemented - connect to backend");
   },
 
   // GET /api/reports/export - Export report
@@ -743,8 +806,8 @@ export const reportsAPI = {
     // });
     // return await response.blob();
 
-    console.log('Backend API: Export report', { reportType, filters });
-    throw new Error('Not implemented - connect to backend');
+    console.log("Backend API: Export report", { reportType, filters });
+    throw new Error("Not implemented - connect to backend");
   },
 };
 
@@ -774,8 +837,8 @@ export const notificationsAPI = {
     // return apiCall<{ count: number }>('/notifications/new-orders-count').then(r => r.count);
 
     // Mock implementation
-    const { mockShipments } = await import('../lib/mockData');
-    return mockShipments.filter(s => s.status === 'new').length;
+    const { mockShipments } = await import("../lib/mockData");
+    return mockShipments.filter((s) => s.status === "new").length;
   },
 
   // POST /api/notifications/order-created - Create notification when order is created
@@ -792,7 +855,7 @@ export const notificationsAPI = {
     //   body: JSON.stringify(data),
     // });
 
-    console.log('Backend API: Order created notification', data);
+    console.log("Backend API: Order created notification", data);
   },
 
   // POST /api/notifications/order-assigned - Create notification when order is assigned to agent
@@ -809,7 +872,7 @@ export const notificationsAPI = {
     //   body: JSON.stringify(data),
     // });
 
-    console.log('Backend API: Order assigned notification', data);
+    console.log("Backend API: Order assigned notification", data);
   },
 
   // POST /api/notifications/status-changed - Create notification when order status changes
@@ -829,7 +892,7 @@ export const notificationsAPI = {
     //   body: JSON.stringify(data),
     // });
 
-    console.log('Backend API: Status changed notification', data);
+    console.log("Backend API: Status changed notification", data);
   },
 
   // PATCH /api/notifications/:id/read - Mark notification as read
@@ -839,7 +902,7 @@ export const notificationsAPI = {
     //   method: 'PATCH',
     // });
 
-    console.log('Backend API: Mark notification as read', id);
+    console.log("Backend API: Mark notification as read", id);
   },
 
   // PATCH /api/notifications/mark-all-read - Mark all notifications as read
@@ -849,7 +912,7 @@ export const notificationsAPI = {
     //   method: 'PATCH',
     // });
 
-    console.log('Backend API: Mark all notifications as read');
+    console.log("Backend API: Mark all notifications as read");
   },
 
   // DELETE /api/notifications/clear - Clear all notifications
@@ -859,6 +922,6 @@ export const notificationsAPI = {
     //   method: 'DELETE',
     // });
 
-    console.log('Backend API: Clear all notifications');
+    console.log("Backend API: Clear all notifications");
   },
 };

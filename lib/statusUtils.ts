@@ -1,4 +1,4 @@
-import { ShipmentStatus } from '../types';
+import { ShipmentStatus, UserRole } from '../types';
 
 // All available statuses (admin only)
 export const ALL_STATUSES: ShipmentStatus[] = [
@@ -79,7 +79,7 @@ export const getStatusColor = (status: ShipmentStatus): string => {
 };
 
 // Get available statuses based on user role
-export const getAvailableStatuses = (role: 'admin' | 'seller' | 'agent'): ShipmentStatus[] => {
+export const getAvailableStatuses = (role: UserRole): ShipmentStatus[] => {
   switch (role) {
     case 'admin':
       return ALL_STATUSES;

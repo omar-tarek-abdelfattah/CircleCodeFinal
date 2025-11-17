@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
-import { 
-  FileText, 
-  Printer, 
+import {
+  FileText,
+  Printer,
   Download,
   Package,
   MapPin,
@@ -22,11 +22,11 @@ import { Badge } from '../components/ui/badge';
 import { Card, CardContent } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Shipment } from '../types';
+import { OrderResponseDetails, Shipment } from '../types';
 import { getStatusLabel, getStatusColor } from '../lib/statusUtils';
 
 interface BulkBillOfLadingPageProps {
-  shipments: Shipment[];
+  shipments: OrderResponseDetails[];
   onBack: () => void;
 }
 
@@ -310,7 +310,7 @@ export function BulkBillOfLadingPage({ shipments, onBack }: BulkBillOfLadingPage
                       {shipments.map((shipment, index) => {
                         const orderTotal = shipment.price + shipment.commission;
                         return (
-                          <TableRow 
+                          <TableRow
                             key={shipment.id}
                             className="border-b border-slate-200 dark:border-slate-800 print:border-black"
                           >
@@ -359,7 +359,7 @@ export function BulkBillOfLadingPage({ shipments, onBack }: BulkBillOfLadingPage
                               ${orderTotal.toFixed(2)}
                             </TableCell>
                             <TableCell className="print:text-black">
-                              <Badge 
+                              <Badge
                                 className={`${getStatusColor(shipment.status)} print:bg-gray-200 print:text-black`}
                               >
                                 {getStatusLabel(shipment.status)}
@@ -397,11 +397,10 @@ export function BulkBillOfLadingPage({ shipments, onBack }: BulkBillOfLadingPage
               DETAILED SHIPMENT INFORMATION
             </h2>
             {shipments.map((shipment, index) => (
-              <div 
-                key={shipment.id} 
-                className={`mb-8 pb-8 border-b-2 border-slate-300 ${
-                  index < shipments.length - 1 ? 'print:break-after-page' : ''
-                }`}
+              <div
+                key={shipment.id}
+                className={`mb-8 pb-8 border-b-2 border-slate-300 ${index < shipments.length - 1 ? 'print:break-after-page' : ''
+                  }`}
               >
                 <div className="mb-4">
                   <h3 className="text-2xl mb-2">
@@ -489,9 +488,9 @@ export function BulkBillOfLadingPage({ shipments, onBack }: BulkBillOfLadingPage
               This document serves as proof of {totalShipments} shipment{totalShipments !== 1 ? 's' : ''} and delivery agreement.
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-600 mt-2 print:text-black">
-              Generated on {new Date().toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
+              Generated on {new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'

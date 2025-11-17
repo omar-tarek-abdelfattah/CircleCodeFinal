@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
 import { OrderResponseDetails, Shipment } from '../types';
 import { mockSellers } from '../lib/mockData';
+import { UserRole } from '@/contexts/AuthContext';
 
 interface ProductItem {
   id: string;
@@ -35,7 +36,7 @@ interface EditShipmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  userRole?: 'seller' | 'agent' | 'admin';
+  userRole?: UserRole;
 }
 
 export function EditShipmentModal({

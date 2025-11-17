@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
-import { 
-  FileText, 
-  Printer, 
+import {
+  FileText,
+  Printer,
   Download,
   Package,
   MapPin,
@@ -19,11 +19,11 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Card, CardContent } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
-import { Shipment } from '../types';
+import { OrderResponseDetails, Shipment } from '../types';
 import { getStatusLabel, getStatusColor } from '../lib/statusUtils';
 
 interface BillOfLadingPageProps {
-  shipment: Shipment | null;
+  shipment: OrderResponseDetails | null;
   onBack: () => void;
 }
 
@@ -404,9 +404,9 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
               This document serves as proof of shipment and delivery agreement.
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-600 mt-2 print:text-black">
-              Generated on {new Date().toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
+              Generated on {new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'

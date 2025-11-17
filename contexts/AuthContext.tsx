@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { loginApi } from '@/services/api';
 
-export type UserRole = 'seller' | 'agent' | 'admin';
+export enum UserRole {
+
+  seller = 'seller',
+  agent = 'agent',
+  Admin = 'Admin',
+  auth = 'authentication'
+}
 
 export interface User {
-  id: string;
+  id?: string;
   name: string;
   email: string;
   role: UserRole;
@@ -15,7 +21,9 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role?: UserRole) => Promise<void>;
+  recievedToken: string
+  role: UserRole
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }
@@ -24,6 +32,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [recievedToken, setRecievedToken] = useState('')
+  const [recievedRole, setRecievedRole] = useState<UserRole>(UserRole.agent)
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -31,21 +41,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  const login = async (email: string, password: string, role?: UserRole) => {
+  const login = async (email: string, password: string) => {
     try {
-      const { token, role: apiRole, id } = await loginApi(email, password, role || 'admin');
+      const { token, role } = await loginApi(email, password);
+      console.log(token);
+      console.log(role);
 
+
+      setRecievedToken(token as string)
+      setRecievedRole(role as UserRole)
       // Save token & role
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', apiRole || role || 'admin');
-      localStorage.setItem('id', id);
+      localStorage.setItem('token', recievedToken);
+      localStorage.setItem('role', recievedRole || 'agent');
+
 
       // Create minimal user object (could be enhanced with more info from backend)
       const loggedUser: User = {
-        id, // can be replaced with backend id
         name: email,
         email,
-        role: apiRole || role || 'admin',
+        role: recievedRole
       };
       setUser(loggedUser);
       localStorage.setItem('user', JSON.stringify(loggedUser));
@@ -73,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, role: recievedRole, recievedToken, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

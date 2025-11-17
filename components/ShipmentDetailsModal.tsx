@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from "motion/react";
 import {
   Package,
   User,
@@ -8,23 +7,22 @@ import {
   DollarSign,
   Phone,
   Truck,
-  X,
   Clock,
   Weight,
   FileText,
-} from 'lucide-react';
-import { OrderResponseDetails, Shipment, ShipmentStatus } from '../types';
+} from "lucide-react";
+import { OrderResponseDetails, ShipmentStatus } from "../types";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from './ui/dialog';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { Separator } from './ui/separator';
-import { useAuth } from '../contexts/AuthContext';
+} from "./ui/dialog";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Separator } from "./ui/separator";
+import { useAuth, UserRole } from "../contexts/AuthContext";
 
 interface ShipmentDetailsModalProps {
   shipment: OrderResponseDetails | null;
@@ -39,36 +37,43 @@ export function ShipmentDetailsModal({
   onClose,
   onUpdateStatus,
 }: ShipmentDetailsModalProps) {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   if (!shipment) return null;
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      picked_up: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-      in_transit: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-      delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-      cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-      returned: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+      picked_up:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+      in_transit:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+      delivered:
+        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+      cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+      returned:
+        "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
     };
     return colors[status] || colors.pending;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
-  const canUpdateStatus = user?.role === 'agent' || user?.role === 'admin';
+  const canUpdateStatus = role === UserRole.agent || UserRole.Admin;
 
-  const statusFlow = ['pending', 'picked_up', 'in_transit', 'delivered'];
-  const currentStatusIndex = statusFlow.indexOf(shipment.statusOrder as ShipmentStatus);
+  const statusFlow = ["pending", "picked_up", "in_transit", "delivered"];
+  const currentStatusIndex = statusFlow.indexOf(
+    shipment.statusOrder as ShipmentStatus
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -97,8 +102,12 @@ export function ShipmentDetailsModal({
                 <p className="text-sm text-blue-100">Tracking Number</p>
                 <p className="text-2xl font-mono">{shipment.id}</p>
               </div>
-              <Badge className={`${getStatusColor(shipment.statusOrder as ShipmentStatus)} text-base px-4 py-2`}>
-                {shipment.statusOrder?.replace('_', ' ').toUpperCase()}
+              <Badge
+                className={`${getStatusColor(
+                  shipment.statusOrder as ShipmentStatus
+                )} text-base px-4 py-2`}
+              >
+                {shipment.statusOrder?.replace("_", " ").toUpperCase()}
               </Badge>
             </div>
           </motion.div>
@@ -112,20 +121,24 @@ export function ShipmentDetailsModal({
             <div className="flex items-center justify-between relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-700" />
               {statusFlow.map((status, index) => (
-                <div key={status} className="flex flex-col items-center z-10 relative">
+                <div
+                  key={status}
+                  className="flex flex-col items-center z-10 relative"
+                >
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${index <= currentStatusIndex
-                      ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
-                      }`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      index <= currentStatusIndex
+                        ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white"
+                        : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                    }`}
                   >
-                    {index < currentStatusIndex ? '✓' : index + 1}
+                    {index < currentStatusIndex ? "✓" : index + 1}
                   </motion.div>
                   <p className="text-xs mt-2 text-center capitalize">
-                    {status.replace('_', ' ')}
+                    {status.replace("_", " ")}
                   </p>
                 </div>
               ))}
@@ -282,7 +295,7 @@ export function ShipmentDetailsModal({
           </motion.div>
 
           {/* Actions */}
-          {canUpdateStatus && shipment.status !== 'delivered' && (
+          {canUpdateStatus && shipment.status !== "delivered" && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -292,11 +305,14 @@ export function ShipmentDetailsModal({
               {currentStatusIndex < statusFlow.length - 1 && (
                 <Button
                   onClick={() =>
-                    onUpdateStatus?.(shipment.id, statusFlow[currentStatusIndex + 1])
+                    onUpdateStatus?.(
+                      shipment.id,
+                      statusFlow[currentStatusIndex + 1]
+                    )
                   }
                   className="bg-gradient-to-r from-blue-500 to-purple-600"
                 >
-                  Mark as {statusFlow[currentStatusIndex + 1].replace('_', ' ')}
+                  Mark as {statusFlow[currentStatusIndex + 1].replace("_", " ")}
                 </Button>
               )}
             </motion.div>

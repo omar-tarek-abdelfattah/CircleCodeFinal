@@ -1,4 +1,4 @@
-import { OTPInputContext } from 'input-otp';
+
 export type ShipmentStatus =
   | 'new'
   | 'in_pickup_stage'

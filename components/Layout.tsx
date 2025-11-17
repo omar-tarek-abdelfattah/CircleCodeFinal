@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Bell,
   Settings,
   LogOut,
   Menu,
@@ -48,13 +47,13 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
     path: 'dashboard',
-    roles: ['seller', 'agent', 'admin'],
+    roles: [UserRole.seller, UserRole.agent, UserRole.Admin],
   },
   {
     label: 'Shipments',
     icon: <Package className="w-5 h-5" />,
     path: 'shipments',
-    roles: ['seller', 'admin'],
+    roles: [UserRole.seller, UserRole.Admin],
     showBadge: (user, newOrdersCount) => user?.role === 'admin' && newOrdersCount > 0,
     badgeCount: (newOrdersCount) => newOrdersCount,
   },
@@ -62,55 +61,55 @@ const navItems: NavItem[] = [
     label: 'Assigned Shipments',
     icon: <Truck className="w-5 h-5" />,
     path: 'assigned-shipments',
-    roles: ['agent'],
+    roles: [UserRole.agent],
   },
   {
     label: 'Sellers',
     icon: <Users className="w-5 h-5" />,
     path: 'sellers',
-    roles: ['admin'],
+    roles: [UserRole.Admin],
   },
   {
     label: 'Agents',
     icon: <Users className="w-5 h-5" />,
     path: 'agents',
-    roles: ['admin'],
+    roles: [UserRole.Admin],
   },
   {
     label: 'Branches',
     icon: <Building2 className="w-5 h-5" />,
     path: 'branches',
-    roles: ['admin'],
+    roles: [UserRole.Admin],
   },
   {
     label: 'Zones',
     icon: <MapPin className="w-5 h-5" />,
     path: 'zones',
-    roles: ['admin'],
+    roles: [UserRole.Admin],
   },
   {
     label: 'Wallet',
     icon: <Wallet className="w-5 h-5" />,
     path: 'wallet',
-    roles: ['seller', 'agent', 'admin'],
+    roles: [UserRole.seller, UserRole.agent, UserRole.Admin,]
   },
   {
     label: 'Reports',
     icon: <FileText className="w-5 h-5" />,
     path: 'reports',
-    roles: ['seller', 'agent', 'admin'],
+    roles: [UserRole.seller, UserRole.agent, UserRole.Admin,]
   },
   {
     label: 'Users',
     icon: <User className="w-5 h-5" />,
     path: 'users',
-    roles: ['admin'],
+    roles: [UserRole.Admin,]
   },
   {
     label: 'Profile',
     icon: <User className="w-5 h-5" />,
     path: 'profile',
-    roles: ['seller', 'agent', 'admin'],
+    roles: [UserRole.seller, UserRole.agent, UserRole.Admin]
   },
 ];
 
@@ -264,9 +263,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`fixed left-0 top-16 bottom-0 z-40 w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-800 ${
-                mobileMenuOpen ? 'block' : 'hidden lg:block'
-              }`}
+              className={`fixed left-0 top-16 bottom-0 z-40 w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-800 ${mobileMenuOpen ? 'block' : 'hidden lg:block'
+                }`}
             >
               <nav className="p-4 space-y-2">
                 {filteredNavItems.map((item, index) => (
@@ -279,24 +277,22 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                       onNavigate(item.path);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                      currentPage === item.path
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === item.path
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
                     whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     {item.icon}
                     <span className="flex-1 text-left">{item.label}</span>
                     {item.showBadge && item.badgeCount && item.showBadge(user, newOrdersCount) && (
-                      <Badge 
-                        variant="secondary" 
-                        className={`ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-xs ${
-                          currentPage === item.path 
-                            ? 'bg-white/20 text-white' 
-                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                        }`}
+                      <Badge
+                        variant="secondary"
+                        className={`ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-xs ${currentPage === item.path
+                          ? 'bg-white/20 text-white'
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                          }`}
                       >
                         {item.badgeCount(newOrdersCount)}
                       </Badge>
@@ -311,9 +307,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
       {/* Main Content */}
       <main
-        className={`pt-20 pb-16 transition-all duration-300 ${
-          sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'
-        }`}
+        className={`pt-20 pb-16 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'
+          }`}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -327,9 +322,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
       {/* Global Footer */}
       <footer
-        className={`fixed bottom-0 left-0 right-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ${
-          sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'
-        }`}
+        className={`fixed bottom-0 left-0 right-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'
+          }`}
       >
         <div className="px-4 lg:px-6 py-3">
           <p className="text-center text-sm text-slate-600 dark:text-slate-400">
