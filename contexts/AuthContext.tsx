@@ -3,9 +3,10 @@ import { loginApi } from '@/services/api';
 
 export enum UserRole {
 
-  seller = 'seller',
-  agent = 'agent',
+  Seller = 'Seller',
+  agent = 'Agent',
   Admin = 'Admin',
+  SuperAdmin = 'SuperAdmin',
   auth = 'authentication'
 }
 
@@ -33,7 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [recievedToken, setRecievedToken] = useState('')
-  const [recievedRole, setRecievedRole] = useState<UserRole>(UserRole.agent)
+  const [recievedRole, setRecievedRole] = useState<UserRole>()
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -52,14 +53,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRecievedRole(role as UserRole)
       // Save token & role
       localStorage.setItem('token', recievedToken);
-      localStorage.setItem('role', recievedRole || 'agent');
+      // localStorage.setItem('role', recievedRole || 'Agent');
+
+      setRecievedToken(token as string);
+      setRecievedRole(role as UserRole);
 
 
       // Create minimal user object (could be enhanced with more info from backend)
       const loggedUser: User = {
         name: email,
         email,
-        role: recievedRole
+        role: role as UserRole,
       };
       setUser(loggedUser);
       localStorage.setItem('user', JSON.stringify(loggedUser));

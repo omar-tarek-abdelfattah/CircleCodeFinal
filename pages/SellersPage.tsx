@@ -361,11 +361,11 @@ export function SellersPage() {
                       <TableHead>SELLER ID</TableHead>
                       <TableHead>NAME</TableHead>
                       <TableHead>STORE NAME</TableHead>
-                      <TableHead>CONTACT</TableHead>
-                      <TableHead>TOTAL SHIPMENTS</TableHead>
+                      {/* <TableHead>CONTACT</TableHead> */}
+                      {/* <TableHead>TOTAL SHIPMENTS</TableHead> */}
                       <TableHead>ACTIVE SHIPMENTS</TableHead>
-                      <TableHead>STATUS</TableHead>
-                      <TableHead>JOINED DATE</TableHead>
+                      {/* <TableHead>STATUS</TableHead> */}
+                      {/* <TableHead>JOINED DATE</TableHead> */}
                       <TableHead className="text-right">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -421,26 +421,26 @@ export function SellersPage() {
                               <span className="text-slate-400">-</span>
                             )}
                           </TableCell>
-                          <TableCell>
+                          {/* <TableCell>
                             <div className="flex items-center gap-2">
                               <Phone className="w-4 h-4 text-slate-400" />
                               <span className="text-sm">{seller.phone}</span>
                             </div>
-                          </TableCell>
-                          <TableCell>
+                          </TableCell> */}
+                          {/* <TableCell>
                             <div className="flex items-center gap-2">
                               <Package className="w-4 h-4 text-blue-500" />
                               <span className="font-semibold">{seller.totalShipments}</span>
                             </div>
-                          </TableCell>
-                          <TableCell>
+                          </TableCell> */}
+                          {/* <TableCell>
                             <Badge 
                               variant={seller.activeShipments > 0 ? "default" : "secondary"}
                               className={seller.activeShipments > 0 ? "bg-green-500" : ""}
                             >
                               {seller.activeShipments}
                             </Badge>
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell>
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-3">
@@ -481,9 +481,9 @@ export function SellersPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm">
+                          {/* <TableCell className="text-sm">
                             {formatDate(seller.joinedDate)}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button
@@ -562,7 +562,7 @@ export function SellersPage() {
               </div>
 
               {/* Contact Info */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <h3 className="font-semibold flex items-center gap-2">
                   <MailIcon className="w-4 h-4" />
                   Contact Information
@@ -587,7 +587,7 @@ export function SellersPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               {/* Account Status */}
               <div className="space-y-3">

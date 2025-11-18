@@ -28,6 +28,8 @@ import { AddAgentModal } from '../components/AddAgentModal';
 import { EditAgentModal } from '../components/EditAgentModal';
 import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
 import { Agent } from '../types';
+import { agentsAPI } from '../services/api';
+import { useEffect } from 'react';
 
 export function AgentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,6 +43,21 @@ export function AgentsPage() {
   const [hiddenAgentsDialogOpen, setHiddenAgentsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+
+  const fetchAgents = async () => {
+        try {
+            const data = await agentsAPI.getAll();
+            setAgents(data);
+        } catch (error) {
+            console.error("Failed to fetch agents:", error);
+            toast.error("Failed to load agents list.");
+        }
+    };
+
+  useEffect(() => {
+        fetchAgents();
+    }, []);  
 
   // Calculate statistics
   const totalAgents = agents.length;
@@ -129,7 +146,9 @@ export function AgentsPage() {
     
     try {
       // TODO: Connect to backend API
-      // await agentsAPI.updateStatus(agentId, newStatus);
+      await agentsAPI.updateStatus(agentId, newStatus);
+      // const response = await agentsAPI.getAll();
+      // console.log('API Response:', response);
       
       // Update local state
       setAgents(prev =>
@@ -140,6 +159,7 @@ export function AgentsPage() {
       
       toast.success(`Agent ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
+      console.error('Failed to update agent status:', error);
       toast.error('Failed to update agent status');
     }
   };
@@ -413,7 +433,11 @@ export function AgentsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-slate-600 dark:text-slate-400">
-                          {agent.id.split('-')[1]}
+                          {
+                          String(agent.id).includes('-') 
+                           ? String(agent.id).split('-')[1] 
+                           : String(agent.id)
+                          }
                         </TableCell>
                         <TableCell>
                           <span className="text-slate-700 dark:text-slate-300">
@@ -723,7 +747,7 @@ export function AgentsPage() {
       <AddAgentModal
         open={addAgentModalOpen}
         onOpenChange={setAddAgentModalOpen}
-        onSuccess={() => {
+        onSuccess={() => {fetchAgents();
           // TODO: Refresh agents list
           console.log('Agent added, refreshing list...');
         }}
@@ -734,7 +758,7 @@ export function AgentsPage() {
         open={editAgentModalOpen}
         onOpenChange={setEditAgentModalOpen}
         agent={selectedAgent}
-        onSuccess={() => {
+        onSuccess={() => {fetchAgents();
           // TODO: Refresh agents list
           console.log('Agent updated, refreshing list...');
         }}

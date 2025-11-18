@@ -12,6 +12,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
+import { agentsAPI } from '../services/api';
 
 interface AddAgentModalProps {
   open: boolean;
@@ -25,8 +26,9 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
     name: '',
     email: '',
     phone: '',
-    branch: '',
-    zone: '',
+    branchId: '',
+    password: '',
+    confirmPassword: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,10 +59,10 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
 
     try {
       // TODO: Connect to backend API
-      // await agentsAPI.create(formData);
+      await agentsAPI.create(formData);
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast.success('Agent added successfully');
       
@@ -69,8 +71,9 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
         name: '',
         email: '',
         phone: '',
-        branch: '',
-        zone: '',
+        branchId: '',
+        password: '',
+        confirmPassword: ''
       });
       
       onOpenChange(false);
@@ -155,20 +158,20 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
 
             {/* Branch */}
             <div className="space-y-2">
-              <Label htmlFor="branch">
+              <Label htmlFor="branchId">
                 Branch <span className="text-slate-400">(Optional)</span>
               </Label>
               <Input
-                id="branch"
-                placeholder="فرع القاهرة"
-                value={formData.branch}
-                onChange={(e) => handleChange('branch', e.target.value)}
+                id="branchId"
+                placeholder="1,2,3,"
+                value={formData.branchId}
+                onChange={(e) => handleChange('branchId', e.target.value)}
                 disabled={loading}
               />
             </div>
 
             {/* Zone */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="zone">
                 Zone <span className="text-slate-400">(Optional)</span>
               </Label>
@@ -179,7 +182,32 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
                 onChange={(e) => handleChange('zone', e.target.value)}
                 disabled={loading}
               />
+            </div> */}
+             <div className="space-y-2">
+              <Label htmlFor="passowrd">
+                Password <span className="text-slate-400"></span>
+              </Label>
+              <Input
+                id="password"
+                placeholder="Abc.123!"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                disabled={loading}
+              />
             </div>
+             <div className="space-y-2">
+              <Label htmlFor="confirmPassowrd">
+                Confirm Password <span className="text-slate-400"></span>
+              </Label>
+              <Input
+                id="confirmPassword"
+                placeholder="Abc.123!"
+                value={formData.confirmPassword}
+                onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
           </div>
 
           <DialogFooter>
