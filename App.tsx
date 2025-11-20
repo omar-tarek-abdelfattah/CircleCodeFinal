@@ -64,14 +64,14 @@ function AppContent() {
 const renderPage = () => {
   // Bill of Lading Pages
   if (currentPage === 'bill-of-lading') {
-    if (role === UserRole.seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
+    if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
       return <BillOfLadingPage shipment={selectedShipmentForBill} onBack={handleBackFromBillOfLading} />;
     }
     return null;
   }
 
   if (currentPage === 'bulk-bill-of-lading') {
-    if (role === UserRole.seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
+    if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
       return <BulkBillOfLadingPage shipments={selectedShipmentsForBulkBill} onBack={handleBackFromBulkBillOfLading} />;
     }
     return null;
@@ -79,14 +79,14 @@ const renderPage = () => {
 
   // Dashboard
   if (currentPage === 'dashboard') {
-    if (role === UserRole.seller) return <SellerDashboard onNavigate={setCurrentPage} />;
+    if (role === UserRole.Seller) return <SellerDashboard onNavigate={setCurrentPage} />;
     if (role === UserRole.agent) return <AgentDashboard onNavigate={setCurrentPage} />;
     if (role === UserRole.Admin || role === UserRole.SuperAdmin) return <AdminDashboard onNavigate={setCurrentPage} />;
     return null;
   }
 
   // Shipments
-  if (currentPage === 'shipments' && (role === UserRole.seller || role === UserRole.Admin || role === UserRole.SuperAdmin)) {
+  if (currentPage === 'shipments' && (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin)) {
     return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
   }
 

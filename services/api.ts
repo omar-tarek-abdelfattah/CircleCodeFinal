@@ -288,6 +288,7 @@ export const agentsAPI = {
 // GET /api/agents - Get all agents
 getAll: async (): Promise<Agent[]> => {
 // TODO: Replace with actual API call to .NET backend
+
 return apiCall<Agent[]>('/Agent',{
 method: 'GET',
 });
@@ -334,6 +335,7 @@ console.log("Backend API: Update agent", { id, agentData });
 throw new Error("Not implemented - connect to backend");
 },
 
+
 // DELETE /api/agents/:id - Delete agent
 delete: async (id: string): Promise<void> => {
 // TODO: Replace with actual API call to .NET backend
@@ -348,14 +350,17 @@ throw new Error("Not implemented - connect to backend");
 
 // PUT /api/Agent/Activation - Update agent status ( Activation endpoint)
 updateStatus: async (
-id: string,
-status: "active" | "inactive"
+id: number,
+branchId: number,
 ): Promise<Agent> => {
 // TODO: Replace with actual API call to .NET backend
-  const isActivated = status === 'active';
-return apiCall<Agent>(`/Agent/Activation`, {
-method: 'PUT', 
-body: JSON.stringify({ agentId: id, isActivated: isActivated }),
+  // const isActivated = status === 'active';
+  console.log(id, branchId);
+  const params = new URLSearchParams({id: id, branchId: branchId })
+return apiCall<Agent>(`/Agent/Activation?${params}`, {
+method: 'GET', 
+
+// body: JSON.stringify({ id : id, branchId: branchId }),
 });
 
 console.log("Backend API: Update agent status", { id, status });
@@ -562,6 +567,12 @@ export const branchesAPI = {
     // console.log('Backend API: Update branch', { id, branchData });
     // throw new Error('Not implemented - connect to backend');
   },
+  // PUT /api/Branch/{id}/activation/{isActive} - Toggle Branch Status
+        toggleActivation: async (id: string, isActive: boolean): Promise<void> => {
+    return apiCall<void>(`/Branch/${id}/activation/${isActive}`, {
+        method: "PUT",
+    });
+},
 
   // DELETE /api/branches/:id - Delete branch
   delete: async (id: string): Promise<void> => {
@@ -625,10 +636,10 @@ export const usersAPI = {
     search?: string;
   }): Promise<any[]> => {
     // TODO: Replace with actual API call to .NET backend
-    // const queryParams = new URLSearchParams(
-    //   Object.entries(filters || {}).filter(([_, v]) => v !== undefined) as [string, string][]
-    // );
-    // return apiCall<any[]>(`/users?${queryParams.toString()}`);
+    const queryParams = new URLSearchParams(
+      Object.entries(filters || {}).filter(([_, v]) => v !== undefined) as [string, string][]
+    );
+    return apiCall<any[]>(`/Admin?${queryParams.toString()}`);
 
     console.log("Backend API: Get users", filters);
     return [];
@@ -645,10 +656,10 @@ export const usersAPI = {
   // POST /api/users - Create new user
   create: async (userData: any): Promise<any> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<any>('/users', {
-    //   method: 'POST',
-    //   body: JSON.stringify(userData),
-    // });
+    return apiCall<any>('/Admin', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
 
     console.log("Backend API: Create user", userData);
     throw new Error("Not implemented - connect to backend");
@@ -657,10 +668,10 @@ export const usersAPI = {
   // PUT /api/users/:id - Update user
   update: async (id: string, userData: any): Promise<any> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<any>(`/users/${id}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify(userData),
-    // });
+    return apiCall<any>(`/Admin`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
 
     console.log("Backend API: Update user", { id, userData });
     throw new Error("Not implemented - connect to backend");

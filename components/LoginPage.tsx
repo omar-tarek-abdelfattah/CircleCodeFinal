@@ -34,9 +34,10 @@ export function LoginPage() {
       await login(email, password);
 
       // const role = localStorage.getItem('role');
-      // if (role === 'admin') window.location.href = '/admin';
-      // else if (role === 'seller') window.location.href = '/seller';
-      // else if (role === 'agent') window.location.href = '/agent';
+      // if (role === 'Admin') window.location.href = '/admin';
+      // else if (role === 'Seller') window.location.href = '/seller';
+      // else if (role === 'Agent') window.location.href = '/agent';
+      // else if (role === 'SuperAdmin') window.location.href = '/admin';
     } catch (err: any) {
       console.error('Login failed:', err);
       setError(err.message || 'Login failed. Please try again.');

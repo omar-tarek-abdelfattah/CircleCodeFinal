@@ -28,7 +28,7 @@ import { AddAgentModal } from '../components/AddAgentModal';
 import { EditAgentModal } from '../components/EditAgentModal';
 import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
 import { Agent } from '../types';
-import { agentsAPI } from '../services/api';
+import { agentsAPI, branchesAPI } from '../services/api';
 import { useEffect } from 'react';
 
 export function AgentsPage() {
@@ -48,6 +48,7 @@ export function AgentsPage() {
   const fetchAgents = async () => {
         try {
             const data = await agentsAPI.getAll();
+            console.log(data)
             setAgents(data);
         } catch (error) {
             console.error("Failed to fetch agents:", error);
@@ -71,6 +72,7 @@ export function AgentsPage() {
     return lastAssignment >= twoDaysAgo;
   }).length;
 
+  // console.log(twoDaysAgo)
   // On duty: agents with orders today
   const onDutyAgents = agents.filter(agent => 
     agent.todayShipments && agent.todayShipments > 0
@@ -141,15 +143,23 @@ export function AgentsPage() {
     setDeactivationModalOpen(true);
   };
 
-  const handleToggleStatus = async (agentId: string, currentStatus: 'active' | 'inactive') => {
+  const handleToggleStatus = async (agentId: string, branshName: string, currentStatus: 'active' | 'inactive') => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+    console.log(agentId, currentStatus, newStatus);
     
     try {
       // TODO: Connect to backend API
-      await agentsAPI.updateStatus(agentId, newStatus);
+      const branches = await branchesAPI.getAll();
+      const branchId = branches.data.filter((b)=>{
+        return branshName == b.name
+      })
+      console.log(branchId)
+      console.log(branches)
+      await agentsAPI.updateStatus(agentId, branchId[0].id);
       // const response = await agentsAPI.getAll();
       // console.log('API Response:', response);
-      
+      console.log(branshName)
       // Update local state
       setAgents(prev =>
         prev.map(a =>
@@ -182,6 +192,8 @@ export function AgentsPage() {
   };
 
   const isTemporarilyDeactivated = (agent: Agent): boolean => {
+    // console.log(agent.deactivationFrom, agent.deactivationTo);
+    // console.log(!agent.deactivationFrom || !agent.deactivationTo);
     if (!agent.deactivationFrom || !agent.deactivationTo) return false;
     
     const now = new Date();
@@ -477,7 +489,7 @@ export function AgentsPage() {
                             <div className="flex items-center gap-3">
                               <Switch
                                 checked={agent.status === 'active' && !isTemporarilyDeactivated(agent)}
-                                onCheckedChange={() => handleToggleStatus(agent.id, agent.status)}
+                                onCheckedChange={() => handleToggleStatus(agent.id , agent.branshName , agent.status)}
                                 className="data-[state=checked]:bg-green-500"
                               />
                               <span className={`text-sm font-semibold ${
@@ -485,7 +497,7 @@ export function AgentsPage() {
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-red-600 dark:text-red-400'
                               }`}>
-                                {agent.status === 'active' && !isTemporarilyDeactivated(agent) ? 'Active' : 'Inactive'}
+                                {agent.status === 'active' && !isTemporarilyDeactivated(agent) ? 'Active' : 'inactive'}
                               </span>
                             </div>
                             {isTemporarilyDeactivated(agent) && agent.deactivationTo && (

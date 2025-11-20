@@ -472,7 +472,7 @@ export function SellersPage() {
                                 <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1.5">
                                   <div className="flex items-center gap-1.5 mb-1">
                                     <CalendarClock className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
-                                    <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span>
+                                    {/* <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span> */}
                                   </div>
                                   <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
                                     From {formatDate(seller.deactivationFrom)} to {formatDate(seller.deactivationTo)}.
@@ -481,9 +481,9 @@ export function SellersPage() {
                               )}
                             </div>
                           </TableCell>
-                          {/* <TableCell className="text-sm">
+                          <TableCell className="text-sm">
                             {formatDate(seller.joinedDate)}
-                          </TableCell> */}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button

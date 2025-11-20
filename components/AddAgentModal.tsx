@@ -13,6 +13,7 @@ import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
 import { agentsAPI } from '../services/api';
+import { parse } from 'path';
 
 interface AddAgentModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
     name: '',
     email: '',
     phone: '',
-    branchId: '',
+    branshId: 0,
     password: '',
     confirmPassword: ''
   });
@@ -59,7 +60,9 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
 
     try {
       // TODO: Connect to backend API
+      console.log('Submitting new agent:', formData);
       await agentsAPI.create(formData);
+      
 
       // Simulate API call
       // await new Promise(resolve => setTimeout(resolve, 1000));
@@ -71,7 +74,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
         name: '',
         email: '',
         phone: '',
-        branchId: '',
+        branshId: 0,
         password: '',
         confirmPassword: ''
       });
@@ -90,7 +93,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -158,14 +161,14 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
 
             {/* Branch */}
             <div className="space-y-2">
-              <Label htmlFor="branchId">
+              <Label htmlFor="branshId">
                 Branch <span className="text-slate-400">(Optional)</span>
               </Label>
               <Input
-                id="branchId"
+                id="branshId"
                 placeholder="1,2,3,"
-                value={formData.branchId}
-                onChange={(e) => handleChange('branchId', e.target.value)}
+                // value={formData.branchId}
+                onChange={(e) => handleChange('branshId', parseInt(e.target.value))}
                 disabled={loading}
               />
             </div>

@@ -64,6 +64,7 @@ import { ViewUserModal } from '../components/ViewUserModal';
 import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
+import { usersAPI } from '../services/api';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -93,8 +94,9 @@ export default function UsersPage() {
     setLoading(true);
     try {
       // TODO: Connect to backend API
-      // const response = await usersAPI.getAll();
-      // setUsers(response.data);
+      // console.log()
+      const response = await usersAPI.getAll();
+      setUsers(response);
       
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));

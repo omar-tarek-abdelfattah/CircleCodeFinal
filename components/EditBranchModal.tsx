@@ -26,14 +26,14 @@ interface EditBranchModalProps {
 export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditBranchModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    id: parseInt(''),
+    // id: parseInt(''),
     name: '',
     managerId: '',
     address: '',
     country: '',
     openingTime: '09:00',
     closingTime: '17:00',
-    status: true,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -50,14 +50,14 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
       }
 
       setFormData({
-        id: parseInt(branch.id),
+        // id: parseInt(branch.id),
         name: branch.name,
         managerId: branch.managerId || '',
         address: branch.address,
         country: branch.country,
         openingTime,
         closingTime,
-        status: branch.status === 'active',
+        isActive: branch.status === 'active',
       });
     }
   }, [branch, open]);
@@ -130,7 +130,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
         openingTime: formData.openingTime,
         closingTime: formData.closingTime,
         businessHours: `${formatTime(formData.openingTime)} - ${formatTime(formData.closingTime)}`,
-        status: formData.status ? 'active' : 'inactive',
+        status: formData.isActive ? 'active' : 'inactive',
       };
 
       onSuccess(updatedBranch);
@@ -210,14 +210,14 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
               <Label>Status</Label>
               <div className="flex items-center h-10 space-x-2">
                 <Checkbox
-                  id="status"
-                  checked={formData.status}
+                  id="isActive"
+                  checked={formData.isActive}
                   onCheckedChange={(checked) =>
-                    setFormData({ ...formData, status: checked as boolean })
+                    setFormData({ ...formData, isActive: checked as boolean })
                   }
                 />
                 <label
-                  htmlFor="status"
+                  htmlFor="isActive"
                   className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Active
