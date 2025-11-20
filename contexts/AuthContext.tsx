@@ -33,7 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [recievedToken, setRecievedToken] = useState('')
+  const [recievedToken, setRecievedToken] = useState<string>()
   const [recievedRole, setRecievedRole] = useState<UserRole>()
 
   // Load user from localStorage on mount
@@ -52,11 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRecievedToken(token as string)
       setRecievedRole(role as UserRole)
       // Save token & role
-      localStorage.setItem('token', recievedToken);
-      // localStorage.setItem('role', recievedRole || 'Agent');
-
-      setRecievedToken(token as string);
-      setRecievedRole(role as UserRole);
+      localStorage.setItem('role', recievedRole || 'Agent');
+      localStorage.setItem('token', recievedToken as string);
+      
+      // setRecievedToken(token as string);
+      // setRecievedRole(role as UserRole);
 
 
       // Create minimal user object (could be enhanced with more info from backend)
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role: recievedRole, recievedToken, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, role: recievedRole as UserRole, recievedToken: recievedToken as string, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

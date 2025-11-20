@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
   { label: 'Zones', icon: <MapPin className="w-5 h-5" />, path: 'zones', roles: [UserRole.Admin, UserRole.SuperAdmin] },
   { label: 'Wallet', icon: <Wallet className="w-5 h-5" />, path: 'wallet', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
   { label: 'Reports', icon: <FileText className="w-5 h-5" />, path: 'reports', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Users', icon: <User className="w-5 h-5" />, path: 'users', roles: [UserRole.Admin, UserRole.SuperAdmin] },
+  { label: 'Users', icon: <User className="w-5 h-5" />, path: 'users', roles: [UserRole.SuperAdmin] },
   { label: 'Profile', icon: <User className="w-5 h-5" />, path: 'profile', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
 ];
 
@@ -77,11 +77,11 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
-      
+
       {/* Top Navbar */}
       <motion.header initial={{ y: -100 }} animate={{ y: 0 }} className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between h-16 px-4 lg:px-6">
-          
+
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden lg:flex"><Menu className="w-5 h-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden">

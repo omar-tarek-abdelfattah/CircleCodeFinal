@@ -38,7 +38,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
   const [selectedBranch, setSelectedBranch] = useState<string>('');
 
   const handleAddRegion = () => {
-    setRegions([...regions, {  name: '', price: 0 }]);
+    setRegions([...regions, { name: '', price: 0 }]);
   };
 
   const handleRemoveRegion = (index: number) => {
@@ -156,7 +156,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
 
                 <div className="space-y-2">
                   {regions.map((region, index) => (
-                    <div  className="flex gap-2 items-start">
+                    <div className="flex gap-2 items-start">
                       <div className="flex-1">
                         <Input
                           value={region.name}
