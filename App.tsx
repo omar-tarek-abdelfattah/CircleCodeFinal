@@ -61,61 +61,61 @@ function AppContent() {
     setCurrentPage(previousPage);
   };
 
-const renderPage = () => {
-  // Bill of Lading Pages
-  if (currentPage === 'bill-of-lading') {
-    if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
-      return <BillOfLadingPage shipment={selectedShipmentForBill} onBack={handleBackFromBillOfLading} />;
+  const renderPage = () => {
+    // Bill of Lading Pages
+    if (currentPage === 'bill-of-lading') {
+      if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
+        return <BillOfLadingPage shipment={selectedShipmentForBill} onBack={handleBackFromBillOfLading} />;
+      }
+      return null;
     }
-    return null;
-  }
 
-  if (currentPage === 'bulk-bill-of-lading') {
-    if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
-      return <BulkBillOfLadingPage shipments={selectedShipmentsForBulkBill} onBack={handleBackFromBulkBillOfLading} />;
+    if (currentPage === 'bulk-bill-of-lading') {
+      if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
+        return <BulkBillOfLadingPage shipments={selectedShipmentsForBulkBill} onBack={handleBackFromBulkBillOfLading} />;
+      }
+      return null;
     }
-    return null;
-  }
 
-  // Dashboard
-  if (currentPage === 'dashboard') {
-    if (role === UserRole.Seller) return <SellerDashboard onNavigate={setCurrentPage} />;
-    if (role === UserRole.agent) return <AgentDashboard onNavigate={setCurrentPage} />;
-    if (role === UserRole.Admin || role === UserRole.SuperAdmin) return <AdminDashboard onNavigate={setCurrentPage} />;
-    return null;
-  }
+    // Dashboard
+    if (currentPage === 'dashboard') {
+      if (role === UserRole.Seller) return <SellerDashboard onNavigate={setCurrentPage} />;
+      if (role === UserRole.agent) return <AgentDashboard onNavigate={setCurrentPage} />;
+      if (role === UserRole.Admin || role === UserRole.SuperAdmin) return <AdminDashboard onNavigate={setCurrentPage} />;
+      return null;
+    }
 
-  // Shipments
-  if (currentPage === 'shipments' && (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin)) {
-    return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
-  }
+    // Shipments
+    if (currentPage === 'shipments' && (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin)) {
+      return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
+    }
 
-  if (currentPage === 'assigned-shipments' && role === UserRole.agent) {
-    return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
-  }
+    if (currentPage === 'assigned-shipments' && role === UserRole.agent) {
+      return <ShipmentsPageComponent onNavigateToBillOfLading={handleNavigateToBillOfLading} onNavigateToBulkBillOfLading={handleNavigateToBulkBillOfLading} />;
+    }
 
-  // Admin only pages
-  if (currentPage === 'sellers' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <SellersPage />;
-  if (currentPage === 'agents' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <AgentsPage />;
-  if (currentPage === 'branches' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <BranchesPage />;
-  if (currentPage === 'zones' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <ZonesPage />;
-  if (currentPage === 'users' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <UsersPage />;
+    // Admin only pages
+    if (currentPage === 'sellers' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <SellersPage />;
+    if (currentPage === 'agents' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <AgentsPage />;
+    if (currentPage === 'branches' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <BranchesPage />;
+    if (currentPage === 'zones' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <ZonesPage />;
+    if (currentPage === 'users' && (role === UserRole.SuperAdmin)) return <UsersPage />;
 
-  // Pages available to all roles
-  if (currentPage === 'wallet') return <WalletPage />;
-  if (currentPage === 'reports') return <ReportsPage />;
-  if (currentPage === 'profile') return <ProfilePage />;
+    // Pages available to all roles
+    if (currentPage === 'wallet') return <WalletPage />;
+    if (currentPage === 'reports') return <ReportsPage />;
+    if (currentPage === 'profile') return <ProfilePage />;
 
-  // Default placeholder
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="text-center">
-        <h2 className="text-2xl mb-2">{currentPage}</h2>
-        <p className="text-slate-600 dark:text-slate-400">This page is not available for your role.</p>
+    // Default placeholder
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl mb-2">{currentPage}</h2>
+          <p className="text-slate-600 dark:text-slate-400">This page is not available for your role.</p>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <Layout currentPage={currentPage} onNavigate={setCurrentPage}>

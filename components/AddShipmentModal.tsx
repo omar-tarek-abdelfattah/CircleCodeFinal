@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -76,7 +76,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
     const selectedZone = mockZones.find(z => z.id === formData.zone);
     if (selectedZone) {
       // Find the selected region in the zone
-      const selectedRegion = selectedZone.regions.find(r => r.id === regionId);
+      const selectedRegion = null
+      // || selectedZone.regions.find(r => r.id === regionId);
       if (selectedRegion) {
         // Auto-fill the delivery fee with the region's price
         handleChange('deliveryFee', selectedRegion.price);

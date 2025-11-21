@@ -39,7 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Load user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    const storedRole = localStorage.getItem('role');
+
     if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedToken) setRecievedToken(storedToken);
+    if (storedRole) setRecievedRole(storedRole as UserRole);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -48,22 +53,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(token);
       console.log(role);
 
+      if (token) {
+        setRecievedToken(token);
+        localStorage.setItem('token', token);
+      }
 
-      setRecievedToken(token as string)
-      setRecievedRole(role as UserRole)
-      // Save token & role
-      localStorage.setItem('role', recievedRole || 'Agent');
-      localStorage.setItem('token', recievedToken as string);
-      
-      // setRecievedToken(token as string);
-      // setRecievedRole(role as UserRole);
+      if (role) {
+        // Ensure we save the role matching our Enum (Capitalized)
+        // If backend returns lowercase, we map it.
+        let normalizedRole = role as UserRole;
+        if (role.toString().toLowerCase() === 'seller') normalizedRole = UserRole.Seller;
+        if (role.toString().toLowerCase() === 'agent') normalizedRole = UserRole.agent;
+        if (role.toString().toLowerCase() === 'admin') normalizedRole = UserRole.Admin;
 
+        setRecievedRole(normalizedRole);
+        localStorage.setItem('role', normalizedRole);
+      } else {
+        // Fallback if role is missing
+        const defaultRole = UserRole.agent;
+        setRecievedRole(defaultRole);
+        localStorage.setItem('role', defaultRole);
+      }
 
       // Create minimal user object (could be enhanced with more info from backend)
       const loggedUser: User = {
         name: email,
         email,
-        role: role as UserRole,
+        role: role as UserRole || UserRole.agent,
       };
       setUser(loggedUser);
       localStorage.setItem('user', JSON.stringify(loggedUser));

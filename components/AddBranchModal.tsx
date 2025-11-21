@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,9 +19,9 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { NewBranchRequest } from '../types';
-import { mockUsers } from '../lib/mockData';
-import { branchesAPI } from '@/services/api';
+import { NewBranchRequest, User } from '../types';
+import { branchesAPI, usersAPI } from '@/services/api';
+
 
 interface AddBranchModalProps {
   open: boolean;
@@ -33,13 +33,26 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<NewBranchRequest>({
     name: '',
-    managerId: 1,
+    managerId: 0,
     address: '',
     country: '',
     open: '09:00',
     close: '17:00',
     isActive: true,
   });
+
+  const [admins, setAdmins] = useState<User[]>([]);
+
+  const getAdmins = async () => {
+    const adminsResponse = await usersAPI.getAll();
+    setAdmins(adminsResponse);
+  }
+
+  useEffect(() => {
+    getAdmins();
+    console.log(admins);
+
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,17 +159,24 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
                 Manager <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={String(formData.managerId)}
-                onValueChange={(value) => setFormData({ ...formData, managerId: parseInt(value) })}
+                value={formData.managerId === 0 ? '' : String(formData.managerId)}
+                onValueChange={
+                  (value) => {
+
+
+                    setFormData({
+                      ...formData, managerId: parseInt(value || '0')
+                    })
+                  }
+                }
               >
                 <SelectTrigger id="managerId">
                   <SelectValue placeholder="Select Manager" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockUsers
-                    .filter(user => user.role === 'admin' && user.status === 'active')
+                  {admins
                     .map((admin) => (
-                      <SelectItem key={admin.id} value={admin.id}>
+                      <SelectItem key={admin.id} value={String(admin.id)}>
                         {admin.name}
                       </SelectItem>
                     ))}
@@ -255,6 +275,6 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

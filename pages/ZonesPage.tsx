@@ -74,7 +74,7 @@ export function ZonesPage() {
   const totalZones = zones.filter(z => !hiddenZoneIds.has(z.id)).length;
   const totalRegions = zones
     .filter(z => !hiddenZoneIds.has(z.id))
-    .reduce((sum, zone) => sum + zone.regions.length, 0);
+    .reduce((sum, zone) => sum + (zone.regions?.length || 0), 0);
   const totalOrders = zones
     .filter(z => !hiddenZoneIds.has(z.id))
     .reduce((sum, zone) => sum + zone.orders, 0);
@@ -396,7 +396,7 @@ export function ZonesPage() {
                               {zone.name}
                             </p>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                              {zone.regions.length} regions
+                              {zone.regions?.length || 0} regions
                             </p>
                           </div>
                         </div>
@@ -431,7 +431,7 @@ export function ZonesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="border-slate-200 dark:border-slate-800">
+          <Card className="border-slate-200 dark:border-slate-800 h-[calc(100vh-20rem)] overflow-y-auto">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Zone List</CardTitle>
@@ -472,7 +472,7 @@ export function ZonesPage() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium mb-1">{zone.name}</h4>
                           <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 mb-1">
-                            <span>{zone.regions.length} regions</span>
+                            <span>{zone.regions?.length || 0} regions</span>
                             <span>•</span>
                             <span>{zone.orders} orders</span>
                             <span>•</span>
@@ -594,7 +594,7 @@ export function ZonesPage() {
                       <div>
                         <p className="font-medium">{zone.name}</p>
                         <p className="text-sm text-slate-500">
-                          {zone.regions.length} regions · {zone.orders} orders · Branch: {getBranchName(zone.associatedBranches[0] as string)}
+                          {zone.regions?.length || 0} regions · {zone.orders} orders · Branch: {getBranchName(zone.associatedBranches[0] as string)}
                         </p>
                       </div>
                     </div>

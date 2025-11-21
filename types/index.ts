@@ -1,3 +1,4 @@
+import { UserRole } from "@/contexts/AuthContext";
 
 export type ShipmentStatus =
   | 'new'
@@ -252,13 +253,14 @@ export interface ZoneResponseDetails {
   isActive: boolean
 }
 
-export type UserRole = 'admin' | 'seller' | 'agent';
+
 
 export interface User {
   id: string;
   name: string;
   email: string;
   phone: string;
+  branshName: string[]
   role: UserRole;
   salary: number;
   status: 'active' | 'inactive';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,9 +19,8 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Loader2, Plus, X } from 'lucide-react';
-import { Zone, ZoneRegion } from '../types';
-import { mockBranches } from '../lib/mockData';
-import { zonesAPI } from '../services/api';
+import { Zone, ZoneRegion, BranchData } from '../types';
+import { zonesAPI, branchesAPI } from '../services/api';
 
 interface AddZoneModalProps {
   open: boolean;
@@ -36,6 +35,29 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
     { name: '', price: 0 }
   ]);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [branches, setBranches] = useState<BranchData[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      loadBranches();
+    }
+  }, [open]);
+
+  const loadBranches = async () => {
+    setLoadingBranches(true);
+    try {
+      const response = await branchesAPI.getAll();
+      if (response && response.data) {
+        setBranches(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load branches:', error);
+      toast.error('Failed to load branches');
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
 
   const handleAddRegion = () => {
     setRegions([...regions, { name: '', price: 0 }]);
@@ -84,22 +106,25 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
     setLoading(true);
 
     try {
-      // TODO: Connect to backend API
-      const response = await zonesAPI.create({ name: zoneName, branchId: [2], regions: validRegions });
+      const response = await zonesAPI.create({
+        name: zoneName,
+        branchId: [parseInt(selectedBranch)],
+        regions: validRegions
+      });
 
       // Map ZoneResponseDetails to Zone format
       const newZone: Zone = {
         id: response.id,
         name: response.name,
-        regions: response.regions,
+        regions: response.regions || [],
         associatedBranches: [selectedBranch],
         orders: 0,
         status: response.isActive ? 'active' : 'inactive',
       };
 
       onSuccess(newZone);
-      // toast.success('Zone created successfully');
-      // onOpenChange(false);
+      toast.success('Zone created successfully');
+      onOpenChange(false);
 
       // Reset form
       setZoneName('');
@@ -195,13 +220,13 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
                 <Label htmlFor="branch">
                   Associated Branch <span className="text-red-500">*</span>
                 </Label>
-                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                <Select value={selectedBranch} onValueChange={setSelectedBranch} disabled={loadingBranches}>
                   <SelectTrigger id="branch">
-                    <SelectValue placeholder="Select a branch" />
+                    <SelectValue placeholder={loadingBranches ? "Loading branches..." : "Select a branch"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockBranches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id.toString()}>
                         {branch.name}
                       </SelectItem>
                     ))}
