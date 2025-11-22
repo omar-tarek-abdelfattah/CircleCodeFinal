@@ -76,7 +76,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
     const selectedZone = mockZones.find(z => z.id === formData.zone);
     if (selectedZone) {
       // Find the selected region in the zone
-      const selectedRegion = null
+      const selectedRegion: any = null
       // || selectedZone.regions.find(r => r.id === regionId);
       if (selectedRegion) {
         // Auto-fill the delivery fee with the region's price

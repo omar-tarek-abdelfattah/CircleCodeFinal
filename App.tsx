@@ -30,7 +30,10 @@ const ShipmentsPageComponent = ShipmentsPage as unknown as ComponentType<Shipmen
 
 function AppContent() {
   const { user, role } = useAuth();
+  // console.log(user);
+  console.log("role:", role);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  console.log("currentPage:", currentPage);
   const [previousPage, setPreviousPage] = useState('dashboard');
   const [selectedShipmentForBill, setSelectedShipmentForBill] = useState<OrderResponseDetails | null>(null);
   const [selectedShipmentsForBulkBill, setSelectedShipmentsForBulkBill] = useState<OrderResponseDetails[]>([]);

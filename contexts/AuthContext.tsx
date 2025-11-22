@@ -44,14 +44,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (storedUser) setUser(JSON.parse(storedUser));
     if (storedToken) setRecievedToken(storedToken);
-    if (storedRole) setRecievedRole(storedRole as UserRole);
+    if (storedRole) {
+      let normalizedRole = storedRole as UserRole;
+      if (storedRole.toLowerCase() === 'seller') normalizedRole = UserRole.Seller;
+      if (storedRole.toLowerCase() === 'agent') normalizedRole = UserRole.agent;
+      if (storedRole.toLowerCase() === 'admin') normalizedRole = UserRole.Admin;
+      if (storedRole.toLowerCase() === 'superadmin' || storedRole.toLowerCase() === 'super_admin') normalizedRole = UserRole.SuperAdmin;
+
+      setRecievedRole(normalizedRole);
+      // Update localStorage if it was incorrect/lowercase
+      if (storedRole !== normalizedRole) {
+        localStorage.setItem('role', normalizedRole);
+      }
+    }
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       const { token, role } = await loginApi(email, password);
-      console.log(token);
-      console.log(role);
 
       if (token) {
         setRecievedToken(token);
@@ -65,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (role.toString().toLowerCase() === 'seller') normalizedRole = UserRole.Seller;
         if (role.toString().toLowerCase() === 'agent') normalizedRole = UserRole.agent;
         if (role.toString().toLowerCase() === 'admin') normalizedRole = UserRole.Admin;
+        if (role.toString().toLowerCase() === 'superadmin' || role.toString().toLowerCase() === 'super_admin') normalizedRole = UserRole.SuperAdmin;
 
         setRecievedRole(normalizedRole);
         localStorage.setItem('role', normalizedRole);

@@ -38,6 +38,7 @@ export function ZonesPage() {
   const [hiddenZoneIds, setHiddenZoneIds] = useState<Set<string>>(new Set());
   const [hiddenZonesDialogOpen, setHiddenZonesDialogOpen] = useState(false);
   const [mapCentered, setMapCentered] = useState(true);
+  const [totalRegions, setTotalRegions] = useState<number>(0)
 
   // Fetch zones on component mount
   useEffect(() => {
@@ -59,8 +60,20 @@ export function ZonesPage() {
         toast.error('Failed to load zones');
       }
     };
+    const fetchRegionCount = async () => {
+      try {
+        const response = await zonesAPI.getAllRegionCount();
+        setTotalRegions(response);
+
+
+      } catch (error) {
+        console.error('Failed to fetch zones:', error);
+        toast.error('Failed to load zones');
+      }
+    };
 
     fetchZones();
+    fetchRegionCount()
   }, []);
 
   // Helper function to get branch name
@@ -72,9 +85,6 @@ export function ZonesPage() {
 
   // Calculate statistics
   const totalZones = zones.filter(z => !hiddenZoneIds.has(z.id)).length;
-  const totalRegions = zones
-    .filter(z => !hiddenZoneIds.has(z.id))
-    .reduce((sum, zone) => sum + (zone.regions?.length || 0), 0);
   const totalOrders = zones
     .filter(z => !hiddenZoneIds.has(z.id))
     .reduce((sum, zone) => sum + zone.orders, 0);

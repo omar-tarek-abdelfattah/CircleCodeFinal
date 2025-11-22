@@ -599,6 +599,9 @@ export const zonesAPI = {
   getAll: async (): Promise<ZoneResponse[]> => {
     return apiCall<ZoneResponse[]>("/Zone");
   },
+  getAllRegionCount: async (): Promise<number> => {
+    return apiCall<number>("/Zone/totalRegoin");
+  },
 
   // GET /api/Zone/{id} - Get zone by ID
   getById: async (id: number): Promise<Zone> => {
