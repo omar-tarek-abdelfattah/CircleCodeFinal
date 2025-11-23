@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText, } from 'lucide-react';
-import { OrderResponse, OrderResponseDetails, ShipmentStatus } from '../types';
+import { OrderResponse, ShipmentStatus } from '../types';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { shipmentsAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -27,16 +26,16 @@ import { importShipmentsFromExcel, downloadTemplate, } from '../lib/excelUtils';
 
 
 interface ShipmentsPageProps {
-  onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
-  onNavigateToBulkBillOfLading?: (shipments: OrderResponseDetails[]) => void;
+  onNavigateToBillOfLading?: (shipment: OrderResponse) => void;
+  onNavigateToBulkBillOfLading?: (shipments: OrderResponse[]) => void;
 }
 
 export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOfLading }: ShipmentsPageProps) {
   const { user } = useAuth();
   const [shipments, setShipments] = useState<OrderResponse[]>([]);
-  const [shipmentsDetails, setShipmentsDetails] = useState<OrderResponseDetails>({} as OrderResponseDetails);
+  const [shipmentsDetails, setShipmentsDetails] = useState<OrderResponse>({} as OrderResponse);
   const [loading, setLoading] = useState(true);
-  const [selectedShipment, setSelectedShipment] = useState<OrderResponseDetails | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
   const [editShipmentModalOpen, setEditShipmentModalOpen] = useState(false);
@@ -92,7 +91,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       if (Array.isArray(response)) {
         setShipments(response);
         if (response.length > 0) {
-          console.log('First shipment:', response[0]);
+          // console.log('First shipment:', response[0]);
         }
       } else {
         console.error('API returned non-array response:', response);
@@ -159,20 +158,23 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     currentPage * itemsPerPage
   );
 
-  const handleViewDetails = async (shipment: OrderResponseDetails) => {
-    const selectedShipmentDetails = setShipmentsDetails(await shipmentsAPI.getById(shipment.id))
-    setSelectedShipment(selectedShipmentDetails as unknown as OrderResponseDetails);
+  const handleViewDetails = async (shipment: OrderResponse) => {
+    console.log(shipment);
+    setShipmentsDetails(shipment)
+
+
+    setSelectedShipment(shipmentsDetails as unknown as OrderResponse);
     setDetailsModalOpen(true);
   };
 
-  const handleViewBillOfLading = async (shipment: OrderResponseDetails) => {
+  const handleViewBillOfLading = async (shipment: OrderResponse) => {
     if (onNavigateToBillOfLading) {
-      const selectedShipmentDetails = setShipmentsDetails(await shipmentsAPI.getById(shipment.id))
-      onNavigateToBillOfLading(selectedShipmentDetails as unknown as OrderResponseDetails);
+      const selectedShipmentDetails = setShipmentsDetails(shipment)
+      onNavigateToBillOfLading(selectedShipmentDetails as unknown as OrderResponse);
     }
   };
 
-  const handleEditShipment = (shipment: OrderResponseDetails) => {
+  const handleEditShipment = (shipment: OrderResponse) => {
     // Check if seller can edit this order
     if (user?.role === UserRole.Seller && shipment.statusOrder !== 'new') {
       toast.error('You cannot edit orders that have been processed by admin or agent');
@@ -469,11 +471,11 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   const agents: any[] = []; // Empty until backend is connected
 
 
-  console.log('ShipmentsPage: Reaching return statement', {
-    shipmentsCount: shipments.length,
-    filteredCount: filteredShipments.length,
-    loading
-  });
+  // console.log('ShipmentsPage: Reaching return statement', {
+  //   shipmentsCount: shipments.length,
+  //   filteredCount: filteredShipments.length,
+  //   loading
+  // });
 
   return (
     <div className="space-y-6">
@@ -844,7 +846,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <TableHead>DATE</TableHead>
                       <TableHead>ZONE</TableHead>
                       <TableHead className="bg-slate-50 dark:bg-slate-800/50">PRODUCT COST</TableHead>
-                      <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead>
+                      {/* <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead> */}
                       <TableHead className="bg-slate-100 dark:bg-slate-800">TOTAL AMOUNT</TableHead>
                       <TableHead>STATUS</TableHead>
                       <TableHead className="text-right">ACTIONS</TableHead>
@@ -870,7 +872,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                         </TableCell>
                       </TableRow>
                     ) : (
-                      paginatedShipments.map((shipment, index) => (
+                      paginatedShipments.map((shipment) => (
                         <tr
                           key={shipment.id}
                           className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
@@ -919,7 +921,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleViewDetails(shipmentsDetails)}
+                                onClick={() => handleViewDetails(shipment)}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="View Details"
                               >
@@ -1487,11 +1489,12 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
         isOpen={addShipmentModalOpen}
         onClose={() => setAddShipmentModalOpen(false)}
         onSuccess={loadShipments}
+
       />
 
       {/* Edit Shipment Modal */}
       <EditShipmentModal
-        shipment={selectedShipment as OrderResponseDetails}
+        shipment={selectedShipment as OrderResponse}
         isOpen={editShipmentModalOpen}
         onClose={() => setEditShipmentModalOpen(false)}
         onSuccess={loadShipments}
