@@ -20,19 +20,21 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
-import { OrderResponseDetails, Shipment } from '../types';
+import { OrderResponse, OrderResponseDetails, OrderUpdate, Seller } from '../types';
 import { mockSellers } from '../lib/mockData';
 import { UserRole } from '@/contexts/AuthContext';
+import { sellersAPI, shipmentsAPI } from '@/services/api';
 
 interface ProductItem {
   id: string;
   itemName: string;
   quantity: number;
   price: number;
+  description?: string
 }
 
 interface EditShipmentModalProps {
-  shipment: OrderResponseDetails | null;
+  shipment: OrderResponse | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -47,55 +49,74 @@ export function EditShipmentModal({
   userRole,
 }: EditShipmentModalProps) {
   const [loading, setLoading] = useState(false);
+
+  const [shipmentDetails, setShipmentDetails] = useState<OrderResponseDetails>({} as OrderResponseDetails)
   // Check if seller is trying to edit a processed order
-  const canEdit = !userRole || userRole !== 'seller' || shipment?.statusOrder === 'new';
+  const canEdit = !userRole || userRole !== UserRole.Seller || shipment?.statusOrder === 'new';
 
   // Form Data
-  const [formData, setFormData] = useState({
-    customerName: '',
-    phone: '',
+  const [formData, setFormData] = useState<OrderUpdate>({
+    id: '',
+    clientName: '',
+    phone1: '',
     phone2: '',
+    apartmentNumber: 0,
+    zoneId: 0,
     address: '',
     notes: '',
-    zone: '',
-    region: '',
-    apartmentNumber: '',
-    buildingNumber: '',
-    selectedSeller: '',
-    deliveryFee: 0,
+    regionName: '',
+    bulidingNumber: 0,
+    sellerId: 0,
+    agentId: 0,
+    statusOrder: 0,
+    items: [],
+    cancellednotes: '',
   });
 
   // Products
   const [products, setProducts] = useState<ProductItem[]>([
-    { id: '1', itemName: '', quantity: 1, price: 0 },
+    { id: '1', itemName: '', quantity: 1, price: 0, description: '' },
   ]);
+
+  const [sellerData, setSellerData] = useState<Seller>({} as Seller)
+
+  const populateModalDetails = async () => {
+    setLoading(true)
+    try {
+      const response = await shipmentsAPI.getById(shipment?.id as string)
+      setShipmentDetails(response)
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   // Populate form when shipment changes
   useEffect(() => {
     if (shipment && isOpen) {
+      populateModalDetails()
       setFormData({
-        customerName: shipment.recipient.name,
-        phone: shipment.recipient.phone,
+        clientName: shipmentDetails.clientName as string,
+        phone1: shipmentDetails.phone1 as string,
         phone2: '',
-        address: shipment.recipient.address,
-        notes: shipment.notes || '',
-        zone: shipment.zone || '',
-        region: '',
-        apartmentNumber: '',
-        buildingNumber: '',
-        selectedSeller: shipment.sender.name,
-        deliveryFee: shipment.commission,
+        address: shipmentDetails.address as string,
+        notes: shipmentDetails.notes || '',
+        zoneId: shipmentDetails.zoneId || 0,
+        regionName: '',
+        apartmentNumber: 0,
+        bulidingNumber: 0,
+        agentId: shipmentDetails.agentId || 0,
+        statusOrder: shipmentDetails.statusOrder || 0,
+        items: [],
+        cancellednotes: '',
       });
 
       // Set product from shipment price
-      setProducts([
-        {
-          id: '1',
-          itemName: 'Product',
-          quantity: 1,
-          price: shipment.price,
-        },
-      ]);
+      setProducts(shipmentDetails.items?.map((item) => {
+        return { id: item.id, itemName: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
+      }) as ProductItem[]);
     }
   }, [shipment, isOpen]);
 

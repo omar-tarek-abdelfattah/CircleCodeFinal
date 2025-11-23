@@ -103,6 +103,26 @@ export interface OrderResponseDetails {
   price: number;
 }
 
+export interface OrderUpdate {
+  id: string;
+  clientName: string;
+  phone1: string;
+  phone2?: string | null;
+  apartmentNumber: number;
+  address: string;
+  zoneId: number;
+  regionName: string;
+  bulidingNumber: number;
+  notes?: string | null;
+  cancellednotes?: string | null;
+  statusOrder: StatusOrderDto;
+  items: ItemRespone[];
+  sellerId: number;
+  agentId?: number | null;
+}
+
+export type StatusOrderDto = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+
 export interface ItemRespone {
   id: string;
   name?: string | null;

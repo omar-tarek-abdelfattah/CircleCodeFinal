@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,11 +20,9 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Package, Loader2, Plus, Trash2 } from 'lucide-react';
-import { mockSellers, mockZones } from '../lib/mockData';
-import { useNotifications } from '../contexts/NotificationContext';
-import { useAuth } from '../contexts/AuthContext';
-import { shipmentsAPI } from '@/services/api';
-import { ItemsRequest } from '@/types';
+import { mockSellers } from '../lib/mockData';
+import { ItemsRequest, OrderRequest, Seller, Zone, ZoneRegion, ZoneResponse } from '@/types';
+import { sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
 
 
 
@@ -36,25 +34,76 @@ interface AddShipmentModalProps {
 
 export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModalProps) {
   const [loading, setLoading] = useState(false);
-  const { notifyOrderCreated } = useNotifications();
-  const { user } = useAuth();
 
 
 
   // Customer Information
-  const [formData, setFormData] = useState({
-    customerName: '',
-    phone: '',
+  const [formData, setFormData] = useState<OrderRequest>({
+    clientName: '',
+    phone1: '',
     phone2: '',
     address: '',
     notes: '',
-    zone: '',
-    region: '',
+    zoneId: 0,
+    regionName: '',
     apartmentNumber: '',
-    buildingNumber: '',
-    selectedSeller: '',
-    deliveryFee: 0,
+    bulidingNumber: '',
+    sellerId: 0,
+    items: []
   });
+
+  const [zones, setZones] = useState<ZoneResponse[]>([])
+  const [selectedRegions, setSelectedRegions] = useState<ZoneRegion[]>([])
+  const [sellers, setSellers] = useState<Seller[]>([])
+
+
+
+  const populateZonesRequest = async () => {
+    try {
+      const result = await zonesAPI.getAll()
+      setZones(result);
+    } catch (error) {
+      console.error('Error fetching zones:', error);
+    }
+  }
+
+  const populateRegionRequest = async (id: number) => {
+    setLoading(true)
+    try {
+      const result = await zonesAPI.getById(id)
+
+      result.regions.map(region => {
+        setSelectedRegions(() => [region])
+      })
+    } catch (error) {
+      console.error(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  const populateSellersRequest = async () => {
+    setLoading(true)
+    try {
+      const result = await sellersAPI.getAll()
+
+      setSellers(result)
+    } catch (error) {
+      console.error(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      populateZonesRequest()
+      populateSellersRequest()
+    }
+  }, [isOpen])
+
 
   // Products
   const [products, setProducts] = useState<ItemsRequest[]>([
@@ -70,20 +119,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
   // Handle region change and auto-fill delivery fee
   const handleRegionChange = (regionId: string) => {
-    handleChange('region', regionId);
+    handleChange('regionName', regionId);
 
-    // Find the selected zone
-    const selectedZone = mockZones.find(z => z.id === formData.zone);
-    if (selectedZone) {
-      // Find the selected region in the zone
-      const selectedRegion: any = null
-      // || selectedZone.regions.find(r => r.id === regionId);
-      if (selectedRegion) {
-        // Auto-fill the delivery fee with the region's price
-        handleChange('deliveryFee', selectedRegion.price);
-        toast.success(`Delivery fee set to $${selectedRegion.price} for ${selectedRegion.name}`);
-      }
-    }
   };
 
   const handleAddItem = () => {
@@ -103,13 +140,18 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   };
 
   const handleProductChange = (
-    id: string,
+    name: string,
     field: keyof ItemsRequest,
     value: string | number
   ) => {
     setProducts(
-      products.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+      products.map((p) => (p.name === name ? { ...p, [field]: value } : p))
     );
+
+    setFormData((prev) => ({
+      ...prev,
+      items: products,
+    }));
   };
 
   const calculateProductsTotal = () => {
@@ -119,18 +161,18 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   };
 
   const calculateGrandTotal = () => {
-    return calculateProductsTotal() + formData.deliveryFee;
+    return calculateProductsTotal()
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
-    if (!formData.customerName.trim()) {
+    if (!formData.clientName.trim()) {
       toast.error('Please enter customer name');
       return;
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phone1.trim()) {
       toast.error('Please enter phone number');
       return;
     }
@@ -138,11 +180,11 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       toast.error('Please enter delivery address');
       return;
     }
-    if (!formData.zone) {
+    if (!formData.zoneId) {
       toast.error('Please select a zone');
       return;
     }
-    if (!formData.region) {
+    if (!formData.regionName) {
       toast.error('Please select a region');
       return;
     }
@@ -150,11 +192,11 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       toast.error('Please enter apartment number');
       return;
     }
-    if (!formData.buildingNumber.trim()) {
+    if (!formData.bulidingNumber.trim()) {
       toast.error('Please enter building number');
       return;
     }
-    if (!formData.selectedSeller) {
+    if (!formData.sellerId) {
       toast.error('Please select a seller');
       return;
     }
@@ -167,19 +209,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
     try {
       // TODO: Connect to backend API
-      const result = await shipmentsAPI.create({
-        clientName: formData.customerName,
-        phone1: formData.phone,
-        phone2: formData.phone2,
-        apartmentNumber: formData.apartmentNumber,
-        address: formData.address,
-        zoneId: 1,
-        regionName: 'فرع الغربية',
-        bulidingNumber: formData.buildingNumber,
-        notes: formData.notes,
-        items: products,
-        sellerId: 1
-      });
+
+      await shipmentsAPI.create(formData)
 
       // Simulate API call
       // await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -199,17 +230,17 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
       // Reset form
       setFormData({
-        customerName: '',
-        phone: '',
+        clientName: '',
+        phone1: '',
         phone2: '',
         address: '',
         notes: '',
-        zone: '',
-        region: '',
+        zoneId: 0,
+        regionName: '',
         apartmentNumber: '',
-        buildingNumber: '',
-        selectedSeller: '',
-        deliveryFee: 0,
+        bulidingNumber: '',
+        sellerId: 0,
+        items: []
       });
       setProducts([{ id: '1', name: '', quantity: 1, price: 0 }]);
 
@@ -257,8 +288,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   <Input
                     id="customerName"
                     placeholder="John Doe"
-                    value={formData.customerName}
-                    onChange={(e) => handleChange('customerName', e.target.value)}
+                    value={formData.clientName}
+                    onChange={(e) => handleChange('clientName', e.target.value)}
                     disabled={loading}
                   />
                 </div>
@@ -271,8 +302,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                     id="phone"
                     type="tel"
                     placeholder="+1234567890"
-                    value={formData.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
+                    value={formData.phone1}
+                    onChange={(e) => handleChange('phone1', e.target.value)}
                     disabled={loading}
                   />
                 </div>
@@ -286,7 +317,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   id="phone2"
                   type="tel"
                   placeholder="Second phone number"
-                  value={formData.phone2}
+                  value={formData.phone2 as string}
                   onChange={(e) => handleChange('phone2', e.target.value)}
                   disabled={loading}
                 />
@@ -322,7 +353,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                 <Textarea
                   id="notes"
                   placeholder="Additional delivery instructions"
-                  value={formData.notes}
+                  value={formData.notes as string}
                   onChange={(e) => handleChange('notes', e.target.value)}
                   disabled={loading}
                   rows={2}
@@ -336,12 +367,11 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                     Zone <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={formData.zone}
+                    value={formData.zoneId.toString()}
                     onValueChange={(value) => {
-                      handleChange('zone', value);
-                      // Reset region when zone changes
-                      handleChange('region', '');
-                      handleChange('deliveryFee', 0);
+                      populateRegionRequest(parseInt(value))
+                      handleChange('zoneId', parseInt(value));
+                      handleChange('regionName', '');
                     }}
                     disabled={loading}
                   >
@@ -349,8 +379,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                       <SelectValue placeholder="Select Zone" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockZones.map((zone) => (
-                        <SelectItem key={zone.id} value={zone.id}>
+                      {zones.map((zone) => (
+                        <SelectItem onSelect={() => { }} key={zone.id} value={zone.id.toString()}>
                           {zone.name}
                         </SelectItem>
                       ))}
@@ -363,19 +393,22 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                     Region <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={formData.region}
+                    value={formData.regionName}
                     onValueChange={handleRegionChange}
-                    disabled={loading || !formData.zone}
+                    disabled={loading || !formData.zoneId}
                   >
                     <SelectTrigger id="region">
-                      <SelectValue placeholder={formData.zone ? "Select Region" : "Select Zone First"} />
+                      <SelectValue placeholder={formData.zoneId ? "Select Region" : "Select Zone First"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {formData.zone && mockZones.find(z => z.id === formData.zone)?.regions.map((region) => (
-                        <SelectItem key={region.id} value={region.id}>
-                          {region.name} (${region.price})
-                        </SelectItem>
-                      ))}
+                      {selectedRegions.map((region) => {
+                        return (
+                          <SelectItem onSelect={() => { }} key={region.name} value={region.name.toString()}>
+                            {region.name}
+                          </SelectItem>
+                        )
+                      })}
+
                     </SelectContent>
                   </Select>
                 </div>
@@ -402,8 +435,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   <Input
                     id="buildingNumber"
                     placeholder="Building 456"
-                    value={formData.buildingNumber}
-                    onChange={(e) => handleChange('buildingNumber', e.target.value)}
+                    value={formData.bulidingNumber}
+                    onChange={(e) => handleChange('bulidingNumber', e.target.value)}
                     disabled={loading}
                   />
                 </div>
@@ -422,16 +455,16 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   Select Seller <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.selectedSeller}
-                  onValueChange={(value) => handleChange('selectedSeller', value)}
+                  value={formData.sellerId.toString()}
+                  onValueChange={(value) => handleChange('sellerId', parseInt(value))}
                   disabled={loading}
                 >
                   <SelectTrigger id="seller">
                     <SelectValue placeholder="Select Seller" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockSellers.map((seller) => (
-                      <SelectItem key={seller.id} value={seller.id}>
+                    {sellers.map((seller) => (
+                      <SelectItem key={seller.id} value={seller.id.toString()}>
                         {seller.name}
                       </SelectItem>
                     ))}
@@ -465,7 +498,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         placeholder="Item name"
                         value={product.name}
                         onChange={(e) =>
-                          handleProductChange(product.id, 'name', e.target.value)
+                          handleProductChange(product.name, 'name', e.target.value)
                         }
                         disabled={loading}
                       />
@@ -477,7 +510,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         value={product.quantity}
                         onChange={(e) =>
                           handleProductChange(
-                            product.id,
+                            product.name,
                             'quantity',
                             parseInt(e.target.value) || 1
                           )
@@ -494,7 +527,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         value={product.price}
                         onChange={(e) =>
                           handleProductChange(
-                            product.id,
+                            product.name,
                             'price',
                             parseFloat(e.target.value) || 0
                           )
@@ -544,20 +577,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                     ${calculateProductsTotal().toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.deliveryFee}
-                    onChange={(e) =>
-                      handleChange('deliveryFee', parseFloat(e.target.value) || 0)
-                    }
-                    disabled={loading}
-                    className="w-24 h-8 text-right"
-                  />
-                </div>
+
                 <div className="flex justify-between text-base pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span className="font-semibold text-slate-900 dark:text-slate-100">
                     Grand Total:

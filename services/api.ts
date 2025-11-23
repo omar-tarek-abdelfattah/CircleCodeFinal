@@ -19,6 +19,7 @@ import {
   BranchResponse,
   BranchData,
   User,
+  OrderUpdate,
 } from "../types";
 
 // -------------------- Base URLs --------------------
@@ -171,11 +172,11 @@ export const shipmentsAPI = {
   // ✅ Update existing order
   update: async (
     id: string,
-    data: Partial<OrderRequest>
+    data: Partial<OrderUpdate>
   ): Promise<OrderRequest> => {
     return apiCall<OrderRequest>(`/Order/${id}`, {
       method: "POST",
-      body: JSON.stringify({ ...data, sellerId: 0 }),
+      body: JSON.stringify({ ...data }),
     });
   },
 
