@@ -19,19 +19,21 @@ import {
   SelectValue,
 } from './ui/select';
 import { toast } from 'sonner';
-import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
-import { OrderResponse, OrderResponseDetails, OrderUpdate, Seller } from '../types';
-import { mockSellers } from '../lib/mockData';
+import { Edit, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Agent, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse } from '../types';
 import { UserRole } from '@/contexts/AuthContext';
-import { sellersAPI, shipmentsAPI } from '@/services/api';
+import { agentsAPI, sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
 
 interface ProductItem {
   id: string;
-  itemName: string;
+  name: string;
   quantity: number;
   price: number;
   description?: string
 }
+
+const statusKeys = Object.keys(ShipmentStatus) as Array<keyof typeof ShipmentStatus>;
+
 
 interface EditShipmentModalProps {
   shipment: OrderResponse | null;
@@ -50,9 +52,13 @@ export function EditShipmentModal({
 }: EditShipmentModalProps) {
   const [loading, setLoading] = useState(false);
 
-  const [shipmentDetails, setShipmentDetails] = useState<OrderResponseDetails>({} as OrderResponseDetails)
+  const [shipmentDetails, setShipmentDetails] = useState<Partial<OrderResponseDetails>>({} as OrderResponseDetails)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [sellers, setSellers] = useState<Seller[]>([])
+  const [zones, setZones] = useState<ZoneResponse[]>([])
+  const [regions, setRegions] = useState<ZoneRegion[]>([])
   // Check if seller is trying to edit a processed order
-  const canEdit = !userRole || userRole !== UserRole.Seller || shipment?.statusOrder === 'new';
+  const canEdit = !userRole || userRole !== UserRole.Seller || shipment?.statusOrder === ShipmentStatusString.New;
 
   // Form Data
   const [formData, setFormData] = useState<OrderUpdate>({
@@ -68,23 +74,87 @@ export function EditShipmentModal({
     bulidingNumber: 0,
     sellerId: 0,
     agentId: 0,
-    statusOrder: 0,
+    statusOrder: 1,
     items: [],
     cancellednotes: '',
   });
 
   // Products
   const [products, setProducts] = useState<ProductItem[]>([
-    { id: '1', itemName: '', quantity: 1, price: 0, description: '' },
+    { id: '1', name: '', quantity: 1, price: 0, description: '' },
   ]);
 
-  const [sellerData, setSellerData] = useState<Seller>({} as Seller)
 
   const populateModalDetails = async () => {
     setLoading(true)
     try {
-      const response = await shipmentsAPI.getById(shipment?.id as string)
-      setShipmentDetails(response)
+      if (shipment?.id) {
+        const response = await shipmentsAPI.getById(shipment.id)
+        setShipmentDetails(response)
+        return
+      }
+      else {
+        toast.error('Shipment not found')
+      }
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  const populateAgents = async () => {
+    setLoading(true)
+    try {
+      const response = await agentsAPI.getAll()
+      setAgents(response)
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  const populateZones = async () => {
+    setLoading(true)
+    try {
+      const response = await zonesAPI.getAll()
+      setZones(response)
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  const populateSellers = async () => {
+    setLoading(true)
+    try {
+      const response = await sellersAPI.getAll()
+      setSellers(response)
+      const defaultSeller = response.find((seller) => seller.name === shipmentDetails.sellerName)
+      if (defaultSeller) {
+        setFormData((prev) => ({
+          ...prev,
+          sellerId: parseInt(defaultSeller.id),
+        }))
+      }
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  const populateRegions = async (zoneId: number) => {
+    setLoading(true)
+    try {
+      const response = await zonesAPI.getById(zoneId)
+      setRegions(response.regions)
     } catch (error) {
       console.log(error)
     }
@@ -95,30 +165,37 @@ export function EditShipmentModal({
 
   // Populate form when shipment changes
   useEffect(() => {
+    setLoading(true)
     if (shipment && isOpen) {
       populateModalDetails()
+      populateZones()
+      populateSellers()
+      populateAgents()
       setFormData({
-        clientName: shipmentDetails.clientName as string,
-        phone1: shipmentDetails.phone1 as string,
-        phone2: '',
-        address: shipmentDetails.address as string,
+        id: shipmentDetails.id as string || 'UNKNOWN',
+        sellerId: 0,
+        zoneId: 0,
+        agentId: 0,
+        clientName: shipmentDetails.clientName || '',
+        phone2: shipmentDetails.phone2 || '',
+        address: shipmentDetails.address || '',
         notes: shipmentDetails.notes || '',
-        zoneId: shipmentDetails.zoneId || 0,
         regionName: '',
-        apartmentNumber: 0,
-        bulidingNumber: 0,
-        agentId: shipmentDetails.agentId || 0,
-        statusOrder: shipmentDetails.statusOrder || 0,
-        items: [],
-        cancellednotes: '',
+        phone1: shipmentDetails.phone1 || '',
+        apartmentNumber: shipmentDetails.apartmentNumber || 0,
+        bulidingNumber: shipmentDetails.bulidingNumber || 0,
+        statusOrder: parseInt(ShipmentStatus[shipmentDetails.statusOrder as keyof typeof ShipmentStatus]) as StatusOrderDto,
+        items: shipmentDetails.items || [],
+        cancellednotes: shipmentDetails.notes || '',
       });
 
       // Set product from shipment price
       setProducts(shipmentDetails.items?.map((item) => {
-        return { id: item.id, itemName: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
+        return { id: item.id, name: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
       }) as ProductItem[]);
     }
-  }, [shipment, isOpen]);
+    setLoading(false)
+  }, [isOpen, shipment?.id, shipment]);
 
   const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
@@ -130,7 +207,7 @@ export function EditShipmentModal({
   const handleAddItem = () => {
     const newProduct: ProductItem = {
       id: Date.now().toString(),
-      itemName: '',
+      name: '',
       quantity: 1,
       price: 0,
     };
@@ -149,18 +226,45 @@ export function EditShipmentModal({
     value: string | number
   ) => {
     setProducts(
-      products.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+      products?.map((p) => (p.id === id ? { ...p, [field]: value } : p))
     );
   };
 
+  const handleRefresh = () => {
+    populateModalDetails()
+    populateZones()
+    populateSellers()
+    populateAgents()
+    setFormData({
+      id: shipmentDetails.id as string || 'UNKNOWN',
+      sellerId: 0,
+      zoneId: 0,
+      clientName: shipmentDetails.clientName || '',
+      agentId: 0,
+      phone2: shipmentDetails.phone2 || '',
+      address: shipmentDetails.address || '',
+      notes: shipmentDetails.notes || '',
+      regionName: '',
+      phone1: shipmentDetails.phone1 || '',
+      apartmentNumber: shipmentDetails.apartmentNumber || 0,
+      bulidingNumber: shipmentDetails.bulidingNumber || 0,
+      statusOrder: parseInt(ShipmentStatus[shipmentDetails.statusOrder as keyof typeof ShipmentStatus]) as StatusOrderDto,
+      items: shipmentDetails.items || [],
+      cancellednotes: shipmentDetails.notes || '',
+    });
+    setProducts(shipmentDetails.items?.map((item) => {
+      return { id: item.id, name: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
+    }) as ProductItem[]);
+  }
+
   const calculateProductsTotal = () => {
-    return products.reduce((sum, product) => {
+    return products?.reduce((sum, product) => {
       return sum + product.quantity * product.price;
     }, 0);
   };
 
   const calculateGrandTotal = () => {
-    return calculateProductsTotal() + formData.deliveryFee;
+    return calculateProductsTotal()
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,18 +273,18 @@ export function EditShipmentModal({
     if (!shipment) return;
 
     // Check if seller can edit
-    if (userRole === 'seller' && shipment.status !== 'new') {
+    if (userRole === UserRole.Seller && shipment.statusOrder !== 'New') {
       toast.error('You cannot edit orders that have been processed by admin or agent');
       onClose();
       return;
     }
 
     // Validation
-    if (!formData.customerName.trim()) {
+    if (!formData.clientName.trim()) {
       toast.error('Please enter customer name');
       return;
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phone1.trim()) {
       toast.error('Please enter phone number');
       return;
     }
@@ -188,27 +292,27 @@ export function EditShipmentModal({
       toast.error('Please enter delivery address');
       return;
     }
-    if (!formData.zone) {
+    if (!formData.zoneId) {
       toast.error('Please select a zone');
       return;
     }
-    if (!formData.region) {
+    if (!formData.regionName.trim()) {
       toast.error('Please select a region');
       return;
     }
-    if (!formData.apartmentNumber.trim()) {
+    if (!formData.apartmentNumber) {
       toast.error('Please enter apartment number');
       return;
     }
-    if (!formData.buildingNumber.trim()) {
+    if (!formData.bulidingNumber) {
       toast.error('Please enter building number');
       return;
     }
-    if (!formData.selectedSeller) {
-      toast.error('Please select a seller');
+    if (!formData.agentId) {
+      toast.error('Please select an agent');
       return;
     }
-    if (products.some((p) => !p.itemName || p.price <= 0)) {
+    if (products.some((p) => !p.name || p.price <= 0)) {
       toast.error('Please complete all product information');
       return;
     }
@@ -216,23 +320,20 @@ export function EditShipmentModal({
     setLoading(true);
 
     try {
-      // TODO: Connect to backend API
-      // await shipmentsAPI.update(shipment.id, {
-      //   customer: { name: formData.customerName, phone: formData.phone, phone2: formData.phone2 },
-      //   delivery: { address: formData.address, notes: formData.notes, zone: formData.zone, region: formData.region, apartmentNumber: formData.apartmentNumber, buildingNumber: formData.buildingNumber },
-      //   seller: formData.selectedSeller,
-      //   products,
-      //   deliveryFee: formData.deliveryFee,
-      //   total: calculateGrandTotal(),
-      // });
+      console.log(formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await shipmentsAPI.update(shipment.id, {
+        ...formData,
+        items: products,
+        statusOrder: parseInt(formData.statusOrder as unknown as string) as StatusOrderDto,
+        zoneId: parseInt(formData.zoneId as unknown as string),
+        agentId: parseInt(formData.agentId as unknown as string),
+        sellerId: parseInt(formData.sellerId as unknown as string),
+      });
 
       toast.success('Shipment updated successfully');
       onClose();
 
-      // Refresh the shipments list
       if (onSuccess) {
         onSuccess();
       }
@@ -252,7 +353,7 @@ export function EditShipmentModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="w-5 h-5" />
-            Edit Shipment - {shipment.trackingNumber}
+            Edit Shipment - {shipment.id}
           </DialogTitle>
           <DialogDescription>
             {!canEdit ? (
@@ -264,6 +365,15 @@ export function EditShipmentModal({
             )}
           </DialogDescription>
         </DialogHeader>
+        <Button
+          variant="outline"
+          onClick={handleRefresh}
+          className="gap-2"
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-6 py-4">
@@ -282,7 +392,7 @@ export function EditShipmentModal({
                   <Input
                     id="customerName"
                     placeholder="John Doe"
-                    value={formData.customerName}
+                    value={formData.clientName}
                     onChange={(e) => handleChange('customerName', e.target.value)}
                     disabled={loading || !canEdit}
                   />
@@ -296,7 +406,7 @@ export function EditShipmentModal({
                     id="phone"
                     type="tel"
                     placeholder="+1234567890"
-                    value={formData.phone}
+                    value={formData.phone1}
                     onChange={(e) => handleChange('phone', e.target.value)}
                     disabled={loading || !canEdit}
                   />
@@ -311,7 +421,7 @@ export function EditShipmentModal({
                   id="phone2"
                   type="tel"
                   placeholder="Second phone number"
-                  value={formData.phone2}
+                  value={formData.phone2 as string}
                   onChange={(e) => handleChange('phone2', e.target.value)}
                   disabled={loading || !canEdit}
                 />
@@ -347,7 +457,7 @@ export function EditShipmentModal({
                 <Textarea
                   id="notes"
                   placeholder="Additional delivery instructions"
-                  value={formData.notes}
+                  value={formData.notes as string}
                   onChange={(e) => handleChange('notes', e.target.value)}
                   disabled={loading || !canEdit}
                   rows={2}
@@ -361,18 +471,19 @@ export function EditShipmentModal({
                     Zone <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={formData.zone}
-                    onValueChange={(value) => handleChange('zone', value)}
+                    value={formData.zoneId?.toString()}
+                    onValueChange={(value) => { handleChange('zoneId', value); populateRegions(parseInt(value)) }}
                     disabled={loading || !canEdit}
                   >
                     <SelectTrigger id="zone">
                       <SelectValue placeholder="Select Zone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="brooklyn">Brooklyn Zone</SelectItem>
-                      <SelectItem value="manhattan">Manhattan Zone</SelectItem>
-                      <SelectItem value="queens">Queens Zone</SelectItem>
-                      <SelectItem value="bronx">Bronx Zone</SelectItem>
+                      {zones.map((zone) => (
+                        <SelectItem key={zone.id} value={zone.id.toString()}>
+                          {zone.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -382,18 +493,19 @@ export function EditShipmentModal({
                     Region <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={formData.region}
-                    onValueChange={(value) => handleChange('region', value)}
+                    value={formData.regionName}
+                    onValueChange={(value) => handleChange('regionName', value)}
                     disabled={loading || !canEdit}
                   >
                     <SelectTrigger id="region">
                       <SelectValue placeholder="Select Region" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="north">North Region</SelectItem>
-                      <SelectItem value="south">South Region</SelectItem>
-                      <SelectItem value="east">East Region</SelectItem>
-                      <SelectItem value="west">West Region</SelectItem>
+                      {regions.map((region) => (
+                        <SelectItem onSelect={() => handleChange('regionName', region.name)} key={region.name} value={region.name}>
+                          {region.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -420,7 +532,7 @@ export function EditShipmentModal({
                   <Input
                     id="buildingNumber"
                     placeholder="Building 456"
-                    value={formData.buildingNumber}
+                    value={formData.bulidingNumber.toString()}
                     onChange={(e) => handleChange('buildingNumber', e.target.value)}
                     disabled={loading || !canEdit}
                   />
@@ -431,25 +543,25 @@ export function EditShipmentModal({
             {/* Seller Section */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
                 Seller
               </h3>
 
               <div className="space-y-2">
-                <Label htmlFor="seller">
+                <Label htmlFor="sellerId">
                   Select Seller <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.selectedSeller}
-                  onValueChange={(value) => handleChange('selectedSeller', value)}
+                  value={formData.sellerId?.toString()}
+                  onValueChange={(value) => handleChange('sellerId', value)}
                   disabled={loading || !canEdit}
                 >
-                  <SelectTrigger id="seller">
+                  <SelectTrigger id="sellerId">
                     <SelectValue placeholder="Select Seller" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockSellers.map((seller) => (
-                      <SelectItem key={seller.id} value={seller.name}>
+                    {sellers.map((seller) => (
+                      <SelectItem key={seller.id} value={seller.id.toString()}>
                         {seller.name}
                       </SelectItem>
                     ))}
@@ -457,7 +569,65 @@ export function EditShipmentModal({
                 </Select>
               </div>
             </div>
+            {/* Agent & status Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  Assign Agent
+                </h3>
 
+                <div className="space-y-2">
+                  <Label htmlFor="agent">
+                    Select Agent <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.agentId?.toString()}
+                    onValueChange={(value) => handleChange('agentId', value)}
+                    disabled={loading || !canEdit}
+                  >
+                    <SelectTrigger id="agent">
+                      <SelectValue placeholder="Select Agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.map((agent) => (
+                        <SelectItem key={agent.id} value={agent.id.toString()}>
+                          {agent.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  Status
+                </h3>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">
+                    Select Status <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.statusOrder?.toString()}
+                    onValueChange={(value) => handleChange('statusOrder', value)}
+                    disabled={loading || !canEdit}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusKeys.map((key) => (
+                        <SelectItem key={key} value={ShipmentStatus[key]}>
+                          {ShipmentStatusString[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
             {/* Products Section */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -482,14 +652,14 @@ export function EditShipmentModal({
                 </div>
 
                 {/* Product Items */}
-                {products.map((product) => (
+                {products?.map((product) => (
                   <div key={product.id} className="grid grid-cols-12 gap-2 items-start">
                     <div className="col-span-5">
                       <Input
                         placeholder="Item name"
-                        value={product.itemName}
+                        value={product.name}
                         onChange={(e) =>
-                          handleProductChange(product.id, 'itemName', e.target.value)
+                          handleProductChange(product.id, 'name', e.target.value)
                         }
                         disabled={loading || !canEdit}
                       />
@@ -565,29 +735,29 @@ export function EditShipmentModal({
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600 dark:text-slate-400">Products Total:</span>
                   <span className="font-mono text-slate-900 dark:text-slate-100">
-                    ${calculateProductsTotal().toFixed(2)}
+                    ${calculateProductsTotal()?.toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
+                {/* <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.deliveryFee}
+                    value={10}
                     onChange={(e) =>
                       handleChange('deliveryFee', parseFloat(e.target.value) || 0)
                     }
                     disabled={loading || !canEdit}
                     className="w-24 h-8 text-right"
                   />
-                </div>
+                </div> */}
                 <div className="flex justify-between text-base pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span className="font-semibold text-slate-900 dark:text-slate-100">
                     Grand Total:
                   </span>
                   <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                    ${calculateGrandTotal().toFixed(2)}
+                    ${calculateGrandTotal()?.toFixed(2)}
                   </span>
                 </div>
               </div>

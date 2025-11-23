@@ -20,6 +20,7 @@ import {
   BranchData,
   User,
   OrderUpdate,
+  ShipmentStatus,
 } from "../types";
 
 // -------------------- Base URLs --------------------
@@ -156,8 +157,11 @@ export const shipmentsAPI = {
   },
 
   // ✅ Get by ID *********
-  getById: async (id: string): Promise<OrderResponseDetails> => {
-    return apiCall<OrderResponseDetails>(`/Order/${id}`);
+  getById: async (id: string): Promise<OrderResponseDetails | Partial<OrderResponseDetails>> => {
+    if (!id) {
+      throw new Error(`Invalid ID ${id}`);
+    }
+    return apiCall<OrderResponseDetails | Partial<OrderResponseDetails>>(`/Order/${id}`);
   },
 
   // ✅ Create new order (with notification)
@@ -309,11 +313,6 @@ export const agentsAPI = {
   getById: async (id: string): Promise<Agent> => {
     // TODO: Replace with actual API call to .NET backend
     return apiCall<Agent>(`/Agent/${id}`, { method: 'GET', });
-
-    const { mockAgents } = await import("../lib/mockData");
-    const agent = mockAgents.find((a) => a.id === id);
-    if (!agent) throw new Error("Agent not found");
-    // return agent;
   },
 
   // POST /api/agents - Create new agent
@@ -884,8 +883,7 @@ export const notificationsAPI = {
     // return apiCall<{ count: number }>('/notifications/new-orders-count').then(r => r.count);
 
     // Mock implementation
-    const { mockShipments } = await import("../lib/mockData");
-    return mockShipments.filter((s) => s.status === "new").length;
+    return 0;
   },
 
   // POST /api/notifications/order-created - Create notification when order is created

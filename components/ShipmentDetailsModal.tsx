@@ -10,7 +10,7 @@ import {
   Clock,
   FileText,
 } from "lucide-react";
-import { OrderResponse, OrderResponseDetails, ShipmentStatus } from "../types";
+import { OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString } from "../types";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,6 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { useAuth, UserRole } from "../contexts/AuthContext";
 import { shipmentsAPI } from "@/services/api";
@@ -40,20 +39,19 @@ export function ShipmentDetailsModal({
 }: ShipmentDetailsModalProps) {
   const { role } = useAuth();
 
-  if (!shipment) return null;
 
   const [shipmentDetails, setShipmentDetails] = useState<OrderResponseDetails>({} as OrderResponseDetails);
   const populateShipmentDetails = async (id: string) => {
     try {
       const response = await shipmentsAPI.getById(id)
-      setShipmentDetails(response)
+      setShipmentDetails(response as OrderResponseDetails)
     } catch (error) {
       console.error("Error fetching shipment details:", error);
       return null;
     }
   };
 
-  useEffect(() => { populateShipmentDetails(shipment.id) }, [isOpen])
+  useEffect(() => { populateShipmentDetails(shipment?.id as string) }, [isOpen, shipment?.id])
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -86,7 +84,7 @@ export function ShipmentDetailsModal({
 
   const statusFlow = ["pending", "picked_up", "in_transit", "delivered"];
   const currentStatusIndex = statusFlow.indexOf(
-    shipmentDetails?.statusOrder as ShipmentStatus
+    shipmentDetails?.statusOrder?.toString() as ShipmentStatusString
   );
 
   return (
@@ -118,10 +116,10 @@ export function ShipmentDetailsModal({
               </div>
               <Badge
                 className={`${getStatusColor(
-                  shipmentDetails.statusOrder as ShipmentStatus
+                  shipmentDetails.statusOrder?.toString() as ShipmentStatus
                 )} text-base px-4 py-2`}
               >
-                {shipmentDetails.statusOrder?.replace("_", " ").toUpperCase()}
+                {shipmentDetails.statusOrder?.toString().replace("_", " ").toUpperCase()}
               </Badge>
             </div>
           </motion.div>
@@ -230,7 +228,7 @@ export function ShipmentDetailsModal({
 
 
 
-            {shipment.agentName && (
+            {shipmentDetails.agentName && (
               <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                   <Truck className="w-4 h-4" />
@@ -295,7 +293,7 @@ export function ShipmentDetailsModal({
           </motion.div>
 
           {/* Actions */}
-          {canUpdateStatus && shipment.statusOrder !== "delivered" && (
+          {canUpdateStatus && shipment?.statusOrder !== ShipmentStatusString.Delivered && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

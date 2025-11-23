@@ -12,37 +12,17 @@ import {
   TableRow,
 } from '../components/ui/table';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../components/ui/popover';
-import { Calendar as CalendarComponent } from '../components/ui/calendar';
-import { Separator } from '../components/ui/separator';
-import {
-  DollarSign,
   FileText,
   TrendingUp,
-  RefreshCw,
   Download,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar,
   Wallet as WalletIcon,
   Filter,
   X,
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { toast } from 'sonner';
 import { walletApi } from '../services/walletApi';
-import { walletAPI } from '../services/api';
 import { Transaction, WalletSummary } from '../types';
 
 type DateFilterType = 'today' | 'lastWeek' | 'lastMonth' | 'last3Months' | 'custom' | null;

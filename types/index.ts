@@ -1,19 +1,39 @@
 import { UserRole } from "@/contexts/AuthContext";
 
-export type ShipmentStatus =
-  | 'new'
-  | 'in_pickup_stage'
-  | 'in_warehouse'
-  | 'delivered_to_agent'
-  | 'delivered'
-  | 'postponed'
-  | 'customer_unreachable'
-  | 'rejected_no_shipping_fees'
-  | 'rejected_with_shipping_fees'
-  | 'canceled_by_merchant'
-  | 'partially_delivered'
-  | 'rejected_by_us'
-  | 'returned';
+export enum ShipmentStatus {
+  New = "0",
+  InPickupStage = "1",
+  InWarehouse = "2",
+
+  DeliveredToAgent = "3",
+  Delivered = "4",
+  Postponed = "5",
+  CustomerUnreachable = "6",
+  RejectedNoShippingFees = "7",
+  RejectedWithShippingFees = "8",
+
+  PartiallyDelivered = "9",
+  RejectedByUs = "10",
+  Returned = "11"
+}
+
+export enum ShipmentStatusString {
+  New = "New",
+  InPickupStage = "InPickupStage",
+  InWarehouse = "InWarehouse",
+
+  DeliveredToAgent = "DeliveredToAgent",
+  Delivered = "Delivered",
+  Postponed = "Postponed",
+  CustomerUnreachable = "CustomerUnreachable",
+  RejectedNoShippingFees = "RejectedNoShippingFees",
+  RejectedWithShippingFees = "RejectedWithShippingFees",
+
+  PartiallyDelivered = "PartiallyDelivered",
+  RejectedByUs = "RejectedByUs",
+  Returned = "Returned"
+}
+
 
 export interface Shipment { // or order
   id: string;
@@ -29,7 +49,7 @@ export interface Shipment { // or order
     phone: string;
     address: string;
   };
-  status: ShipmentStatus;
+  status: ShipmentStatusString;
   assignedAgent?: {
     id: string;
     name: string;
@@ -70,7 +90,7 @@ export interface ItemsRequest {
 export interface OrderResponse {
   id: string;
   clientName?: string | null;
-  statusOrder?: string | null;
+  statusOrder?: ShipmentStatusString;
   sellerName?: string | null;
   totalPrice: number;
   regionName?: string | null;
@@ -94,7 +114,7 @@ export interface OrderResponseDetails {
   country?: string | null;
   bulidingNumber: number;
   notes?: string | null;
-  statusOrder?: ShipmentStatus;
+  statusOrder?: ShipmentStatusString;
   items?: ItemRespone[] | null;
   sellerName?: string | null;
   agentName?: string | null;
