@@ -1,28 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import {
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  Shield,
-  Lock,
-  Bell,
-  Eye,
-  EyeOff,
-  Camera,
-  Save,
-  X,
-  Edit,
-  ShieldCheck,
-  Briefcase,
-  UserCog,
-  DollarSign,
-  Package,
-  TrendingUp,
-  Clock,
-  Sparkles,
-} from 'lucide-react';
+import {User,Mail,Phone,Calendar,Shield,Lock,Bell,Eye,EyeOff,Camera,Save,X,Edit,ShieldCheck,Briefcase,UserCog,DollarSign,Package,TrendingUp,Clock, Sparkles,} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -36,6 +14,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
+import { changePasswordApi } from '../services/api.ts';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -49,13 +28,14 @@ export default function ProfilePage() {
 
   // Personal information state
   const [personalInfo, setPersonalInfo] = useState({
-    name: 'John Doe',
-    email: 'john.doe@circlecode.com',
-    phone: '+1 234 567 8900',
-    role: user?.role || 'admin',
-    joinedDate: '2024-01-15',
-    salary: 75000,
-  });
+  name: user?.name || '',
+  email: user?.email || '',
+  phone: user?.phone || '',
+  role: user?.role || 'admin',
+  joinedDate: user?.joinedDate || new Date().toISOString(),
+  salary: user?.salary || 0,
+});
+
 
   // Password state
   const [passwordData, setPasswordData] = useState({
@@ -175,41 +155,49 @@ export default function ProfilePage() {
     loadProfileData();
   };
 
-  const handleChangePassword = async () => {
-    if (!passwordData.currentPassword) {
-      toast.error('Please enter your current password');
-      return;
-    }
-    if (!passwordData.newPassword) {
-      toast.error('Please enter a new password');
-      return;
-    }
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match');
-      return;
-    }
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
+const handleChangePassword = async () => {
+  if (!passwordData.currentPassword) {
+    toast.error('Please enter your current password');
+    return;
+  }
+  if (!passwordData.newPassword) {
+    toast.error('Please enter a new password');
+    return;
+  }
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    toast.error('New passwords do not match');
+    return;
+  }
+  if (passwordData.newPassword.length < 8) {
+    toast.error('Password must be at least 8 characters');
+    return;
+  }
 
-    setSaving(true);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Password changed successfully');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setEditingPassword(false);
-    } catch (error) {
-      toast.error('Failed to change password');
-    } finally {
-      setSaving(false);
-    }
-  };
+  setSaving(true);
+  try {
+    // استدعي الـ API
+    await changePasswordApi(
+      personalInfo.email,
+      passwordData.currentPassword,
+      passwordData.newPassword,
+      passwordData.confirmPassword
+    );
+
+    toast.success('Password changed successfully');
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setEditingPassword(false);
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error?.message || 'Failed to change password');
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications((prev) => ({

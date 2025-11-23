@@ -20,6 +20,10 @@ import UsersPage from './pages/UsersPage';
 import ProfilePage from './pages/ProfilePage';
 import { Toaster } from './components/ui/sonner';
 import { OrderResponseDetails } from './types';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { SignUpPage } from './components/SignUpPage';
+import ResetPasswordPage from './pages/ResetPass';
+
 
 type ShipmentsNavigationHandlers = {
   onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
@@ -132,8 +136,12 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <NotificationProvider>
-          <AppContent />
-          <Toaster />
+            <Routes>
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/*" element={<AppContent />} />
+            </Routes>
+            <Toaster />
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

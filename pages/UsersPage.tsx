@@ -172,16 +172,20 @@ export default function UsersPage() {
     name: string;
     email: string;
     phone: string;
-    role: UserRole;
+    // role: UserRole;
+    address: string;
     salary: number;
     password: string;
+    confirmPassword: string;
   }) => {
     const newUser: User = {
       id: `${users.length + 1}`,
       name: userData.name,
       email: userData.email,
       phone: userData.phone,
-      role: userData.role,
+      password: userData.password,
+      address: userData.address,
+      confirmPassword: userData.confirmPassword,
       salary: userData.salary,
       status: 'active',
       registrationDate: new Date().toISOString(),
@@ -484,14 +488,14 @@ export default function UsersPage() {
                   <Plus className="w-4 h-4 mr-2" />
                   Add Admin
                 </Button>
-                <Button
+                {/* <Button
                   size="sm"
                   onClick={() => setAddModalOpen(true)}
                   className="bg-gradient-to-r from-blue-500 to-cyan-600"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add User
-                </Button>
+                </Button> */}
               </div>
             </div>
           </CardHeader>

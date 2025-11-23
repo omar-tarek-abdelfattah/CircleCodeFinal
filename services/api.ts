@@ -120,32 +120,94 @@ export async function loginApi(
     throw new Error(error);
   }
 }
-
-export async function forgetPasswordApi(email: string) {
-  const res = await fetch(
-    `http://91.98.160.24:5000/api/Authentication/forget-password`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    }
+// 🔹 Check if Email Exists
+export async function emailExistApi(email: string): Promise<boolean> {
+  return await apiCall<boolean>(
+    `/Authentication/EmailExist?email=${encodeURIComponent(email)}`,
+    { method: "GET" },
+    undefined,
+    apiMode.auth
   );
-  if (!res.ok) throw new Error("Email not found or request failed");
-  return await res.json();
 }
 
-export async function saveNewPasswordApi(email: string, newPassword: string) {
-  const res = await fetch(
-    `http://91.98.160.24:5000/api/Authentication/save-new-password`,
+// 🔹 Agent Register
+export async function agentRegisterApi(data: any) {
+  return await apiCall<any>(
+    "/Authentication/AgentRegister",
+    { method: "POST", body: JSON.stringify(data) },
+    undefined,
+    apiMode.auth
+  );
+}
+
+// 🔹 Seller Register
+export async function sellerRegisterApi(data: any) {
+  return await apiCall<any>(
+    "/Authentication/SellerRegister",
+    { method: "POST", body: JSON.stringify(data) },
+    undefined,
+    apiMode.auth
+  );
+}
+
+// 🔹 Confirm Email
+export async function confirmEmailApi(email: string, token: string) {
+  return await apiCall<any>(
+    `/Authentication/confirm-email?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`,
+    { method: "GET" },
+    undefined,
+    apiMode.auth
+  );
+}
+
+// 🔹 Resend confirmation email
+export async function resendConfirmationEmailApi(email: string) {
+  return await apiCall<any>(
+    `/Authentication/ReSent?email=${encodeURIComponent(email)}`,
+    { method: "GET" },
+    undefined,
+    apiMode.auth
+  );
+}
+
+// 🔹 Forget Password
+export async function forgetPasswordApi(email: string): Promise<boolean> {
+  return await apiCall<boolean>(
+    `/Authentication/forget-password`,
+    { method: "POST", body: JSON.stringify({ email }) },
+    undefined,
+    apiMode.auth
+  );
+}
+
+// 🔹 Save New Password
+export async function saveNewPasswordApi(data: {
+  email: string;
+  token: string;
+  password: string;
+  confirmPassword: string;
+}): Promise<boolean> {
+  return await apiCall<boolean>(
+    `/Authentication/save-new-password`,
+    { method: "POST", body: JSON.stringify(data) },
+    undefined,
+    apiMode.auth
+  );
+}
+
+// 🔹 Change Password
+export async function changePasswordApi(email: string, oldPassword: string, password: string, confirmPassword: string) {
+  return await apiCall<any>(
+    `/Authentication/change-password/${encodeURIComponent(email)}`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, newPassword }),
-    }
+      body: JSON.stringify({ oldPassword, password, confirmPassword }),
+    },
+    undefined,
+    apiMode.auth
   );
-  if (!res.ok) throw new Error("Failed to save new password");
-  return await res.json();
 }
+
 
 // -------------------- Shipments (Orders) API --------------------
 export const shipmentsAPI = {
