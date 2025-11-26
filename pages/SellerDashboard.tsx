@@ -1,40 +1,97 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Package, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'; 
+import { Package, TrendingUp, Clock, DollarSign, ArrowRight, X } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { NewShipmentsTable } from '../components/NewShipmentsTable';
 import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
 import { AddShipmentModal } from '../components/AddShipmentModal';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { OrderResponse, Shipment } from '../types';
+import { Shipment } from '../types'; 
 import { Activity } from '../lib/mockData';
+import { shipmentsAPI, log, sellersAPI } from '../services/api'; 
+
+// يجب استبدال هذا الـ ID بالـ ID الفعلي للبائع الذي تم تسجيل دخوله
+const MOCK_SELLER_ID = 'seller_123'; 
 
 interface SellerDashboardProps {
   onNavigate?: (page: string) => void;
+  sellerId?: string; // يجب تمرير هذا الـ ID من الـ Auth Context
 }
 
-export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
-  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
+export function SellerDashboard({ onNavigate, sellerId }: SellerDashboardProps) {
+  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
+  
+  // حالات تخزين البيانات
+  const [shipments, setShipments] = useState<any[]>([]);
+  const [logData, setLogData] = useState<Activity[]>([]);
+  const [sellerName, setSellerName] = useState('Seller'); 
 
-  // Empty data - to be replaced with API calls
-  const shipments: OrderResponse[] = [];
-  const activities: Activity[] = [];
+  // حالات الإحصائيات
+  const [completedShipments, setCompletedShipments] = useState(0);
+  const [inPickupCount, setInPickupCount] = useState(0);
+  const [totalCollection, setTotalCollection] = useState(0);
+  const [totalShipments, setTotalShipments] = useState(0);
+  
+  const currentSellerId = sellerId || MOCK_SELLER_ID; 
 
-  const recentShipments = shipments.slice(0, 5);
-  const completedCount = 0;
-  const pendingCount = 0;
-  const inPickupCount = 0;
-  const totalShipments = 0;
-  const totalCollection = 0;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // جلب الشحنات والتصفية محليًا
+        const [allShipmentsData, allLogsData, sellerData] = await Promise.all([
+             shipmentsAPI.getAll(),
+             log.getAll(),
+             sellersAPI.getById(currentSellerId), // نفترض وجود getById للبائع
+        ]);
 
-  const handleViewDetails = (shipment: OrderResponse) => {
-    setSelectedShipment(shipment);
-    setDetailsModalOpen(true);
+        // 1. تصفية شحنات البائع
+        const sellerShipments = allShipmentsData.filter(
+          (s: any) => s.sellerId === currentSellerId 
+        );
+        
+        // 2. تصفية سجل النشاطات للبائع
+        const sellerLogs = allLogsData.filter(
+            (activity: any) => activity.sellerId === currentSellerId 
+        );
+        
+        setSellerName(sellerData?.name || 'Seller');
+        setShipments(sellerShipments);
+        setLogData(sellerLogs);
+        setTotalShipments(sellerShipments.length);
+
+        // حساب الإحصائيات
+        const completed = sellerShipments.filter((s: any) => s.statusOrder === 'Delivered').length;
+        const inPickup = sellerShipments.filter((s: any) => s.statusOrder === 'DeliveredToAgent').length; 
+        const collection = sellerShipments
+          .filter((s: any) => s.statusOrder === 'Delivered')
+          .reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0);
+
+        setCompletedShipments(completed);
+        setInPickupCount(inPickup);
+        setTotalCollection(collection);
+
+      } catch (error) {
+        console.error("Failed to fetch seller dashboard data:", error);
+        // التعامل مع حالات الـ API غير المتوفرة (مثل 404 أو الدالة غير الموجودة)
+      }
+    };
+
+    fetchData();
+  }, [currentSellerId]); 
+
+  const handleViewDetails = (shipment: Shipment) => {
+    // التأكد من أن الشحنة تحتوي على ID قبل الفتح (لإصلاح خطأ 'Invalid ID undefined')
+    // نفترض أن الـ ID موجود إما في خاصية 'id' أو 'ID'
+    if (shipment && (shipment.id || shipment.ID)) { 
+      setSelectedShipment(shipment);
+      setDetailsModalOpen(true);
+    } else {
+      console.error("Shipment selected is missing an ID.", shipment);
+    }
   };
 
   const handleAddShipment = () => {
@@ -42,20 +99,9 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
   };
 
   const handleShipmentCreated = () => {
-    // TODO: Refresh shipments list from API
     console.log('Shipment created, refreshing list...');
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      picked_up: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-      in_transit: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-      delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-      cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-      returned: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    };
-    return colors[status] || colors.pending;
+    // قم باستدعاء fetchData لتحديث البيانات بعد إضافة شحنة جديدة
+    // fetchData(); 
   };
 
   return (
@@ -68,12 +114,14 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10">
-          <h1 className="text-3xl mb-2">Welcome back, Seller! 👋</h1>
+          <h1 className="text-3xl mb-2">Welcome back, {sellerName}! 👋</h1>
           <p className="text-blue-100">
-            Here's what's happening with your shipments today.
+            Monitor and manage your shipments effortlessly.
           </p>
         </div>
       </motion.div>
+
+      {/* --- */}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -81,34 +129,29 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
           title="Total Shipments"
           value={totalShipments}
           icon={Package}
-          trend={{ value: 12, positive: true }}
-          delay={0.1}
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
           title="In Pickup Stage"
           value={inPickupCount}
           icon={Clock}
-          delay={0.2}
           gradient="from-orange-500 to-orange-600"
         />
         <StatCard
           title="Completed"
-          value={completedCount}
+          value={completedShipments}
           icon={TrendingUp}
-          trend={{ value: 8, positive: true }}
-          delay={0.3}
           gradient="from-green-500 to-green-600"
         />
         <StatCard
           title="Collection Amount"
-          value={`$${totalCollection.toFixed(2)}`}
+          value={`$${totalCollection.toFixed(0)}`}
           icon={DollarSign}
-          trend={{ value: 15, positive: true }}
-          delay={0.4}
           gradient="from-purple-500 to-purple-600"
         />
       </div>
+
+      {/* --- */}
 
       {/* Recent Activity */}
       <motion.div
@@ -116,17 +159,22 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <RecentActivity activities={activities} />
+        <Card className="p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
+          <RecentActivity activities={logData} />
+        </Card>
       </motion.div>
 
-      {/* Recent Shipments */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      {/* --- */}
+
+      {/* New Shipments Table */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
         transition={{ delay: 0.6 }}
       >
         <NewShipmentsTable
-          shipments={recentShipments}
+          shipments={shipments.slice(0, 5)}
           onViewDetails={handleViewDetails}
           onAddShipment={handleAddShipment}
           showAddButton={true}
@@ -134,18 +182,47 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
         />
       </motion.div>
 
+      {/* --- */}
+
+      {/* Quick Actions */}
+      {/* <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+        <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <X className="w-5 h-5" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-slate-500 dark:text-slate-400 mb-4">
+              Create a new shipment or check your full profile details.
+            </p>
+            <div className="flex gap-4">
+              <Button onClick={handleAddShipment} className="bg-green-600 hover:bg-green-700">
+                <Package className="w-4 h-4 mr-2" /> Add New Shipment
+              </Button>
+              <Button variant="outline" onClick={() => onNavigate?.('profile')}>
+                View Profile <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div> */}
+
+      {/* --- */}
+
       {/* Shipment Details Modal */}
-      <ShipmentDetailsModal
-        shipment={selectedShipment}
-        isOpen={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
+      <ShipmentDetailsModal 
+        shipment={selectedShipment} 
+        isOpen={detailsModalOpen} 
+        onClose={() => setDetailsModalOpen(false)} 
       />
 
       {/* Add Shipment Modal */}
-      <AddShipmentModal
-        isOpen={addShipmentModalOpen}
-        onClose={() => setAddShipmentModalOpen(false)}
-        onSuccess={handleShipmentCreated}
+      <AddShipmentModal 
+        isOpen={addShipmentModalOpen} 
+        onClose={() => setAddShipmentModalOpen(false)} 
+        onSuccess={handleShipmentCreated} 
       />
     </div>
   );

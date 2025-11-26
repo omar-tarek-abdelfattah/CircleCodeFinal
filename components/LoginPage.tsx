@@ -40,7 +40,6 @@ export function LoginPage() {
 
     try {
       await login(email, password);
-      // بعد تسجيل الدخول ممكن تعمل redirect حسب role
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -161,119 +160,59 @@ export function LoginPage() {
               </Label>
 
               {/* 🔹 Forget Password / Reset Password */}
-              {showForget && (
-                <div className="mt-4 p-4 bg-gray-100 dark:bg-slate-800 rounded-lg space-y-2">
-                  {!forgetStep2 ? (
-                    <>
-                      <Label>Email for password reset:</Label>
-                      <Input
-                        type="email"
-                        placeholder="your.email@circlecode.com"
-                        value={forgetEmail}
-                        onChange={(e) => setForgetEmail(e.target.value)}
-                        className="mt-1"
-                      />
-                      <Button
-                        onClick={async () => {
-                          if (!forgetEmail) {
-                            setForgetMessage('Please enter your email.');
-                            return;
-                          }
-                          setForgetLoading(true);
-                          setForgetMessage('');
-                          try {
-                            const success = await forgetPassword(forgetEmail);
-                            if (success) {
-                              setForgetMessage('Check your email for password reset instructions.');
-                              setForgetStep2(true);
-                            } else {
-                              setForgetMessage('Failed to send reset link. Try again.');
-                            }
-                          } catch (err) {
-                            setForgetMessage(err instanceof Error ? err.message : 'Failed to send request.');
-                          } finally {
-                            setForgetLoading(false);
-                          }
-                        }}
-                        className="mt-2 w-full"
-                        disabled={forgetLoading}
-                      >
-                        {forgetLoading ? 'Sending...' : 'Send Reset Link'}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Label>Enter new password & token:</Label>
-                      <Input
-                        type="text"
-                        placeholder="Token from email"
-                        value={resetToken}
-                        onChange={(e) => setResetToken(e.target.value)}
-                        className="mt-1"
-                      />
-                      <Input
-                        type="password"
-                        placeholder="New password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="mt-1"
-                      />
-                      <Input
-                        type="password"
-                        placeholder="Confirm new password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="mt-1"
-                      />
+              {/* 🔹 Forget Password / Send Reset Link only */}
+{showForget && (
+  <div className="mt-4 p-4 bg-gray-100 dark:bg-slate-800 rounded-lg space-y-2">
+    <Label>Email for password reset:</Label>
+    <Input
+      type="email"
+      placeholder="your.email@circlecode.com"
+      value={forgetEmail}
+      onChange={(e) => setForgetEmail(e.target.value)}
+      className="mt-1"
+    />
 
-                      <Button
-                        onClick={async () => {
-                          if (!resetToken || !newPassword || !confirmPassword) {
-                            setForgetMessage('Please fill all fields.');
-                            return;
-                          }
-                          if (newPassword !== confirmPassword) {
-                            setForgetMessage('Passwords do not match.');
-                            return;
-                          }
-                          setForgetLoading(true);
-                          setForgetMessage('');
-                          try {
-                            const success = await saveNewPassword({
-                              email: forgetEmail,
-                              token: resetToken,
-                              password: newPassword,
-                              confirmPassword,
-                            });
-                            if (success) {
-                              setForgetMessage('Password updated successfully! You can now login.');
-                              setForgetStep2(false);
-                              setShowForget(false);
-                              setNewPassword('');
-                              setConfirmPassword('');
-                              setResetToken('');
-                            } else {
-                              setForgetMessage('Failed to save new password. Try again.');
-                            }
-                          } catch (err) {
-                            setForgetMessage(err instanceof Error ? err.message : 'Failed to save password.');
-                          } finally {
-                            setForgetLoading(false);
-                          }
-                        }}
-                        className="mt-2 w-full"
-                        disabled={forgetLoading}
-                      >
-                        {forgetLoading ? 'Saving...' : 'Save New Password'}
-                      </Button>
-                    </>
-                  )}
+    <Button
+      onClick={async () => {
+        if (!forgetEmail) {
+          setForgetMessage('Please enter your email.');
+          return;
+        }
+        setForgetLoading(true);
+        setForgetMessage('');
+        try {
+          const success = await forgetPassword(forgetEmail);
+          if (success) {
+            setForgetMessage('📩 A reset link has been sent to your email.');
+          } else {
+            setForgetMessage('❌ Failed to send reset link. Try again.');
+          }
+        } catch (err) {
+          setForgetMessage(err instanceof Error ? err.message : 'Failed to send request.');
+        } finally {
+          setForgetLoading(false);
+        }
+      }}
+      className="mt-2 w-full"
+      disabled={forgetLoading}
+    >
+      {forgetLoading ? 'Sending...' : 'Send Reset Link'}
+    </Button>
 
-                  {forgetMessage && (
-                    <p className="text-sm mt-2 text-center text-red-500 dark:text-red-400">{forgetMessage}</p>
-                  )}
-                </div>
-              )}
+    {forgetMessage && (
+      <p className="text-sm mt-2 text-center text-blue-600 dark:text-blue-400">
+        {forgetMessage}
+      </p>
+    )}
+
+    <p
+      className="text-center text-sm text-slate-600 dark:text-slate-400 cursor-pointer hover:text-blue-500"
+      onClick={() => setShowForget(false)}
+    >
+    </p>
+  </div>
+)}
+
               <p className="text-blue-500 cursor-pointer" onClick={() => navigate('/signup')}>
         Don't have an account? Sign Up
       </p>

@@ -193,7 +193,7 @@ export function SignUpPage() {
                 </div>
               </div>
 
-              {role === "Agent" && (
+              {(role === "Agent" || role === "Seller") && (
                 <div>
                   <Label>Confirm Password</Label>
                   <div className="relative">

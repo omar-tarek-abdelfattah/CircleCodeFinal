@@ -18,6 +18,7 @@ interface AgentDashboardProps {
 export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  
 
   // Empty data - to be replaced with API calls
   const assignedShipments: Shipment[] = [];

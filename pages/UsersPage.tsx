@@ -91,13 +91,12 @@ export default function UsersPage() {
       setUsers(response);
 
       // Simulate API call
-<<<<<<< HEAD
       // await new Promise((resolve) => setTimeout(resolve, 500));
       
-=======
+
       await new Promise((resolve) => setTimeout(resolve, 500));
 
->>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
+
       // Empty state until backend is connected
       // setUsers([]);
     } catch (error) {
@@ -271,7 +270,7 @@ export default function UsersPage() {
   //   }
   // };
 
-<<<<<<< HEAD
+
   // const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
   //   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
   //   setUsers(
@@ -286,22 +285,21 @@ export default function UsersPage() {
   //   );
   //   toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
   // };
-=======
-  const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    setUsers(
-      users.map((u) =>
-        u.id === userId
-          ? {
-            ...u,
-            status: newStatus,
-          }
-          : u
-      )
-    );
-    toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-  };
->>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
+  // const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
+  //   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  //   setUsers(
+  //     users.map((u) =>
+  //       u.id === userId
+  //         ? {
+  //           ...u,
+  //           status: newStatus,
+  //         }
+  //         : u
+  //     )
+  //   );
+  //   toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+  // };
+
 
   const handleSetDeactivationPeriod = (user: User) => {
     setUserForDeactivation(user);
