@@ -60,7 +60,7 @@ export function SignUpPage() {
         });
       }
 
-      alert("Account created! Please login.");
+      alert("Account created! Please check your email.");
       navigate("/login");
     } catch (err: any) {
       setError(err.message || "Registration failed");

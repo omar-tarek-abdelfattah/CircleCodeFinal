@@ -10,45 +10,87 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
-import { User, UserRole } from '../types';
+import { User } from '../types';
+import { toast } from 'react-toastify';
+import { usersAPI } from '../services/api';
 
 interface EditUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (userData: User) => void;
   user: User | null;
+  onUpdate: (updatedUser: User) => void;
 }
 
-export function EditUserModal({ open, onOpenChange, onSubmit, user }: EditUserModalProps) {
-  const [formData, setFormData] = useState<User | null>(null);
+export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserModalProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    salary: 0,
+    password: '',
+    confirmPassword: '',
+  });
 
   useEffect(() => {
     if (user) {
-      setFormData({ ...user });
+      setFormData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        address: user.address || '',
+        salary: user.salary || 0,
+        password: '',
+        confirmPassword: '',
+      });
     }
   }, [user]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData) {
-      onSubmit(formData);
-      onOpenChange(false);
+  const validateForm = () => {
+    if (!formData.name || !formData.email) {
+      toast.error('Please fill all required fields!');
+      return false;
     }
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match!');
+      return false;
+    }
+    return true;
   };
 
   const handleClose = () => {
-    setFormData(null);
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      salary: 0,
+      password: '',
+      confirmPassword: '',
+    });
     onOpenChange(false);
   };
 
-  if (!formData) return null;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm() || !user) return;
+
+    const updatedData = {
+      ...user,
+      ...formData,
+      password: formData.password ? formData.password : undefined,
+    };
+
+    try {
+      const updatedUser = await usersAPI.update(user.id, updatedData);
+      onUpdate(updatedUser);
+      toast.success('User updated successfully');
+      handleClose();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,7 +107,6 @@ export function EditUserModal({ open, onOpenChange, onSubmit, user }: EditUserMo
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter full name"
                 required
               />
             </div>
@@ -77,7 +118,6 @@ export function EditUserModal({ open, onOpenChange, onSubmit, user }: EditUserMo
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="user@example.com"
                 required
               />
             </div>
@@ -89,25 +129,16 @@ export function EditUserModal({ open, onOpenChange, onSubmit, user }: EditUserMo
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+1 234 567 8900"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="role">Role *</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="seller">Seller</SelectItem>
-                  <SelectItem value="agent">Agent</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
             </div>
 
             <div className="grid gap-2">
@@ -119,7 +150,28 @@ export function EditUserModal({ open, onOpenChange, onSubmit, user }: EditUserMo
                 step="0.01"
                 value={formData.salary}
                 onChange={(e) => setFormData({ ...formData, salary: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="Enter new password if changing"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                placeholder="Confirm new password"
               />
             </div>
           </div>

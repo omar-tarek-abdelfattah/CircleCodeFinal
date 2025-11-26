@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { UserRole } from '../types';
+import { toast } from 'react-toastify';
 
 interface AddUserModalProps {
   open: boolean;
@@ -26,9 +27,10 @@ interface AddUserModalProps {
     name: string;
     email: string;
     phone: string;
-    role: UserRole;
+    address : string;
     salary: number;
     password: string;
+    confirmPassword: string;
   }) => void;
   defaultRole?: UserRole;
 }
@@ -38,13 +40,29 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
     name: '',
     email: '',
     phone: '',
-    role: defaultRole || ('admin' as UserRole),
+    // role: defaultRole || ('admin' as UserRole),
+    address: '',
     salary: 0,
     password: '',
+    confirmPassword: '',
   });
+
+  // 🔍 validation before submit
+  const validateForm = () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error('Please fill all required fields!');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match!');
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     onSubmit(formData);
     handleClose();
   };
@@ -54,9 +72,11 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
       name: '',
       email: '',
       phone: '',
-      role: defaultRole || ('admin' as UserRole),
+      address: '',
+      // role: defaultRole || ('admin' as UserRole),
       salary: 0,
       password: '',
+      confirmPassword: '',
     });
     onOpenChange(false);
   };
@@ -70,6 +90,8 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            
+            {/* Name */}
             <div className="grid gap-2">
               <Label htmlFor="name">Name *</Label>
               <Input
@@ -81,6 +103,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
               />
             </div>
 
+            {/* Email */}
             <div className="grid gap-2">
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -93,6 +116,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
               />
             </div>
 
+            {/* Phone */}
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
@@ -104,23 +128,19 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="role">Role *</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="seller">Seller</SelectItem>
-                  <SelectItem value="agent">Agent</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Role */}
+           <div className="grid gap-2">
+              <Label htmlFor="address">Address *</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Enter Your Address"
+                required
+              />
             </div>
 
+            {/* Salary */}
             <div className="grid gap-2">
               <Label htmlFor="salary">Salary</Label>
               <Input
@@ -134,6 +154,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
               />
             </div>
 
+            {/* Password */}
             <div className="grid gap-2">
               <Label htmlFor="password">Password *</Label>
               <Input
@@ -142,6 +163,19 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Enter password"
+                required
+              />
+            </div>
+
+            {/* Confirm Password */}
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Confirm Password *</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                placeholder="Confirm password"
                 required
               />
             </div>

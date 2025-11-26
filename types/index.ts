@@ -18,17 +18,15 @@ export type ShipmentStatus =
 export interface Shipment { // or order
   id: string;
   trackingNumber: string;
-  clientName: {
-    name: string;
-    phone1: string;
-    phone2: string;
-    address: string;
-  };
-  recipient: {
-    name: string;
-    phone: string;
-    address: string;
-  };
+  clientName: string;
+  statusOrder : string;
+  sellerName?: string;
+  totalPrice : number;
+  // recipient: {
+  //   name: string;
+  //   phone: string;
+  //   address: string;
+  // };
   status: ShipmentStatus;
   assignedAgent?: {
     id: string;

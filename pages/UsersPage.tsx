@@ -45,16 +45,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../components/ui/alert-dialog';
+import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription, AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,} from '../components/ui/alert-dialog';
 import { Calendar as CalendarComponent } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -94,15 +85,15 @@ export default function UsersPage() {
     setLoading(true);
     try {
       // TODO: Connect to backend API
-      // console.log()
+      console.log()
       const response = await usersAPI.getAll();
       setUsers(response);
       
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // await new Promise((resolve) => setTimeout(resolve, 500));
       
       // Empty state until backend is connected
-      setUsers([]);
+      // setUsers([]);
     } catch (error) {
       console.error('Failed to load users:', error);
       toast.error('Failed to load users');
@@ -168,48 +159,78 @@ export default function UsersPage() {
     return matchesSearch && matchesRole && matchesDateRange;
   });
 
-  const handleAddUser = (userData: {
+  //  Add User
+  const handleAddUser = async (userData: {
     name: string;
     email: string;
     phone: string;
-    // role: UserRole;
     address: string;
     salary: number;
     password: string;
     confirmPassword: string;
   }) => {
-    const newUser: User = {
-      id: `${users.length + 1}`,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.phone,
-      password: userData.password,
-      address: userData.address,
-      confirmPassword: userData.confirmPassword,
-      salary: userData.salary,
-      status: 'active',
-      registrationDate: new Date().toISOString(),
-    };
-
-    setUsers([...users, newUser]);
-    toast.success(`User ${userData.name} added successfully`);
+    try {
+      const createdUser = await usersAPI.create(userData);
+      setUsers((prevUsers) => [createdUser, ...prevUsers]);
+      toast.success(`User ${userData.name} added successfully`);
+      setAddModalOpen(false);
+    } catch (error) {
+      console.error("Error adding user:", error);
+      toast.error("Error adding user");
+    }
   };
 
-  const handleUpdateUser = (userData: User) => {
-    setUsers(users.map((u) => (u.id === userData.id ? userData : u)));
-    toast.success(`User ${userData.name} updated successfully`);
+  //  Update User
+  const handleUpdateUser = async (userData: any) => {
+    try {
+      await usersAPI.update(userData.id, userData);
+      setUsers(users.map((u) => (u.id === userData.id ? userData : u)));
+      toast.success(`User ${userData.name} updated successfully`);
+      setEditModalOpen(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Error updating user");
+    }
   };
 
-  const handleViewDetails = (user: User) => {
+  //  View details
+  const handleViewDetails = (user: any) => {
     setSelectedUser(user);
     setViewModalOpen(true);
   };
 
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setEditModalOpen(true);
+  //  Delete User
+  const confirmDelete = async () => {
+    if (userToDelete) {
+      try {
+        await usersAPI.delete(userToDelete.id);
+        setUsers(users.filter((u) => u.id !== userToDelete.id));
+        toast.success(`User ${userToDelete.name} deleted successfully`);
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        toast.error("Error deleting user");
+      }
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    }
   };
 
+  //  Activate / Deactivate User
+  const handleStatusToggle = async (userId: string, currentStatus: "active" | "inactive") => {
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    try {
+      await usersAPI.updateStatus(userId, newStatus);
+      setUsers(
+        users.map((u) =>
+          u.id === userId ? { ...u, status: newStatus } : u
+        )
+      );
+      toast.success(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update user status");
+    }
+  };
   const handleHideUser = (userId: string) => {
     setHiddenUserIds((prev) => new Set([...prev, userId]));
     toast.success('User hidden successfully');
@@ -230,34 +251,34 @@ export default function UsersPage() {
     toast.success('All users restored successfully');
   };
 
-  const handleDeleteUser = (user: User) => {
-    setUserToDelete(user);
-    setDeleteDialogOpen(true);
-  };
+  // const handleDeleteUser = (user: User) => {
+  //   setUserToDelete(user);
+  //   setDeleteDialogOpen(true);
+  // };
 
-  const confirmDelete = () => {
-    if (userToDelete) {
-      setUsers(users.filter((u) => u.id !== userToDelete.id));
-      toast.success(`User ${userToDelete.name} deleted successfully`);
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
-  };
+  // const confirmDelete = () => {
+  //   if (userToDelete) {
+  //     setUsers(users.filter((u) => u.id !== userToDelete.id));
+  //     toast.success(`User ${userToDelete.name} deleted successfully`);
+  //     setDeleteDialogOpen(false);
+  //     setUserToDelete(null);
+  //   }
+  // };
 
-  const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    setUsers(
-      users.map((u) =>
-        u.id === userId
-          ? {
-              ...u,
-              status: newStatus,
-            }
-          : u
-      )
-    );
-    toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-  };
+  // const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
+  //   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  //   setUsers(
+  //     users.map((u) =>
+  //       u.id === userId
+  //         ? {
+  //             ...u,
+  //             status: newStatus,
+  //           }
+  //         : u
+  //     )
+  //   );
+  //   toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+  // };
 
   const handleSetDeactivationPeriod = (user: User) => {
     setUserForDeactivation(user);
@@ -373,7 +394,7 @@ export default function UsersPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Users</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Admins</p>
                   <h2 className="text-slate-900 dark:text-slate-100">{totalUsers}</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     All users in system
@@ -392,7 +413,7 @@ export default function UsersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card>
+          {/* <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -405,7 +426,7 @@ export default function UsersPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </motion.div>
 
         <motion.div
@@ -413,7 +434,7 @@ export default function UsersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card>
+          {/* <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -426,7 +447,7 @@ export default function UsersPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </motion.div>
 
         <motion.div
@@ -434,7 +455,7 @@ export default function UsersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card>
+          {/* <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -447,7 +468,7 @@ export default function UsersPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </motion.div>
       </div>
 
@@ -461,8 +482,8 @@ export default function UsersPage() {
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage users and their access permissions</CardDescription>
+                <CardTitle>Admin Management</CardTitle>
+                <CardDescription>Manage Admins and their access permissions</CardDescription>
               </div>
               <div className="flex gap-2">
                 {hiddenUserIds.size > 0 && (
@@ -514,7 +535,7 @@ export default function UsersPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <Popover>
+                  {/* <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -529,11 +550,11 @@ export default function UsersPage() {
                         initialFocus
                       />
                     </PopoverContent>
-                  </Popover>
+                  </Popover> */}
 
-                  <span className="text-slate-500">To</span>
+                  {/* <span className="text-slate-500">To</span> */}
 
-                  <Popover>
+                  {/* <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -549,7 +570,7 @@ export default function UsersPage() {
                         initialFocus
                       />
                     </PopoverContent>
-                  </Popover>
+                  </Popover> */}
                 </div>
 
                 <Button variant="default" size="sm" onClick={() => {}}>
@@ -569,9 +590,9 @@ export default function UsersPage() {
               <Tabs value={roleFilter} onValueChange={(value) => setRoleFilter(value as any)}>
                 <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="admin">Admins</TabsTrigger>
-                  <TabsTrigger value="seller">Sellers</TabsTrigger>
-                  <TabsTrigger value="agent">Agents</TabsTrigger>
+                  {/* <TabsTrigger value="admin">Admins</TabsTrigger> */}
+                  {/* <TabsTrigger value="seller">Sellers</TabsTrigger> */}
+                  {/* <TabsTrigger value="agent">Agents</TabsTrigger> */}
                 </TabsList>
               </Tabs>
             </div>
@@ -585,11 +606,11 @@ export default function UsersPage() {
                       <TableHead>USER ID</TableHead>
                       <TableHead>NAME</TableHead>
                       <TableHead>EMAIL</TableHead>
-                      <TableHead>PHONE</TableHead>
-                      <TableHead>ROLE</TableHead>
+                      {/* <TableHead>PHONE</TableHead> */}
+                      {/* <TableHead>ROLE</TableHead> */}
                       <TableHead>SALARY</TableHead>
                       <TableHead>STATUS</TableHead>
-                      <TableHead>REGISTRATION DATE</TableHead>
+                      {/* <TableHead>REGISTRATION DATE</TableHead> */}
                       <TableHead className="text-right">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -623,13 +644,13 @@ export default function UsersPage() {
                             </div>
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.phone}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={getRoleColor(user.role)}>
+                          {/* <TableCell>{user.phone}</TableCell> */}
+                          {/* <TableCell> */}
+                            {/* <Badge variant="outline" className={getRoleColor(user.role)}>
                               {getRoleIcon(user.role)}
                               <span className="ml-1 capitalize">{user.role}</span>
-                            </Badge>
-                          </TableCell>
+                            </Badge> */}
+                          {/* </TableCell> */}
                           <TableCell>${user.salary.toLocaleString()}</TableCell>
                           <TableCell>
                             <div className="space-y-1.5">
@@ -671,13 +692,13 @@ export default function UsersPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
+                          {/* <TableCell>
                             {new Date(user.registrationDate).toLocaleDateString('en-US', {
                               month: '2-digit',
                               day: '2-digit',
                               year: 'numeric',
                             })}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
                               <Button
@@ -701,7 +722,7 @@ export default function UsersPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleEditUser(user)}
+                                onClick={() => handleUpdateUser(user)}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="Edit User"
                               >
