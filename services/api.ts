@@ -1,5 +1,4 @@
 // ✅ api.ts — Clean, TypeScript, Connected to .NET backend
-
 import { UserRole } from "@/contexts/AuthContext";
 import {
   Shipment,
@@ -20,7 +19,14 @@ import {
   BranchData,
   User,
   OrderUpdate,
+  ZoneUpdate,
+  BranchResponseDetails,
+  BranchUpdate,
   ShipmentStatus,
+  ChangeSateOrdersRequest,
+  ZonesForSellerResponse,
+  OrderRequestSeller,
+  OrderUpdateSeller,
 } from "../types";
 
 // -------------------- Base URLs --------------------
@@ -217,6 +223,9 @@ export const shipmentsAPI = {
   getAll: async (): Promise<OrderResponse[]> => {
     return apiCall<OrderResponse[]>(`/Order`);
   },
+  getAllZonesForSeller: async (): Promise<ZonesForSellerResponse[]> => {
+    return apiCall<ZonesForSellerResponse[]>("/Order/Zones");
+  },
 
   // ✅ Get by ID *********
   getById: async (id: string): Promise<OrderResponseDetails | Partial<OrderResponseDetails>> => {
@@ -234,11 +243,32 @@ export const shipmentsAPI = {
       body: JSON.stringify(data),
     });
   },
+  createForSeller: async (data: Partial<OrderRequestSeller>): Promise<OrderResponse> => {
+    return apiCall<OrderResponse>("/Order", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  // create: async (data: Partial<OrderRequest>): Promise<OrderResponse> => {
+  //   return apiCall<OrderResponse>("/Order", {
+  //     method: "POST",
+  //     body: JSON.stringify(data),
+  //   });
+  // },
 
   // ✅ Update existing order
   update: async (
     id: string,
     data: Partial<OrderUpdate>
+  ): Promise<OrderRequest> => {
+    return apiCall<OrderRequest>(`/Order/${id}`, {
+      method: "POST",
+      body: JSON.stringify({ ...data }),
+    });
+  },
+  updateForSeller: async (
+    id: string,
+    data: Partial<OrderUpdateSeller>
   ): Promise<OrderRequest> => {
     return apiCall<OrderRequest>(`/Order/${id}`, {
       method: "POST",
@@ -260,13 +290,18 @@ export const shipmentsAPI = {
 
   // ✅ Bulk status update
   bulkUpdateStatus: async (
-    ids: string[],
-    status: string,
-    notes?: string
+    data: ChangeSateOrdersRequest
   ): Promise<void> => {
-    return apiCall<void>("/Order/bulk-status", {
+    // Convert status from string key (e.g. "New") to enum value (e.g. "0") if needed
+    const statusKey = data.statusOrder as unknown as keyof typeof ShipmentStatus;
+    const statusValue = ShipmentStatus[statusKey];
+    const finalStatus = statusValue !== undefined ? statusValue : data.statusOrder;
+
+    return apiCall<void>("/Order/ChangeSatuseOrders", {
       method: "PATCH",
-      body: JSON.stringify({ shipmentIds: ids, status, notes }),
+      body: JSON.stringify({
+        ...data, statusOrder: parseInt(finalStatus)
+      }),
     });
   },
 
@@ -428,8 +463,6 @@ export const agentsAPI = {
     const params = new URLSearchParams({ id: id as string, branchId: branchId })
     return apiCall<Agent>(`/Agent/Activation?${params}`, {
       method: 'GET',
-
-      // body: JSON.stringify({ id : id, branchId: branchId }),
     });
 
     console.log("Backend API: Update agent status", { id, status });
@@ -484,7 +517,7 @@ export const sellersAPI = {
       method: "POST",
       body: JSON.stringify(sellerData),
     });
-    const { mockSellers } = await import("../lib/mockData");
+
     // const newSeller = { id: Date.now().toString(), ...sellerData } as Seller;
     // return newSeller;
     // console.log('Backend API: Create seller', sellerData);
@@ -512,21 +545,22 @@ export const sellersAPI = {
   // PATCH /api/sellers/:id/status - Update seller status
   updateStatus: async (
     id: string,
-    status: "active" | "inactive"
-  ): Promise<Seller> => {
+    status: "active" | "inactive",
+    vip: string
+  ): Promise<Boolean> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Seller>(`/sellers/${id}/status`, {
-    //   method: 'PATCH',
-    //   body: JSON.stringify({ status }),
-    // });
+    return apiCall<Boolean>(`/Seller/activation?=${id}${vip ? "&vip=true" : ""}`, {
+      method: 'POST',
+      body: JSON.stringify({ status }),
+    });
 
     // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const { mockSellers } = await import("../lib/mockData");
-    const seller = mockSellers.find((s) => s.id === id);
-    if (!seller) throw new Error("Seller not found");
-    seller.status = status;
-    return seller;
+    // await new Promise((resolve) => setTimeout(resolve, 300));
+    // const { mockSellers } = await import("../lib/mockData");
+    // const seller = mockSellers.find((s) => s.id === id);
+    // if (!seller) throw new Error("Seller not found");
+    // seller.status = status;
+    // return seller;
   },
 
   // POST /api/sellers/:id/deactivation-period - Set deactivation period
@@ -600,14 +634,11 @@ export const branchesAPI = {
   },
 
   // GET /api/branches/:id - Get branch by ID
-  getById: async (id: string): Promise<Branch> => {
+  getById: async (id: string): Promise<BranchResponseDetails> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<Branch>(`/branches/${id}`);
+    return apiCall<BranchResponseDetails>(`/Branch/${id}`);
 
-    const { mockBranches } = await import("../lib/mockData");
-    const branch = mockBranches.find((b) => b.id === id);
-    if (!branch) throw new Error("Branch not found");
-    return branch;
+
   },
 
   // POST /api/branches - Create new branch
@@ -625,10 +656,10 @@ export const branchesAPI = {
   // PUT /api/branches/:id - Update branch
   update: async (
     id: string,
-    branchData: Partial<BranchData>
-  ): Promise<Branch> => {
+    branchData: Partial<BranchUpdate>
+  ): Promise<BranchUpdate> => {
     // TODO: Replace with actual API call to .NET backend
-    return apiCall<Branch>(`/Branch/${id}`, {
+    return apiCall<BranchUpdate>(`/Branch/${id}`, {
       method: "PUT",
       body: JSON.stringify(branchData),
     });
@@ -638,8 +669,9 @@ export const branchesAPI = {
   },
   // PUT /api/Branch/{id}/activation/{isActive} - Toggle Branch Status
   toggleActivation: async (id: string, isActive: boolean): Promise<void> => {
-    return apiCall<void>(`/Branch/${id}/activation/${isActive}`, {
+    return apiCall<void>(`/Branch/activation/${isActive}`, {
       method: "PUT",
+      body: JSON.stringify([id]),
     });
   },
 
@@ -661,13 +693,14 @@ export const zonesAPI = {
   getAll: async (): Promise<ZoneResponse[]> => {
     return apiCall<ZoneResponse[]>("/Zone");
   },
+
   getAllRegionCount: async (): Promise<number> => {
     return apiCall<number>("/Zone/totalRegoin");
   },
 
   // GET /api/Zone/{id} - Get zone by ID
-  getById: async (id: number): Promise<Zone> => {
-    return apiCall<Zone>(`/Zone/${id}`);
+  getById: async (id: number): Promise<ZoneResponseDetails> => {
+    return apiCall<ZoneResponseDetails>(`/Zone/${id}`);
   },
 
   // POST /api/Zone - Create new zone
@@ -680,8 +713,8 @@ export const zonesAPI = {
   },
 
   // PUT /api/Zone/{id} - Update zone
-  update: async (id: number, payload: any): Promise<Zone> => {
-    return apiCall<Zone>(`/Zone/${id}`, {
+  update: async (id: number, payload: ZoneUpdate): Promise<void> => {
+    return apiCall<void>(`/Zone/${id}`, {
       method: "PUT",
       body: JSON.stringify(payload),
     });
@@ -708,7 +741,7 @@ export const usersAPI = {
   },
 
   // GET /api/users/:id - Get user by ID
-  getById: async (id: string): Promise<any> => {
+  getById: async (_id: string): Promise<any> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<any>(`/users/${id}`);
 
@@ -787,8 +820,8 @@ export const usersAPI = {
 
   // PUT /api/users/password - Change password
   changePassword: async (
-    oldPassword: string,
-    newPassword: string
+    _oldPassword: string,
+    _newPassword: string
   ): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<void>('/users/password', {
@@ -829,7 +862,7 @@ export const authAPI = {
   },
 
   // POST /api/auth/refresh - Refresh token
-  refreshToken: async (refreshToken: string): Promise<{ token: string }> => {
+  refreshToken: async (_refreshToken: string): Promise<{ token: string }> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<{ token: string }>('/auth/refresh', {
     //   method: 'POST',
@@ -852,7 +885,7 @@ export const authAPI = {
   },
 
   // POST /api/auth/reset-password - Reset password with token
-  resetPassword: async (token: string, newPassword: string): Promise<void> => {
+  resetPassword: async (_token: string, _newPassword: string): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
     // return apiCall<void>('/auth/reset-password', {
     //   method: 'POST',

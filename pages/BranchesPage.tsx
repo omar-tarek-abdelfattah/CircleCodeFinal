@@ -78,7 +78,9 @@ export function BranchesPage() {
     try {
       const result = await branchesAPI.getAll();
       const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
+
       setBranches(mappedBranches);
+      console.log(branches);
     } catch (error) {
       console.error('Failed to fetch branches:', error);
       toast.error('Failed to load branches');
@@ -138,11 +140,14 @@ export function BranchesPage() {
     currentPage * itemsPerPage
   );
 
-  const handleToggleStatus = (branchId: string, currentStatus: string) => {
+  const handleToggleStatus = async (branchId: string, currentStatus: string) => {
+
+    await branchesAPI.toggleActivation(branchId, currentStatus === 'active' ? true : false);
+
     setBranches(prevBranches =>
       prevBranches.map(branch =>
         branch.id === branchId
-          ? { ...branch, status: currentStatus === 'active' ? 'inactive' : 'active' }
+          ? { ...branch, status: currentStatus === 'active' ? 'active' : 'inactive' }
           : branch
       )
     );
@@ -368,7 +373,7 @@ export function BranchesPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={branch.status === 'active'}
+                            checked={branch.status === 'active' ? true : false}
                             onCheckedChange={() => handleToggleStatus(branch.id, branch.status)}
                             className="data-[state=checked]:bg-green-500"
                           />
@@ -557,7 +562,7 @@ export function BranchesPage() {
                       <Clock className="w-4 h-4" />
                       Business Hours
                     </div>
-                    <p className="font-medium">{selectedBranch.businessHours || 'Not specified'}</p>
+                    <p className="font-medium">{selectedBranch.closingTime || 'Not specified'}</p>
                   </div>
                 </div>
               </div>

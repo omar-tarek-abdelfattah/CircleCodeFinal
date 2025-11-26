@@ -25,6 +25,8 @@ export const SELLER_STATUSES: ShipmentStatusString[] = [
   ShipmentStatusString.InWarehouse,
   ShipmentStatusString.DeliveredToAgent,
   ShipmentStatusString.Delivered,
+  ShipmentStatusString.CustomerUnreachable,
+  ShipmentStatusString.PartiallyDelivered,
   ShipmentStatusString.Returned,
 ];
 

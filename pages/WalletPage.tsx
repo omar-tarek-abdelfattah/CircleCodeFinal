@@ -23,21 +23,20 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { walletApi } from '../services/walletApi';
-import { Transaction, WalletSummary } from '../types';
+import { OrderResponse, ShipmentStatusString, Transaction, WalletSummary } from '../types';
+import { shipmentsAPI } from '@/services/api';
 
 type DateFilterType = 'today' | 'lastWeek' | 'lastMonth' | 'last3Months' | 'custom' | null;
 
 const WalletPage: React.FC = () => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState<Array<{ month: string; revenue: number }>>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  
+
   // Date filter states
   const [dateFilter, setDateFilter] = useState<DateFilterType>(null);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [customDateRange, setCustomDateRange] = useState<{
     from: Date | undefined;
     to: Date | undefined;
@@ -46,15 +45,32 @@ const WalletPage: React.FC = () => {
     to: undefined,
   });
 
+
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
   // Load wallet data on component mount
+
+  const loadOrdersData = async () => {
+    try {
+      setIsLoading(true);
+      const ordersData = await shipmentsAPI.getAll();
+      const filteredData = ordersData.filter(order => order.statusOrder === ShipmentStatusString.Delivered);
+      setOrders(filteredData);
+    } catch (error) {
+      console.error('Error loading orders data:', error);
+      toast.error('Failed to load orders data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
     loadWalletData();
+    loadOrdersData();
   }, []);
 
   const loadWalletData = async () => {
     try {
       setIsLoading(true);
-      
+
       // Load all wallet data in parallel
       const [summary, transactionsData, revenueData] = await Promise.all([
         walletApi.getSummary(),
@@ -90,7 +106,7 @@ const WalletPage: React.FC = () => {
   const getDateRange = (filterType: DateFilterType): { from: Date; to: Date } | null => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (filterType) {
       case 'today':
         return {
@@ -185,7 +201,7 @@ const WalletPage: React.FC = () => {
   // Get filter label
   const getFilterLabel = () => {
     if (!dateFilter) return 'All Time';
-    
+
     switch (dateFilter) {
       case 'today':
         return 'Today';
@@ -208,7 +224,7 @@ const WalletPage: React.FC = () => {
   // Get period label for the 4th card
   // const getPeriodLabel = () => {
   //   if (!dateFilter) return 'This Month';
-    
+
   //   switch (dateFilter) {
   //     case 'today':
   //       return 'Today';
@@ -284,7 +300,7 @@ const WalletPage: React.FC = () => {
             )}
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {dateFilter 
+            {dateFilter
               ? `Showing financial data for ${getFilterLabel().toLowerCase()}`
               : 'Track your revenue and manage your finances'
             }
@@ -462,8 +478,8 @@ const WalletPage: React.FC = () => {
             onClick={handleRefresh}
             disabled={isRefreshing} */}
           {/* > */}
-            {/* <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> */}
-            {/* Refresh */}
+          {/* <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> */}
+          {/* Refresh */}
           {/* </Button> */}
           <Button variant="outline" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
@@ -686,7 +702,7 @@ const WalletPage: React.FC = () => {
               <CardTitle>Recent Transactions</CardTitle>
               {transactions.length > 0 && (
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {dateFilter 
+                  {dateFilter
                     ? `${transactions.length} transaction${transactions.length !== 1 ? 's' : ''} in selected period`
                     : `Latest ${Math.min(transactions.length, 10)} transactions`
                   }
@@ -706,86 +722,86 @@ const WalletPage: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Type</TableHead>
-                        {/* <TableHead>Description</TableHead> */}
-                        {/* <TableHead>Date</TableHead> */}
-                        {/* <TableHead>Reference</TableHead> */}
+                        <TableHead>client name</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Seller</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {transactions.length === 0 ? (
+                      {orders.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                             {dateFilter ? 'No transactions found for the selected date range' : 'No transactions found'}
                           </TableCell>
                         </TableRow>
                       ) : (
-                        transactions.slice(0, 10).map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {transaction.type === 'credit' ? (
-                              <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                                <ArrowDownRight className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        orders.slice(0, 10).map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {order.statusOrder === ShipmentStatusString.Delivered ? (
+                                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                                    <ArrowDownRight className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                                    <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
+                                  </div>
+                                )}
+                                <span className="capitalize">{order.statusOrder}</span>
                               </div>
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                                <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-[300px] truncate">
+                                {order.clientName}
                               </div>
-                            )}
-                            <span className="capitalize">{transaction.type}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="max-w-[300px] truncate">
-                            {transaction.description}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-500">
-                          {formatDate(transaction.date)}
-                        </TableCell>
-                        <TableCell className="text-sm font-mono text-slate-500">
-                          {transaction.reference}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={
-                              transaction.type === 'credit'
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                            }
-                          >
-                            {transaction.type === 'credit' ? '+' : '-'}$
-                            {transaction.amount.toLocaleString()}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              transaction.status === 'completed'
-                                ? 'default'
-                                : transaction.status === 'pending'
-                                ? 'secondary'
-                                : 'destructive'
-                            }
-                          >
-                            {transaction.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
+                            </TableCell>
+                            <TableCell className="text-sm text-slate-500">
+                              {formatDate(order.dateCreated)}
+                            </TableCell>
+                            <TableCell className="text-sm font-mono text-slate-500">
+                              {order.clientName}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span
+                                className={
+                                  order.statusOrder === ShipmentStatusString.Delivered
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-red-600 dark:text-red-400'
+                                }
+                              >
+                                {order.statusOrder === ShipmentStatusString.Delivered ? '+' : '-'}$
+                                {order.totalPrice.toLocaleString()}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  order.statusOrder === ShipmentStatusString.Delivered
+                                    ? 'default'
+                                    : order.statusOrder === ShipmentStatusString.InWarehouse
+                                      ? 'secondary'
+                                      : 'destructive'
+                                }
+                              >
+                                {order.statusOrder}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
                         ))
                       )}
                     </TableBody>
                   </Table>
                 </div>
 
-                {transactions.length > 10 && (
+                {orders.length > 10 && (
                   <div className="mt-4 text-center">
                     <p className="text-sm text-slate-500 mb-2">
-                      Showing 10 of {transactions.length} transactions
+                      Showing 10 of {orders.length} orders
                     </p>
-                    <Button variant="outline">View All Transactions</Button>
+                    <Button variant="outline">View All Orders</Button>
                   </div>
                 )}
               </>

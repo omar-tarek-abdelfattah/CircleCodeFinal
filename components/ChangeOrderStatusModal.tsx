@@ -120,7 +120,7 @@ export function ChangeOrderStatusModal({
           </DialogDescription>
         </DialogHeader>
 
-        {shipments.length > 0 && (
+        {shipments?.length > 0 && (
           <form onSubmit={handleSubmit}>
             <div className="space-y-6 py-4">
               {/* Order Information */}

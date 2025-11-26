@@ -46,23 +46,23 @@ export function AgentsPage() {
 
 
   const fetchAgents = async () => {
-        try {
-            const data = await agentsAPI.getAll();
-            console.log(data)
-            setAgents(data);
-        } catch (error) {
-            console.error("Failed to fetch agents:", error);
-            toast.error("Failed to load agents list.");
-        }
-    };
+    try {
+      const data = await agentsAPI.getAll();
+      console.log(data)
+      setAgents(data);
+    } catch (error) {
+      console.error("Failed to fetch agents:", error);
+      toast.error("Failed to load agents list.");
+    }
+  };
 
   useEffect(() => {
-        fetchAgents();
-    }, []);  
+    fetchAgents();
+  }, []);
 
   // Calculate statistics
   const totalAgents = agents.length;
-  
+
   // Active agents: those with assignments within 2 days
   const twoDaysAgo = new Date();
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
@@ -74,14 +74,14 @@ export function AgentsPage() {
 
   // console.log(twoDaysAgo)
   // On duty: agents with orders today
-  const onDutyAgents = agents.filter(agent => 
+  const onDutyAgents = agents.filter(agent =>
     agent.todayShipments && agent.todayShipments > 0
   ).length;
 
   // Filter agents based on search and hidden status
   const filteredAgents = useMemo(() => {
     let filtered = agents.filter(agent => !hiddenAgentIds.has(agent.id));
-    
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(agent =>
@@ -91,7 +91,7 @@ export function AgentsPage() {
         (agent.branch && agent.branch.includes(query))
       );
     }
-    
+
     return filtered;
   }, [searchQuery, hiddenAgentIds, agents]);
 
@@ -144,14 +144,14 @@ export function AgentsPage() {
   };
 
   const handleToggleStatus = async (agentId: string, branshName: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const newStatus = currentStatus === 'active' ? 'active' : 'inactive';
 
     console.log(agentId, currentStatus, newStatus);
-    
+
     try {
       // TODO: Connect to backend API
       const branches = await branchesAPI.getAll();
-      const branchId = branches.data.filter((b)=>{
+      const branchId = branches.data.filter((b) => {
         return branshName == b.name
       })
       console.log(branchId)
@@ -166,7 +166,7 @@ export function AgentsPage() {
           a.id === agentId ? { ...a, status: newStatus } : a
         )
       );
-      
+
       toast.success(`Agent ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
       console.error('Failed to update agent status:', error);
@@ -182,10 +182,10 @@ export function AgentsPage() {
       prev.map(a =>
         a.id === selectedAgent.id
           ? {
-              ...a,
-              deactivationFrom: fromDate || undefined,
-              deactivationTo: toDate || undefined,
-            }
+            ...a,
+            deactivationFrom: fromDate || undefined,
+            deactivationTo: toDate || undefined,
+          }
           : a
       )
     );
@@ -195,28 +195,28 @@ export function AgentsPage() {
     // console.log(agent.deactivationFrom, agent.deactivationTo);
     // console.log(!agent.deactivationFrom || !agent.deactivationTo);
     if (!agent.deactivationFrom || !agent.deactivationTo) return false;
-    
+
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
-    
+
     const from = new Date(agent.deactivationFrom);
     from.setHours(0, 0, 0, 0);
-    
+
     const to = new Date(agent.deactivationTo);
     to.setHours(23, 59, 59, 999); // End of day
-    
+
     return now >= from && now <= to;
   };
 
   const isScheduledForFuture = (agent: Agent): boolean => {
     if (!agent.deactivationFrom) return false;
-    
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    
+
     const from = new Date(agent.deactivationFrom);
     from.setHours(0, 0, 0, 0);
-    
+
     return from > now;
   };
 
@@ -446,9 +446,9 @@ export function AgentsPage() {
                         </TableCell>
                         <TableCell className="text-slate-600 dark:text-slate-400">
                           {
-                          String(agent.id).includes('-') 
-                           ? String(agent.id).split('-')[1] 
-                           : String(agent.id)
+                            String(agent.id).includes('-')
+                              ? String(agent.id).split('-')[1]
+                              : String(agent.id)
                           }
                         </TableCell>
                         <TableCell>
@@ -473,8 +473,8 @@ export function AgentsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className={
                               agent.todayShipments && agent.todayShipments > 0
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -489,14 +489,13 @@ export function AgentsPage() {
                             <div className="flex items-center gap-3">
                               <Switch
                                 checked={agent.status === 'active' && !isTemporarilyDeactivated(agent)}
-                                onCheckedChange={() => handleToggleStatus(agent.id , agent.branshName , agent.status)}
+                                onCheckedChange={() => handleToggleStatus(agent.id, agent.branshName as unknown as string, agent.status)}
                                 className="data-[state=checked]:bg-green-500"
                               />
-                              <span className={`text-sm font-semibold ${
-                                agent.status === 'active' && !isTemporarilyDeactivated(agent)
-                                  ? 'text-green-600 dark:text-green-400' 
-                                  : 'text-red-600 dark:text-red-400'
-                              }`}>
+                              <span className={`text-sm font-semibold ${agent.status === 'active' && !isTemporarilyDeactivated(agent)
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
+                                }`}>
                                 {agent.status === 'active' && !isTemporarilyDeactivated(agent) ? 'Active' : 'inactive'}
                               </span>
                             </div>
@@ -642,7 +641,7 @@ export function AgentsPage() {
                     Agent ID: {selectedAgent.id}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    <Badge 
+                    <Badge
                       className={
                         selectedAgent.status === 'active' && !isTemporarilyDeactivated(selectedAgent)
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -759,7 +758,8 @@ export function AgentsPage() {
       <AddAgentModal
         open={addAgentModalOpen}
         onOpenChange={setAddAgentModalOpen}
-        onSuccess={() => {fetchAgents();
+        onSuccess={() => {
+          fetchAgents();
           // TODO: Refresh agents list
           console.log('Agent added, refreshing list...');
         }}
@@ -770,7 +770,8 @@ export function AgentsPage() {
         open={editAgentModalOpen}
         onOpenChange={setEditAgentModalOpen}
         agent={selectedAgent}
-        onSuccess={() => {fetchAgents();
+        onSuccess={() => {
+          fetchAgents();
           // TODO: Refresh agents list
           console.log('Agent updated, refreshing list...');
         }}

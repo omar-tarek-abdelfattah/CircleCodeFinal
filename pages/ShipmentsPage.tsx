@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff } from 'lucide-react';
-import { OrderResponse, ShipmentStatusString } from '../types';
+import { Agent, OrderResponse, ShipmentStatus, ShipmentStatusString } from '../types';
 import { useAuth, UserRole } from '../contexts/AuthContext';
-import { shipmentsAPI } from '../services/api';
+import { agentsAPI, shipmentsAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -21,7 +21,7 @@ import { EditShipmentModal } from '../components/EditShipmentModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { StatCard } from '../components/StatCard';
-import { getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
+import { AGENT_STATUSES, SELLER_STATUSES, ALL_STATUSES, getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
 import { importShipmentsFromExcel, downloadTemplate, } from '../lib/excelUtils';
 
 
@@ -31,11 +31,11 @@ interface ShipmentsPageProps {
 }
 
 export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPageProps) {
-  const { user } = useAuth();
+  const { role } = useAuth();
   const [shipments, setShipments] = useState<OrderResponse[]>([]);
   // const [shipmentsDetails, setShipmentsDetails] = useState<OrderResponse>({} as OrderResponse);
   const [loading, setLoading] = useState(true);
-  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | OrderResponse[] | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
   const [editShipmentModalOpen, setEditShipmentModalOpen] = useState(false);
@@ -79,13 +79,17 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
   const [hiddenOrdersDialogOpen, setHiddenOrdersDialogOpen] = useState(false);
 
 
+  const isRoleAdminOrSuperAdmin = role === UserRole.Admin || role === UserRole.SuperAdmin;
+  const isRoleAgent = role == UserRole.agent;
+  const isRoleSeller = role == UserRole.Seller;
+
   // Load shipments
   const loadShipments = async () => {
     setLoading(true);
     setLoadingStats(true);
     try {
       const response = await shipmentsAPI.getAll();
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
 
       // Ensure response is an array
       if (Array.isArray(response)) {
@@ -118,7 +122,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
   // console.log('Stats calculated', { totalOrders, packagesInProgress, completedShipments });
 
   // Get available statuses based on user role
-  const availableStatuses = user?.role ? getAvailableStatuses(user.role as UserRole) : [];
+  const availableStatuses = role ? getAvailableStatuses(role as UserRole) : [];
 
   // Apply filters (and exclude hidden orders)
   const filteredShipments = visibleShipments.filter(s => {
@@ -173,7 +177,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
   const handleEditShipment = (shipment: OrderResponse) => {
     // Check if seller can edit this order
-    if (user?.role === UserRole.Seller && shipment.statusOrder !== ShipmentStatusString.New) {
+    if (role === UserRole.Seller && shipment.statusOrder !== ShipmentStatusString.New) {
       toast.error('You cannot edit orders that have been processed by admin or agent');
       return;
     }
@@ -234,7 +238,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
   // Hide/Restore order handlers
   const handleHideOrder = (orderId: string) => {
     // Check if seller can hide this order
-    if (user?.role === UserRole.Seller) {
+    if (role === UserRole.Seller) {
       const shipment = shipments.find(s => s.id === orderId);
       if (shipment && shipment.statusOrder !== ShipmentStatusString.New) {
         toast.error('You cannot hide orders that have been processed by admin or agent');
@@ -362,13 +366,16 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
       } else {
         newSet.add(orderId);
       }
+
+      // console.log(newSet);
+
       return newSet;
     });
   };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // setSelectedOrderIds(new Set(paginatedShipments.map(s => s.id)));
+      setSelectedOrderIds(new Set(paginatedShipments.map(s => s.id)));
     } else {
       setSelectedOrderIds(new Set());
     }
@@ -385,14 +392,21 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
   // Bulk action handlers
   const handleBulkStatusChange = async () => {
     // Prevent sellers from changing status
-    if (user?.role === UserRole.Seller) {
+    if (role === UserRole.Seller) {
       toast.error('You do not have permission to change order status');
       return;
     }
 
     try {
+      console.log(bulkStatus);
+
       // TODO: Connect to backend API
-      // await shipmentsAPI.bulkUpdateStatus(Array.from(selectedOrderIds), bulkStatus);
+      await shipmentsAPI.bulkUpdateStatus({
+        orderIdS: Array.from(selectedOrderIds),
+        statusOrder: bulkStatus as unknown as ShipmentStatus,
+        agentId: selectedAgentId ? parseInt(selectedAgentId) : undefined,
+        // cancellednotes: bulkCancelledNotes,
+      });
 
       // Update local state
       setShipments(prev =>
@@ -402,7 +416,6 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
             : s
         )
       );
-
 
       toast.success(`Successfully updated status for ${selectedOrderIds.size} orders`);
       setChangeStatusDialogOpen(false);
@@ -414,7 +427,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
   const handleBulkAgentAssignment = async () => {
     // Prevent sellers from assigning agents
-    if (user?.role === UserRole.Seller) {
+    if (role === UserRole.Seller) {
       toast.error('You do not have permission to assign agents');
       return;
     }
@@ -426,11 +439,12 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
     try {
       // TODO: Connect to backend API
-      // await shipmentsAPI.bulkAssignAgent(Array.from(selectedOrderIds), selectedAgentId);
-
-      // TODO: Get agent details from backend API
-      // const agentResponse = await agentsAPI.getById(selectedAgentId);
-      // const selectedAgent = agentResponse.data;
+      await shipmentsAPI.bulkUpdateStatus({
+        orderIdS: Array.from(selectedOrderIds),
+        statusOrder: bulkStatus as unknown as ShipmentStatus,
+        agentId: selectedAgentId ? parseInt(selectedAgentId) : undefined,
+        // cancellednotes: bulkCancelledNotes,
+      });
 
       const selectedAgent = { id: selectedAgentId, name: 'Agent', phone: 'N/A' };
 
@@ -464,10 +478,20 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
   };
 
   // TODO: Load agents from backend API
-  // const [agents, setAgents] = useState<Agent[]>([]);
-  // Load agents when component mounts
-  const agents: any[] = []; // Empty until backend is connected
+  const [agents, setAgents] = useState<Agent[]>([]);
 
+  useEffect(() => {
+    loadAgents();
+  }, []);
+
+  const loadAgents = async () => {
+    try {
+      const response = await agentsAPI.getAll();
+      setAgents(response);
+    } catch (error) {
+      console.error('Error loading agents:', error);
+    }
+  };
 
   // console.log('ShipmentsPage: Reaching return statement', {
   //   shipmentsCount: shipments.length,
@@ -505,7 +529,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
             <Download className="w-4 h-4" />
             Export
           </Button>
-          {user?.role !== UserRole.agent && (
+          {role !== UserRole.agent && (
             <Button
               className="gap-2 bg-gradient-to-r from-blue-500 to-purple-600"
               onClick={() => setAddShipmentModalOpen(true)}
@@ -700,7 +724,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {user?.role !== UserRole.agent && (
+                  {role !== UserRole.agent && (
                     <>
                       <Button
                         variant="default"
@@ -722,7 +746,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                       </Button>
                     </>
                   )}
-                  {user?.role !== UserRole.Seller && (
+                  {role !== UserRole.Seller && (
                     <Button
                       variant="default"
                       size="sm"
@@ -733,7 +757,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                       Change Status
                     </Button>
                   )}
-                  {user?.role === UserRole.Admin || UserRole.SuperAdmin && (
+                  {role === UserRole.Admin || role === UserRole.SuperAdmin && (
                     <Button
                       variant="default"
                       size="sm"
@@ -781,7 +805,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                     {hiddenOrderIds.size} Hidden {hiddenOrderIds.size === 1 ? 'Order' : 'Orders'}
                   </Button>
                 )}
-                {user?.role !== UserRole.agent && (
+                {role !== UserRole.agent && (
                   <>
                     <Button
                       variant="outline"
@@ -811,7 +835,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                     </Button>
                   </>
                 )}
-                {user?.role !== UserRole.agent && (
+                {role !== UserRole.agent && (
                   <Button
                     size="sm"
                     className="bg-gradient-to-r from-blue-500 to-purple-600"
@@ -840,9 +864,9 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                       <TableHead>TRACKING ID</TableHead>
                       <TableHead>CUSTOMER</TableHead>
                       <TableHead>MERCHANT</TableHead>
-                      <TableHead>AGENT</TableHead>
+                      {/* <TableHead>AGENT</TableHead>
                       <TableHead>DATE</TableHead>
-                      <TableHead>ZONE</TableHead>
+                      <TableHead>ZONE</TableHead> */}
                       <TableHead className="bg-slate-50 dark:bg-slate-800/50">PRODUCT COST</TableHead>
                       {/* <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead> */}
                       <TableHead className="bg-slate-100 dark:bg-slate-800">TOTAL AMOUNT</TableHead>
@@ -887,16 +911,16 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                           </TableCell>
                           <TableCell>{shipment.clientName}</TableCell>
                           <TableCell>{shipment.sellerName}</TableCell>
-                          <TableCell>
+                          {/* <TableCell>
                             {shipment.agentName || (
                               <span className="text-slate-400">Unassigned</span>
                             )}
-                          </TableCell>
-                          <TableCell>{formatDate(shipment.dateCreated)}</TableCell>
-                          <TableCell>{shipment.sellerName || '-'}</TableCell>
+                          </TableCell> */}
+                          {/* <TableCell>{formatDate(shipment.dateCreated)}</TableCell> */}
+                          {/* <TableCell>{shipment.sellerName || '-'}</TableCell> */}
                           <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/30">
                             <div className="flex items-center gap-1">
-                              <span className="text-slate-500 text-xs">$</span>
+                              <span className="text-slate-500rmaxt-xs">$</span>
                               <span>{(shipment.totalPrice || 0).toFixed(2)}</span>
                             </div>
                           </TableCell>
@@ -934,28 +958,34 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                               >
                                 <FileText className="w-4 h-4" />
                               </Button> */}
-                              {user?.role === UserRole.Admin || UserRole.SuperAdmin && shipment.statusOrder === 'New' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditShipment(shipment)}
-                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-                                  title="Edit Shipment"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              )}
+                              {
+                                (
+                                  (isRoleAdminOrSuperAdmin && shipment.statusOrder !== ShipmentStatusString.Delivered) ||
+                                  (isRoleAgent && AGENT_STATUSES.includes(shipment.statusOrder as ShipmentStatusString)) ||
+                                  (isRoleSeller && SELLER_STATUSES.includes(shipment.statusOrder as ShipmentStatusString))
+                                ) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditShipment(shipment)}
+                                    className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    title="Edit Shipment"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                )
+                              }
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleHideOrder(shipment.id)}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title={
-                                  user?.role === UserRole.Seller && shipment.statusOrder !== ShipmentStatusString.New
+                                  role === UserRole.Seller && shipment.statusOrder !== ShipmentStatusString.New
                                     ? 'Cannot hide processed orders'
                                     : 'Hide Order'
                                 }
-                                disabled={user?.role === UserRole.Seller && shipment.statusOrder !== ShipmentStatusString.New}
+                                disabled={role === UserRole.Seller && shipment.statusOrder !== ShipmentStatusString.New}
                               >
                                 <EyeOff className="w-4 h-4" />
                               </Button>
@@ -1109,7 +1139,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
             {/* Status Filter */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Order Status {user?.role !== UserRole.Admin || UserRole.SuperAdmin && <span className="text-xs text-slate-500">(Limited to your role)</span>}</Label>
+                <Label>Order Status {role !== UserRole.Admin || UserRole.SuperAdmin && <span className="text-xs text-slate-500">(Limited to your role)</span>}</Label>
                 {statusFilter.length > 0 && (
                   <Button
                     variant="ghost"
@@ -1189,7 +1219,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
       {/* Shipment Details Modal */}
       <ShipmentDetailsModal
-        shipment={selectedShipment}
+        shipment={selectedShipment as OrderResponse}
         isOpen={detailsModalOpen}
         onClose={() => setDetailsModalOpen(false)}
         onUpdateStatus={handleUpdateStatus}
@@ -1287,7 +1317,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Select New Status</Label>
-              <Select value={bulkStatus} onValueChange={(value) => setBulkStatus(value as ShipmentStatusString)}>
+              <Select value={bulkStatus} onValueChange={(value) => { setBulkStatus(value as ShipmentStatusString) }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -1496,7 +1526,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
         isOpen={editShipmentModalOpen}
         onClose={() => setEditShipmentModalOpen(false)}
         onSuccess={loadShipments}
-        userRole={user?.role}
+        userRole={role}
       />
     </div>
   );

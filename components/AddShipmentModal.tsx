@@ -20,9 +20,9 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Package, Loader2, Plus, Trash2 } from 'lucide-react';
-import { mockSellers } from '../lib/mockData';
-import { ItemsRequest, OrderRequest, Seller, Zone, ZoneRegion, ZoneResponse } from '@/types';
+import type { ItemsRequest, OrderRequest, Seller, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '@/types';
 import { sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 
 
 
@@ -35,6 +35,8 @@ interface AddShipmentModalProps {
 export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModalProps) {
   const [loading, setLoading] = useState(false);
 
+
+  const { role } = useAuth()
 
 
   // Customer Information
@@ -53,10 +55,24 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   });
 
   const [zones, setZones] = useState<ZoneResponse[]>([])
+  const [sellerZones, setSellerZones] = useState<ZonesForSellerResponse[]>([])
   const [selectedRegions, setSelectedRegions] = useState<ZoneRegion[]>([])
   const [sellers, setSellers] = useState<Seller[]>([])
 
 
+  const populateZonesForSeller = async () => {
+    setLoading(true)
+    try {
+      const result = await shipmentsAPI.getAllZonesForSeller()
+      setSellerZones(result);
+      setZones(result.map(z => ({ id: z.id, name: z.name, noOrders: 0, isActive: true })));
+    } catch (error) {
+      console.error('Error fetching zones:', error);
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   const populateZonesRequest = async () => {
     try {
@@ -64,6 +80,9 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       setZones(result);
     } catch (error) {
       console.error('Error fetching zones:', error);
+    }
+    finally {
+      setLoading(false)
     }
   }
 
@@ -101,6 +120,9 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
     if (isOpen) {
       populateZonesRequest()
       populateSellersRequest()
+      if (role === UserRole.Seller) {
+        populateZonesForSeller()
+      }
     }
   }, [isOpen])
 
@@ -196,7 +218,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       toast.error('Please enter building number');
       return;
     }
-    if (!formData.sellerId) {
+    if (!formData.sellerId && role !== UserRole.Seller) {
       toast.error('Please select a seller');
       return;
     }
@@ -209,7 +231,43 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
     try {
       // TODO: Connect to backend API
+      if (role === UserRole.Seller) {
+        await shipmentsAPI.createForSeller({
+          clientName: formData.clientName,
+          phone1: formData.phone1,
+          phone2: formData.phone2,
+          apartmentNumber: Number(formData.apartmentNumber),
+          address: formData.address,
+          zoneId: formData.zoneId,
+          regionName: formData.regionName,
+          bulidingNumber: Number(formData.bulidingNumber),
+          notes: formData.notes,
+          items: formData.items,
+        })
+        toast.success('Shipment created successfully');
 
+        setFormData({
+          address: '',
+          clientName: '',
+          phone1: '',
+          phone2: '',
+          apartmentNumber: '',
+          bulidingNumber: '',
+          zoneId: 0,
+          regionName: '',
+          notes: '',
+          items: [],
+          sellerId: 0,
+        });
+
+        setProducts([{ id: '1', name: '', quantity: 1, price: 0 }]);
+
+        if (onSuccess) {
+          onSuccess();
+        }
+
+        return
+      }
       await shipmentsAPI.create(formData)
 
       // Simulate API call
@@ -272,7 +330,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-6 py-4">
+          <div className="space-y-4 py-4">
             {/* Customer Information Section */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -369,7 +427,19 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   <Select
                     value={formData.zoneId.toString()}
                     onValueChange={(value) => {
-                      populateRegionRequest(parseInt(value))
+                      if (role === UserRole.Seller) {
+                        const selectedZone = sellerZones.find(z => z.id.toString() === value);
+                        if (selectedZone) {
+                          // Map RegionDetails to ZoneRegion
+                          const regions: ZoneRegion[] = selectedZone.regions.map(r => ({
+                            name: r.name,
+                            price: r.price
+                          }));
+                          setSelectedRegions(regions);
+                        }
+                      } else {
+                        populateRegionRequest(parseInt(value))
+                      }
                       handleChange('zoneId', parseInt(value));
                       handleChange('regionName', '');
                     }}
@@ -444,35 +514,36 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
             </div>
 
             {/* Seller Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                Seller
-              </h3>
+            {role === UserRole.Admin || role === UserRole.SuperAdmin && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  Seller
+                </h3>
 
-              <div className="space-y-2">
-                <Label htmlFor="seller">
-                  Select Seller <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.sellerId.toString()}
-                  onValueChange={(value) => handleChange('sellerId', parseInt(value))}
-                  disabled={loading}
-                >
-                  <SelectTrigger id="seller">
-                    <SelectValue placeholder="Select Seller" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sellers.map((seller) => (
-                      <SelectItem key={seller.id} value={seller.id.toString()}>
-                        {seller.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="seller">
+                    Select Seller <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.sellerId.toString()}
+                    onValueChange={(value) => handleChange('sellerId', parseInt(value))}
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="seller">
+                      <SelectValue placeholder="Select Seller" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sellers.map((seller) => (
+                        <SelectItem key={seller.id} value={seller.id.toString()}>
+                          {seller.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-
+            )}
             {/* Products Section */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -483,7 +554,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
               <div className="space-y-3">
                 {/* Header */}
                 <div className="grid grid-cols-12 gap-2 text-xs font-medium text-slate-600 dark:text-slate-400 px-2">
-                  <div className="col-span-5">Item Name <span className="text-red-500">*</span></div>
+                  <div className="col-span-5">Item Name (up) & Description (down) <span className="text-red-500">*</span></div>
                   <div className="col-span-2">Qty <span className="text-red-500">*</span></div>
                   <div className="col-span-2">Price <span className="text-red-500">*</span></div>
                   <div className="col-span-2">Total</div>
@@ -495,6 +566,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   <div key={product.id} className="grid grid-cols-12 gap-2 items-start">
                     <div className="col-span-5">
                       <Input
+                        className='py-2'
                         placeholder="Item name"
                         value={product.name}
                         onChange={(e) =>
@@ -502,6 +574,17 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         }
                         disabled={loading}
                       />
+                      {role === UserRole.Seller ? (
+                        <Input
+                          className='py-2'
+                          placeholder="Item Description"
+                          value={product.description}
+                          onChange={(e) =>
+                            handleProductChange(product.name, 'description', e.target.value)
+                          }
+                          disabled={loading}
+                        />
+                      ) : null}
                     </div>
                     <div className="col-span-2">
                       <Input

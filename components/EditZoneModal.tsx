@@ -19,8 +19,8 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Loader2, Plus, X } from 'lucide-react';
-import { Zone, ZoneRegion } from '../types';
-import { mockBranches } from '../lib/mockData';
+import { BranchData, Zone, ZoneRegion } from '../types';
+import { branchesAPI, zonesAPI } from '@/services/api';
 
 interface EditZoneModalProps {
   open: boolean;
@@ -32,21 +32,54 @@ interface EditZoneModalProps {
 export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneModalProps) {
   const [loading, setLoading] = useState(false);
   const [zoneName, setZoneName] = useState('');
-  const [regions, setRegions] = useState<ZoneRegion[]>([
-    { id: 'temp-1', name: '', price: 0 }
-  ]);
+  const [regions, setRegions] = useState<ZoneRegion[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [branches, setBranches] = useState<BranchData[]>([]);
+
+  const populateBranchData = async () => {
+    try {
+      const response = await branchesAPI.getAll();
+      if (response && response.data) {
+        setBranches(response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error("Failed to fetch branches:", error);
+    }
+    return [];
+  }
+
+  const populateModalData = async () => {
+    if (!zone?.id) return;
+    const fetchedBranches = await populateBranchData();
+
+    try {
+      const response = await zonesAPI.getById(parseInt(zone.id));
+      if (response) {
+        setZoneName(response.name);
+        setRegions(response.regions.length > 0 ? [...response.regions] : [{ name: '', price: 0 }]);
+
+        // Find the branch ID that matches the branch name from the zone response
+        if (response.branchName && response.branchName.length > 0) {
+          const matchingBranch = fetchedBranches.find(b => response.branchName.includes(b.name));
+          if (matchingBranch) {
+            setSelectedBranch(matchingBranch.id.toString());
+          }
+        }
+      }
+    } catch (error) { 
+      console.error("Failed to fetch zone details:", error);
+    }
+  }
 
   useEffect(() => {
-    if (zone && open) {
-      setZoneName(zone.name);
-      setRegions(zone.regions.length > 0 ? [...zone.regions] : [{ id: 'temp-1', name: '', price: 0 }]);
-      setSelectedBranch(zone.associatedBranches[0] || '');
+    if (open) {
+      populateModalData()
     }
-  }, [zone, open]);
+  }, [open, zone]);
 
   const handleAddRegion = () => {
-    setRegions([...regions, { id: `temp-${Date.now()}`, name: '', price: 0 }]);
+    setRegions([...regions, { name: '', price: 0 }]);
   };
 
   const handleRemoveRegion = (index: number) => {
@@ -58,9 +91,13 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
   const handleRegionChange = (index: number, field: 'name' | 'price', value: string | number) => {
     const newRegions = [...regions];
     if (field === 'name') {
-      newRegions[index].name = value as string;
+      if (newRegions[index]) {
+        newRegions[index].name = value as string;
+      }
     } else {
-      newRegions[index].price = parseFloat(value as string) || 0;
+      if (newRegions[index]) {
+        newRegions[index].price = parseFloat(value as string) || 0;
+      }
     }
     setRegions(newRegions);
   };
@@ -93,23 +130,27 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
 
     try {
       // TODO: Connect to backend API
-      // await zonesAPI.update(zone.id, { zoneName, regions: validRegions, branchId: selectedBranch });
+      await zonesAPI.update(parseInt(zone.id), {
+        branchId: [parseInt(selectedBranch)],
+        isActive: true,
+        name: zoneName,
+        regions: validRegions,
+        zoneId: parseInt(zone.id)
+      });
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const updatedZone: Zone = {
-        ...zone,
-        name: zoneName,
-        regions: validRegions.map((r) => ({
-          id: r.id.startsWith('temp-') ? `REG-${Date.now()}-${Math.random()}` : r.id,
-          name: r.name,
-          price: r.price,
-        })),
-        associatedBranches: [selectedBranch],
-      };
+      // const updatedZone: Zone = {
+      //   ...zone,
+      //   name: zoneName,
+      //   regions: validRegions.map((r) => ({
+      //     name: r.name,
+      //     price: r.price,
+      //   })),
+      //   associatedBranches: [selectedBranch],
+      // };
 
-      onSuccess(updatedZone);
+      onSuccess(zone);
       toast.success('Zone updated successfully');
       onOpenChange(false);
     } catch (error) {
@@ -163,7 +204,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
 
                 <div className="space-y-2">
                   {regions.map((region, index) => (
-                    <div key={region.id} className="flex gap-2 items-start">
+                    <div key={region.name} className="flex gap-2 items-start">
                       <div className="flex-1">
                         <Input
                           value={region.name}
@@ -202,13 +243,13 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
                 <Label htmlFor="branch">
                   Associated Branch <span className="text-red-500">*</span>
                 </Label>
-                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                <Select value={selectedBranch} onValueChange={(value) => setSelectedBranch(value)}>
                   <SelectTrigger id="branch">
-                    <SelectValue placeholder="Select a branch" />
+                    <SelectValue defaultValue={selectedBranch ? selectedBranch : ''} placeholder="Select a branch" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockBranches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id.toString()}>
                         {branch.name}
                       </SelectItem>
                     ))}
@@ -227,9 +268,9 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={loading} 
+            <Button
+              type="submit"
+              disabled={loading}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -238,6 +279,6 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

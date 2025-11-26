@@ -95,7 +95,7 @@ export function SellersPage() {
   const activeSellers = visibleSellers.filter(s => s.activeShipments > 0).length;
 
   // Total revenue (sum of all wallet balances)
-  const totalRevenue = visibleSellers.reduce((sum, s) => sum + s.walletBalance, 0);
+  const totalRevenue = visibleSellers.reduce((sum, s) => sum + (s.walletBalance || 0), 0);
 
   // Apply search filter (excluding hidden sellers)
   const filteredSellers = visibleSellers.filter(seller => {
@@ -146,7 +146,7 @@ export function SellersPage() {
   };
 
   const handleToggleStatus = async (sellerId: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const newStatus = currentStatus === 'active' ? 'active' : 'inactive';
 
     try {
       // TODO: Connect to backend API
@@ -222,8 +222,11 @@ export function SellersPage() {
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return `$${amount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrency = (amount: number | undefined | null) => {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return '$0.00';
+    }
+    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -450,8 +453,8 @@ export function SellersPage() {
                                   className="data-[state=checked]:bg-green-500"
                                 />
                                 <span className={`text-sm font-semibold ${seller.status === 'active' && !isTemporarilyDeactivated(seller)
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-red-600 dark:text-red-400'
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : 'text-red-600 dark:text-red-400'
                                   }`}>
                                   {seller.status === 'active' && !isTemporarilyDeactivated(seller) ? 'Active' : 'Inactive'}
                                 </span>

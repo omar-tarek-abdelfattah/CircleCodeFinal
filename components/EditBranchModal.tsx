@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -13,53 +12,61 @@ import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { Branch } from '../types';
+import { Branch, BranchUpdate } from '../types';
 import { branchesAPI } from '@/services/api';
 
 interface EditBranchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   branch: Branch | null;
-  onSuccess: (branch: Branch) => void;
+  onSuccess: (branch: any) => void;
 }
 
 export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditBranchModalProps) {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    // id: parseInt(''),
-    name: '',
-    managerId: '',
-    address: '',
-    country: '',
-    openingTime: '09:00',
-    closingTime: '17:00',
-    isActive: true,
-  });
+  const [formData, setFormData] = useState<BranchUpdate>({} as BranchUpdate);
+
+
+  const populateForm = async () => {
+    setLoading(true)
+    try {
+      const result = await branchesAPI.getById(branch?.id.toString() as string)
+      return result;
+    } catch (error) {
+      console.error('failed to get branch details', error)
+      return null;
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    if (branch && open) {
-      // Parse times from businessHours or use defaults
-      let openingTime = '09:00';
-      let closingTime = '17:00';
+    const init = async () => {
+      if (branch && open) {
+        const details = await populateForm();
 
-      if (branch.openingTime) {
-        openingTime = branch.openingTime;
-      }
-      if (branch.closingTime) {
-        closingTime = branch.closingTime;
-      }
+        // Parse times from businessHours or use defaults
+        let openingTime = '09:00';
+        let closingTime = '17:00';
 
-      setFormData({
-        // id: parseInt(branch.id),
-        name: branch.name,
-        managerId: branch.managerId || '',
-        address: branch.address,
-        country: branch.country,
-        openingTime,
-        closingTime,
-        isActive: branch.status === 'active',
-      });
-    }
+        if (details?.open) {
+          openingTime = details.open;
+          closingTime = details.close;
+        }
+
+        setFormData({
+          id: branch?.id as unknown as number,
+          name: details?.name as string || branch.name,
+          managerId: 1,
+          address: details?.address as string || branch.address,
+          country: details?.country as string || branch.country,
+          open: openingTime,
+          close: closingTime,
+          isActive: details?.isActive ?? (branch.status === 'active'),
+        });
+      }
+    };
+    init();
   }, [branch, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +79,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
       toast.error('Branch name is required');
       return;
     }
-    if (!formData.managerId.trim()) {
+    if (!formData.managerId) {
       toast.error('Manager ID is required');
       return;
     }
@@ -84,11 +91,11 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
       toast.error('Country is required');
       return;
     }
-    if (!formData.openingTime) {
+    if (!formData.open) {
       toast.error('Opening time is required');
       return;
     }
-    if (!formData.closingTime) {
+    if (!formData.close) {
       toast.error('Closing time is required');
       return;
     }
@@ -120,17 +127,15 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
         return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
       };
 
-      const updatedBranch: Branch = {
-        ...branch,
-        id: branch.id,
+      const updatedBranch: BranchUpdate = {
+        id: parseInt(branch.id),
         name: formData.name,
-        managerId: formData.managerId,
+        managerId: 1,
         address: formData.address,
         country: formData.country,
-        openingTime: formData.openingTime,
-        closingTime: formData.closingTime,
-        businessHours: `${formatTime(formData.openingTime)} - ${formatTime(formData.closingTime)}`,
-        status: formData.isActive ? 'active' : 'inactive',
+        open: formData.open,
+        close: formData.close,
+        isActive: formData.isActive,
       };
 
       onSuccess(updatedBranch);
@@ -173,7 +178,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
               <Input
                 id="managerId"
                 value={formData.managerId}
-                onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, managerId: parseInt(e.target.value) })}
                 placeholder="Enter manager ID"
               />
             </div>
@@ -235,8 +240,8 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
               <Input
                 id="openingTime"
                 type="time"
-                value={formData.openingTime}
-                onChange={(e) => setFormData({ ...formData, openingTime: e.target.value })}
+                value={formData.open}
+                onChange={(e) => setFormData({ ...formData, open: e.target.value })}
               />
             </div>
 
@@ -247,8 +252,8 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
               <Input
                 id="closingTime"
                 type="time"
-                value={formData.closingTime}
-                onChange={(e) => setFormData({ ...formData, closingTime: e.target.value })}
+                value={formData.close}
+                onChange={(e) => setFormData({ ...formData, close: e.target.value })}
               />
             </div>
           </div>

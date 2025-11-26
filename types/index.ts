@@ -1,3 +1,5 @@
+// import { UserRole } from "@/contexts/AuthContext";
+
 import { UserRole } from "@/contexts/AuthContext";
 
 export enum ShipmentStatus {
@@ -32,6 +34,13 @@ export enum ShipmentStatusString {
   PartiallyDelivered = "PartiallyDelivered",
   RejectedByUs = "RejectedByUs",
   Returned = "Returned"
+}
+
+export interface ChangeSateOrdersRequest {
+  statusOrder: ShipmentStatus;
+  agentId?: number;
+  orderIdS: string[];
+  cancellednotes?: string;
 }
 
 
@@ -141,6 +150,46 @@ export interface OrderUpdate {
   agentId?: number | null;
 }
 
+export interface OrderRequestSeller {
+  clientName: string;
+  phone1: string;
+  phone2?: string | null;
+  apartmentNumber: number;
+  address: string;
+  zoneId: number;
+  regionName: string;
+  bulidingNumber: number;
+  notes?: string | null;
+  items: ItemsRequest[];
+}
+
+export interface OrderUpdateAgent {
+  id: string;
+  statusOrder: ShipmentStatus;
+  cancelledNotes?: string | null;
+}
+
+export interface OrderUpdateSeller {
+  id: string;
+  clientName: string;
+  phone1: string;
+  phone2: string;
+  apartmentNumber: number;
+  address: string;
+  zoneId: number;
+  regionName: string;
+  bulidingNumber: number;
+  notes?: string | null;
+  cancelledNotes?: string | null;
+  statusOrder: ShipmentStatus;
+  items?: ItemRespone[] | null;
+  sellerId: number;
+  agentId?: number | null;
+}
+
+
+
+
 export type StatusOrderDto = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
 export interface ItemRespone {
@@ -179,6 +228,7 @@ export interface DashboardStats {
 
 export interface Agent {
   id: string;
+  branshName: string;
   name: string;
   email: string;
   phone: string;
@@ -257,12 +307,47 @@ export interface BranchResponse {
   totalAgents: number
   data: BranchData[]
 }
+export interface BranchResponseDetails {
+  id: number,
+  name: string,
+  ordersNumber: number,
+  address: string,
+  country: string,
+  agentsNumber: number,
+  isActive: boolean,
+  managerName: string,
+  open: string,
+  close: string
+
+}
+
+export interface BranchUpdate {
+  id: number;
+  name: string;
+  address: string;
+  country: string;
+  isActive: boolean;
+  managerId: number;
+  open: string;
+  close: string;
+}
 export interface ZoneRegion {
   // id: string;
   name: string;
   price: number;
 }
 
+export interface ZoneUpdate {
+  zoneId: number;
+  name: string;
+  isActive: boolean;
+  regions: RegionUpdate[];
+  branchId: number[];
+}
+export interface RegionUpdate {
+  name: string;
+  price: number;
+}
 export interface Zone {
   id: string;
   name: string;
@@ -285,12 +370,22 @@ export interface ZoneResponse {
   noOrders: number
   isActive: boolean
 }
+export interface ZonesForSellerResponse {
+  id: string
+  name: string
+  regions: RegionDetails[]
+}
 export interface ZoneResponseDetails {
   id: string
   name: string
-  regions: ZoneRegion[]
-  branchName: string
+  regions: RegionDetails[]
+  branchName: string[]
   isActive: boolean
+}
+
+export interface RegionDetails {
+  name: string;
+  price: number;
 }
 
 
