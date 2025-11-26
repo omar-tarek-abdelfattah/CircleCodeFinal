@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { UserRole } from '../types';
+import { UserRole } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 
 interface AddUserModalProps {
@@ -27,7 +27,7 @@ interface AddUserModalProps {
     name: string;
     email: string;
     phone: string;
-    address : string;
+    address: string;
     salary: number;
     password: string;
     confirmPassword: string;
@@ -51,6 +51,16 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
   const validateForm = () => {
     if (!formData.name || !formData.email || !formData.password) {
       toast.error('Please fill all required fields!');
+      return false;
+    }
+    const userNameRegex = /^[a-zA-Z0-9]+$/;
+    if (!userNameRegex.test(formData.name)) {
+      toast.error('Name must only contain letters and numbers!');
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Invalid email format!');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -90,10 +100,10 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            
+
             {/* Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Name (should only contain letters and numbers)*</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -129,7 +139,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
             </div>
 
             {/* Role */}
-           <div className="grid gap-2">
+            <div className="grid gap-2">
               <Label htmlFor="address">Address *</Label>
               <Input
                 id="address"

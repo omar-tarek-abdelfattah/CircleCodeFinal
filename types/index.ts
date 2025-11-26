@@ -226,6 +226,12 @@ export interface DashboardStats {
   activeSellers?: number;
 }
 
+export interface OrderUpdateAgent {
+  id: string;
+  statusOrder: ShipmentStatus;
+  cancelledNotes?: string | null;
+}
+
 export interface Agent {
   id: string;
   branshName: string;
@@ -241,8 +247,20 @@ export interface Agent {
   lastAssignmentDate?: string; // When they last received an order
   todayShipments?: number; // Number of shipments assigned today
   status: 'active' | 'inactive';
+  branchId?: string;
   deactivationFrom?: string;
   deactivationTo?: string;
+}
+
+export interface SellerUpdateRequest {
+  name: string;
+  id: number;
+  phone: string;
+  branchId: number;
+  email: string;
+  storeName: string;
+  address: string;
+  vip: boolean;
 }
 
 export interface Seller {
@@ -397,6 +415,7 @@ export interface User {
   phone: string;
   branshName: string[]
   role: UserRole;
+  address: string;
   salary: number;
   status: 'active' | 'inactive';
   registrationDate: string;
@@ -405,6 +424,44 @@ export interface User {
   deactivationTo?: string;
 }
 
+export interface AgentResponse {
+  id: number;
+  email: string;
+  name: string;
+  phoneNumber: string
+  branshName: string
+  isactive: boolean
+  isLock: boolean
+  numberofOrder: number
+  profit: number
+  date: string
+}
+
+
+export interface SellerResponse {
+  id: number;
+  name?: string | null;
+  storeName?: string | null;
+  address?: string | null;
+  numberofOrder: number;
+  profit: number;
+  isActive: boolean;
+}
+
+export interface SellerResponseDetails {
+  name?: string | null;
+  phone?: string | null;
+  branchName?: string | null;
+  email?: string | null;
+  storeName?: string | null;
+  address?: string | null;
+  numberofOrder: number;
+  profit: number;
+  isActive: boolean;
+  isConfermid: boolean;
+  isLookout: boolean;
+  lookoutDate?: string | null;
+}
 export type NotificationType =
   | 'order_created'
   | 'order_assigned'
@@ -430,4 +487,26 @@ export interface LoggedInUser {
   token: "string";
   role: UserRole;
   id: string
+}
+
+export interface AdminResponse {
+  id: number;
+  email?: string | null;
+  name?: string | null;
+  branshName?: string[] | null;
+  isLock: boolean;
+  lockDate?: string | null;
+  salary: number;
+  hiringDate: string;
+  address?: string | null;
+  phone?: string | null; // Added based on usage in EditUserModal, though not in schema
+}
+
+export interface AdminUpdateRequest {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  salary: number;
+  lockout?: string;
 }

@@ -15,24 +15,34 @@ import { toast } from 'sonner';
 import { CalendarIcon, Loader2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from './ui/utils';
+import { UserRole } from '@/contexts/AuthContext';
+import { agentsAPI, sellersAPI, usersAPI } from '@/services/api';
 
 interface DeactivationPeriodModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   // Support both old props (for sellers) and new props (for agents)
+  adminId?: string;
+  adminName?: string;
+  agentId?: string;
+  agentName?: string;
   sellerId?: string;
   sellerName?: string;
   itemId?: string;
   itemName?: string;
   itemType?: string;
-  currentFromDate?: string;
+  currentFromDate?: string | any;
   currentToDate?: string;
-  onSuccess?: (fromDate: string | null, toDate: string | null) => void;
+  onSuccess?: (fromDate: string | any | null, toDate: string | any | null) => any;
 }
 
 export function DeactivationPeriodModal({
   open,
   onOpenChange,
+  adminId,
+  adminName,
+  agentId,
+  agentName,
   sellerId,
   sellerName,
   itemId,
@@ -43,9 +53,9 @@ export function DeactivationPeriodModal({
   onSuccess,
 }: DeactivationPeriodModalProps) {
   // Use the new props if available, otherwise fall back to old props
-  const entityId = itemId || sellerId || '';
-  const entityName = itemName || sellerName || '';
-  const entityType = itemType || 'Seller';
+  // const entityId = itemId || sellerId || agentId || adminId || '';
+  const entityName = itemName || sellerName || agentName || adminName || '';
+  const entityType = itemType || UserRole.Seller || UserRole.agent || UserRole.Admin;
   const [loading, setLoading] = useState(false);
   const [fromDate, setFromDate] = useState<Date | undefined>(
     currentFromDate ? new Date(currentFromDate) : undefined
@@ -62,6 +72,8 @@ export function DeactivationPeriodModal({
   }, [open, currentFromDate, currentToDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // console.log(adminId);
+
     e.preventDefault();
 
     // Validation
@@ -81,26 +93,36 @@ export function DeactivationPeriodModal({
     setLoading(true);
 
     try {
-      // TODO: Connect to backend API
-      // await sellersAPI.setDeactivationPeriod(sellerId, {
-      //   from: fromDate.toISOString(),
-      //   to: toDate.toISOString(),
-      // });
+      if (adminId || adminId) {
+        await usersAPI.adminLockout(adminId, true, fromDate.toISOString())
+        toast.success('Lockout period set successfully');
+        onOpenChange(false);
+        if (onSuccess) {
+          onSuccess(fromDate.toISOString(), toDate.toISOString());
+        }
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (agentId) {
+        console.log(agentId);
+        await agentsAPI.agentLockout(agentId, fromDate.toISOString(), true)
+        toast.success('Lockout period set successfully');
+        onOpenChange(false);
+        if (onSuccess) {
+          onSuccess(fromDate.toISOString(), toDate.toISOString());
+        }
+      }
 
-      toast.success('Deactivation period set successfully');
-
-      onOpenChange(false);
-
-      // Notify parent component
-      if (onSuccess) {
-        onSuccess(fromDate.toISOString(), toDate.toISOString());
+      if (sellerId) {
+        await sellersAPI.sellersLockout(sellerId, fromDate.toISOString(), true)
+        toast.success('Lockout period set successfully');
+        onOpenChange(false);
+        if (onSuccess) {
+          onSuccess(fromDate.toISOString(), toDate.toISOString());
+        }
       }
     } catch (error) {
-      console.error('Failed to set deactivation period:', error);
-      toast.error('Failed to set deactivation period');
+      console.error('Failed to set lockout period:', error);
+      toast.error('Failed to set lockout period');
     } finally {
       setLoading(false);
     }
@@ -143,7 +165,7 @@ export function DeactivationPeriodModal({
         <DialogHeader>
           <DialogTitle>Set Deactivation Period</DialogTitle>
           <DialogDescription>
-            Set a temporary deactivation period for <span className="font-semibold text-slate-900 dark:text-slate-100">{entityName}</span>. 
+            Set a temporary deactivation period for <span className="font-semibold text-slate-900 dark:text-slate-100">{entityName}</span>.
             The account will be inactive during this period.
           </DialogDescription>
         </DialogHeader>

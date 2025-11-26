@@ -214,8 +214,8 @@ export function LoginPage() {
 )}
 
               <p className="text-blue-500 cursor-pointer" onClick={() => navigate('/signup')}>
-        Don't have an account? Sign Up
-      </p>
+                Don't have an account? Sign Up
+              </p>
 
             </form>
           </CardContent>

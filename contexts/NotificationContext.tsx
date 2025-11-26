@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Notification, NotificationType, ShipmentStatus } from '../types';
-import { useAuth } from './AuthContext';
+import { Notification, ShipmentStatus, Agent, Seller } from '../types';
+import { useAuth, UserRole } from './AuthContext';
 import { toast } from 'sonner';
-import { notificationsAPI } from '../services/api';
+import { notificationsAPI, agentsAPI, sellersAPI } from '../services/api';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -23,6 +23,11 @@ interface NotificationContextType {
     changedById?: string,
     sellerId?: string
   ) => void;
+  inactiveAgents: Agent[];
+  inactiveSellers: Seller[];
+  refreshInactiveUsers: () => Promise<void>;
+  activateSeller: (id: string, vip: boolean) => Promise<void>;
+  activateAgent: (id: string, branchId: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -30,17 +35,24 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
-  const { user } = useAuth();
+  const [inactiveAgents, setInactiveAgents] = useState<Agent[]>([]);
+  const [inactiveSellers, setInactiveSellers] = useState<Seller[]>([]);
+  const { user, role } = useAuth();
 
   // Load notifications and new orders count on mount and user change
   useEffect(() => {
     if (user) {
       loadNotifications();
-      if (user.role === 'admin') {
+      if (role === UserRole.Admin || role === UserRole.SuperAdmin) {
         loadNewOrdersCount();
+        loadInactiveUsers();
       }
     }
   }, [user]);
+
+
+
+
 
   // Load notifications from backend
   const loadNotifications = async () => {
@@ -63,6 +75,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  // Load inactive users (admin only)
+  const loadInactiveUsers = async () => {
+    try {
+      const [agents, sellers] = await Promise.all([
+        agentsAPI.getAllInactive(),
+        sellersAPI.getAllInactive()
+      ]);
+      setInactiveAgents(agents);
+      setInactiveSellers(sellers);
+    } catch (error) {
+      console.error('Failed to load inactive users:', error);
+    }
+  };
+
   const addNotification = useCallback(
     (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
       const newNotification: Notification = {
@@ -78,21 +104,21 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       if (user) {
         switch (notification.type) {
           case 'order_created':
-            if (user.role === 'admin') {
+            if (role === UserRole.Admin || role === UserRole.SuperAdmin) {
               toast.info(notification.title, {
                 description: notification.message,
               });
             }
             break;
           case 'order_assigned':
-            if (user.role === 'agent') {
+            if (role === UserRole.agent) {
               toast.info(notification.title, {
                 description: notification.message,
               });
             }
             break;
           case 'status_changed':
-            if (user.role === 'seller' || user.role === 'admin') {
+            if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin) {
               toast.info(notification.title, {
                 description: notification.message,
               });
@@ -114,17 +140,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           sellerName,
           sellerId: sellerId || 'unknown',
         });
-        
+
         // Refresh new orders count for admin
-        if (user?.role === 'admin') {
+        if (role === UserRole.Admin || role === UserRole.SuperAdmin) {
           loadNewOrdersCount();
         }
       } catch (error) {
         console.error('Failed to send order created notification:', error);
       }
-      
+
       // For admins - Add to local notifications
-      if (user?.role === 'admin') {
+      if (role === UserRole.Admin || role === UserRole.SuperAdmin) {
         addNotification({
           type: 'order_created',
           title: 'New Order Created',
@@ -132,7 +158,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           orderId,
           orderNumber,
         });
-        
+
         // Increment new orders count
         setNewOrdersCount((prev) => prev + 1);
       }
@@ -153,9 +179,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       } catch (error) {
         console.error('Failed to send order assigned notification:', error);
       }
-      
+
       // For agents - Add to local notifications if current user is the assigned agent
-      if (user?.role === 'agent' && (agentId === user.id || !agentId)) {
+      if (role === UserRole.agent && (agentId === user?.id || !agentId)) {
         addNotification({
           type: 'order_assigned',
           title: 'New Order Assigned',
@@ -189,16 +215,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           changedById: changedById || 'unknown',
           sellerId,
         });
-        
+
         // Refresh new orders count for admin if status changed from "new"
-        if (user?.role === 'admin' && oldStatus === 'new') {
+        if (user?.role === UserRole.Admin && oldStatus === ShipmentStatus.New) {
           loadNewOrdersCount();
         }
       } catch (error) {
         console.error('Failed to send status changed notification:', error);
       }
-      
-      const formatStatus = (status: ShipmentStatus) => 
+
+      const formatStatus = (status: ShipmentStatus) =>
         status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 
       const message = `Order ${orderNumber} status changed from "${formatStatus(
@@ -206,7 +232,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       )}" to "${formatStatus(newStatus)}" by ${changedBy}`;
 
       // For sellers and admins - Add to local notifications
-      if (user?.role === 'seller' || user?.role === 'admin') {
+      if (role === UserRole.Seller || role === UserRole.Admin) {
         addNotification({
           type: 'status_changed',
           title: 'Order Status Changed',
@@ -220,7 +246,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }
 
       // If order status changed from "new", decrement the new orders count (for admin)
-      if (oldStatus === 'new' && user?.role === 'admin') {
+      if (oldStatus === ShipmentStatus.New && role === UserRole.Admin) {
         setNewOrdersCount((prev) => Math.max(0, prev - 1));
       }
     },
@@ -231,7 +257,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setNotifications((prev) =>
       prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
     );
-    
+
     // Backend API call
     try {
       await notificationsAPI.markAsRead(id);
@@ -242,7 +268,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const markAllAsRead = useCallback(async () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-    
+
     // Backend API call
     try {
       await notificationsAPI.markAllAsRead();
@@ -253,7 +279,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const clearNotifications = useCallback(async () => {
     setNotifications([]);
-    
+
     // Backend API call
     try {
       await notificationsAPI.clearAll();
@@ -264,24 +290,51 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        newOrdersCount,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        clearNotifications,
-        notifyOrderCreated,
-        notifyOrderAssigned,
-        notifyStatusChanged,
-      }}
-    >
-      {children}
-    </NotificationContext.Provider>
-  );
+  // Activate seller
+  const activateSeller = async (id: string, vip: boolean) => {
+    try {
+      await sellersAPI.activate(id, vip);
+      toast.success('Seller activated successfully');
+      // Refresh the list
+      loadInactiveUsers();
+    } catch (error) {
+      console.error('Failed to activate seller:', error);
+      toast.error('Failed to activate seller');
+    }
+  };
+
+  // Activate agent
+  const activateAgent = async (id: string) => {
+    try {
+      await agentsAPI.activate(id);
+      toast.success('Agent activated successfully');
+      // Refresh the list
+      loadInactiveUsers();
+    } catch (error) {
+      console.error('Failed to activate agent:', error);
+      toast.error('Failed to activate agent');
+    }
+  };
+
+  const value = {
+    notifications,
+    unreadCount,
+    newOrdersCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    clearNotifications,
+    notifyOrderCreated,
+    notifyOrderAssigned,
+    notifyStatusChanged,
+    inactiveAgents,
+    inactiveSellers,
+    refreshInactiveUsers: loadInactiveUsers,
+    activateSeller,
+    activateAgent,
+  };
+
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 }
 
 export function useNotifications() {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
-import { sellersAPI } from '../services/api';
+import { branchesAPI, sellersAPI } from '../services/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { BranchData, BranchResponse } from '@/types';
 
 interface AddSellerModalProps {
   open: boolean;
@@ -22,6 +24,8 @@ interface AddSellerModalProps {
 
 export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModalProps) {
   const [loading, setLoading] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [branches, setBranches] = useState<BranchData[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,6 +37,25 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
     branchId: 0,
     vip: true,
   });
+
+  const loadBranches = async () => {
+    setLoadingBranches(true);
+    try {
+      const response = await branchesAPI.getAll();
+      if (response && response.data) {
+        setBranches(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load branches:', error);
+      toast.error('Failed to load branches');
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBranches();
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,14 +247,22 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
               <Label htmlFor="branchId">
                 BranchId <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="branchId"
-                type="number"
-                placeholder="123 Main St, City, Country"
-                value={formData.branchId}
-                onChange={(e) => handleChange('branchId', e.target.value)}
+              <Select
+                value={formData.branchId.toString()}
+                onValueChange={(e) => handleChange('branchId', e)}
                 disabled={loading}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id.toString()}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="vip">
@@ -242,7 +273,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
                 type="text"
                 placeholder="true,false"
                 // value={formData.vip}
-                onChange={(e) => handleChange('vip', e.target.value === 'true' ? true as string : false as string)}
+                onChange={(e) => handleChange('vip', e.target.value === 'true' ? true as unknown as string : false as unknown as string)}
                 disabled={loading}
               />
             </div>

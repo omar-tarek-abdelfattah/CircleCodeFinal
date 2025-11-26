@@ -10,7 +10,7 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { User } from '../types';
+import { AdminUpdateRequest, User } from '../types';
 import { toast } from 'react-toastify';
 import { usersAPI } from '../services/api';
 
@@ -22,26 +22,16 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserModalProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    salary: 0,
-    password: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState<AdminUpdateRequest>({} as AdminUpdateRequest);
 
   useEffect(() => {
     if (user) {
       setFormData({
+        id: 0,
         name: user.name,
         email: user.email,
         phone: user.phone || '',
-        address: user.address || '',
         salary: user.salary || 0,
-        password: '',
-        confirmPassword: '',
       });
     }
   }, [user]);
@@ -51,22 +41,16 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
       toast.error('Please fill all required fields!');
       return false;
     }
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match!');
-      return false;
-    }
     return true;
   };
 
   const handleClose = () => {
     setFormData({
+      id: 0,
       name: '',
       email: '',
       phone: '',
-      address: '',
       salary: 0,
-      password: '',
-      confirmPassword: '',
     });
     onOpenChange(false);
   };
@@ -78,7 +62,6 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
     const updatedData = {
       ...user,
       ...formData,
-      password: formData.password ? formData.password : undefined,
     };
 
     try {
@@ -132,14 +115,6 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              />
-            </div>
 
             <div className="grid gap-2">
               <Label htmlFor="salary">Salary</Label>
@@ -153,27 +128,6 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter new password if changing"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                placeholder="Confirm new password"
-              />
-            </div>
           </div>
 
           <DialogFooter>

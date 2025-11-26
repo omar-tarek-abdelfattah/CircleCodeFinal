@@ -21,7 +21,7 @@ import { EditShipmentModal } from '../components/EditShipmentModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { StatCard } from '../components/StatCard';
-import { AGENT_STATUSES, SELLER_STATUSES, ALL_STATUSES, getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
+import { AGENT_STATUSES, SELLER_STATUSES, getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
 import { importShipmentsFromExcel, downloadTemplate, } from '../lib/excelUtils';
 
 
@@ -89,7 +89,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
     setLoadingStats(true);
     try {
       const response = await shipmentsAPI.getAll();
-      // console.log('API Response:', response);
+      console.log('API Response:', response);
 
       // Ensure response is an array
       if (Array.isArray(response)) {
@@ -115,7 +115,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
 
   // Calculate stats (excluding hidden orders)
-  const visibleShipments = shipments.filter(s => !hiddenOrderIds.has(s.id));
+  let visibleShipments = shipments.filter(s => !hiddenOrderIds.has(s.id));
   const totalOrders = visibleShipments.length;
   const packagesInProgress = visibleShipments.filter(s => isInProgressStatus(s.statusOrder as ShipmentStatusString)).length;
   const completedShipments = visibleShipments.filter(s => isCompletedStatus(s.statusOrder as ShipmentStatusString)).length;
@@ -157,7 +157,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
   // Pagination
   const totalPages = Math.ceil(filteredShipments.length / itemsPerPage);
-  const paginatedShipments = filteredShipments.slice(
+  let paginatedShipments = filteredShipments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -308,7 +308,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
     }
   };
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSearchQuery('');
     setStatusFilter([]);
     setSellerFilter('all');
@@ -317,9 +317,18 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
     setAgentSearch('');
     setDateFrom(undefined);
     setDateTo(undefined);
+    await loadShipments();
+    toast.success('Filters reset successfully');
   };
 
-  const handleApplyFilters = () => {
+  const handleApplyFilters = async () => {
+
+    if (dateFrom && dateTo) {
+      const filteredResult = await shipmentsAPI.getAll(dateFrom.toISOString(), dateTo.toISOString());
+      setShipments(filteredResult);
+      visibleShipments = shipments.filter(s => !hiddenOrderIds.has(s.id));
+      return
+    }
     setFilterDialogOpen(false);
     toast.success('Filters applied successfully');
   };
@@ -403,7 +412,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
       // TODO: Connect to backend API
       await shipmentsAPI.bulkUpdateStatus({
         orderIdS: Array.from(selectedOrderIds),
-        statusOrder: bulkStatus as unknown as ShipmentStatus,
+        statusOrder: selectedAgentId ? ShipmentStatus.InPickupStage : bulkStatus as unknown as ShipmentStatus,
         agentId: selectedAgentId ? parseInt(selectedAgentId) : undefined,
         // cancellednotes: bulkCancelledNotes,
       });
@@ -724,7 +733,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {role !== UserRole.agent && (
+                  {/* {role !== UserRole.agent && (
                     <>
                       <Button
                         variant="default"
@@ -745,7 +754,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                         Export Selected
                       </Button>
                     </>
-                  )}
+                  )} */}
                   {role !== UserRole.Seller && (
                     <Button
                       variant="default"
@@ -805,7 +814,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                     {hiddenOrderIds.size} Hidden {hiddenOrderIds.size === 1 ? 'Order' : 'Orders'}
                   </Button>
                 )}
-                {role !== UserRole.agent && (
+                {/* {role !== UserRole.agent && (
                   <>
                     <Button
                       variant="outline"
@@ -834,7 +843,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                       Print {selectedOrderIds.size > 0 ? `(${selectedOrderIds.size})` : ''}
                     </Button>
                   </>
-                )}
+                )} */}
                 {role !== UserRole.agent && (
                   <Button
                     size="sm"
