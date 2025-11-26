@@ -7,8 +7,6 @@ import {
   Plus,
   Eye,
   Edit,
-  Trash2,
-  Calendar,
   UserCog,
   ShieldCheck,
   Briefcase,
@@ -32,22 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
-import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription, AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,} from '../components/ui/alert-dialog';
-import { Calendar as CalendarComponent } from '../components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from '../components/ui/alert-dialog';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { AddUserModal } from '../components/AddUserModal';
 import { EditUserModal } from '../components/EditUserModal';
@@ -91,13 +74,8 @@ export default function UsersPage() {
       setUsers(response);
 
       // Simulate API call
-<<<<<<< HEAD
-      // await new Promise((resolve) => setTimeout(resolve, 500));
-      
-=======
       await new Promise((resolve) => setTimeout(resolve, 500));
 
->>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
       // Empty state until backend is connected
       // setUsers([]);
     } catch (error) {
@@ -137,16 +115,16 @@ export default function UsersPage() {
   // Calculate stats (excluding hidden users)
   const visibleUsers = users.filter((u) => !hiddenUserIds.has(u.id));
   const totalUsers = visibleUsers.length;
-  const totalAdmins = visibleUsers.filter((u) => u.role === UserRole.Admin).length;
-  const totalSellers = visibleUsers.filter((u) => u.role === UserRole.Seller).length;
-  const totalAgents = visibleUsers.filter((u) => u.role === UserRole.agent).length;
+  // const totalAdmins = visibleUsers.filter((u) => u.role === UserRole.Admin).length;
+  // const totalSellers = visibleUsers.filter((u) => u.role === UserRole.Seller).length;
+  // const totalAgents = visibleUsers.filter((u) => u.role === UserRole.agent).length;
 
   // Apply filters
   const filteredUsers = visibleUsers.filter((user) => {
     const matchesSearch =
       searchQuery === '' ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      user.name?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery?.toLowerCase());
 
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
@@ -187,16 +165,19 @@ export default function UsersPage() {
   };
 
   //  Update User
-  const handleUpdateUser = async (userData: any) => {
-    try {
-      await usersAPI.update(userData.id, userData);
-      setUsers(users.map((u) => (u.id === userData.id ? userData : u)));
-      toast.success(`User ${userData.name} updated successfully`);
-      setEditModalOpen(false);
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Error updating user");
-    }
+  const handleUpdateUser = async (user: any) => {
+    // try {
+    //   await usersAPI.update(userData.id, userData);
+    //   setUsers(users.map((u) => (u.id === userData.id ? userData : u)));
+    //   toast.success(`User ${userData.name} updated successfully`);
+    //   setEditModalOpen(false);
+    // } catch (error) {
+    //   console.error("Error updating user:", error);
+    //   toast.error("Error updating user");
+    // }
+    setSelectedUser(user);
+    setEditModalOpen(true);
+
   };
 
   //  View details
@@ -222,21 +203,21 @@ export default function UsersPage() {
   };
 
   //  Activate / Deactivate User
-  const handleStatusToggle = async (userId: string, currentStatus: "active" | "inactive") => {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
-    try {
-      await usersAPI.updateStatus(userId, newStatus);
-      setUsers(
-        users.map((u) =>
-          u.id === userId ? { ...u, status: newStatus } : u
-        )
-      );
-      toast.success(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update user status");
-    }
-  };
+  // const handleStatusToggle = async (userId: string, currentStatus: "active" | "inactive") => {
+  //   const newStatus = currentStatus === "active" ? "inactive" : "active";
+  //   try {
+  //     await usersAPI.updateStatus(userId, newStatus);
+  //     setUsers(
+  //       users.map((u) =>
+  //         u.id === userId ? { ...u, status: newStatus } : u
+  //       )
+  //     );
+  //     toast.success(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //     toast.error("Failed to update user status");
+  //   }
+  // };
   const handleHideUser = (userId: string) => {
     setHiddenUserIds((prev) => new Set([...prev, userId]));
     toast.success('User hidden successfully');
@@ -271,22 +252,6 @@ export default function UsersPage() {
   //   }
   // };
 
-<<<<<<< HEAD
-  // const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
-  //   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-  //   setUsers(
-  //     users.map((u) =>
-  //       u.id === userId
-  //         ? {
-  //             ...u,
-  //             status: newStatus,
-  //           }
-  //         : u
-  //     )
-  //   );
-  //   toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-  // };
-=======
   const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     setUsers(
@@ -301,7 +266,6 @@ export default function UsersPage() {
     );
     toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
   };
->>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
 
   const handleSetDeactivationPeriod = (user: User) => {
     setUserForDeactivation(user);
@@ -371,11 +335,12 @@ export default function UsersPage() {
   };
 
   const getInitials = (name: string) => {
-    const words = name.split(' ');
+    if (!name) return '';
+    const words = name.trim().split(/\s+/);
     if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
+      return (words[0]!.charAt(0) + words[1]!.charAt(0)).toUpperCase();
     }
-    return name.substring(0, 2)?.toUpperCase();
+    return name.substring(0, 2).toUpperCase();
   };
 
   const getAvatarColor = (role: UserRole) => {
@@ -669,12 +634,12 @@ export default function UsersPage() {
                           <TableCell>{user.email}</TableCell>
                           {/* <TableCell>{user.phone}</TableCell> */}
                           {/* <TableCell> */}
-                            {/* <Badge variant="outline" className={getRoleColor(user.role)}>
+                          {/* <Badge variant="outline" className={getRoleColor(user.role)}>
                               {getRoleIcon(user.role)}
                               <span className="ml-1 capitalize">{user.role}</span>
                             </Badge> */}
                           {/* </TableCell> */}
-                          <TableCell>${user.salary.toLocaleString()}</TableCell>
+                          <TableCell>${user.salary?.toLocaleString()}</TableCell>
                           <TableCell>
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-3">
@@ -683,9 +648,9 @@ export default function UsersPage() {
                                   onCheckedChange={() => handleStatusToggle(user.id, user.status)}
                                   className="data-[state=checked]:bg-green-500"
                                 />
-                                <span className={`text-sm font-semibold ${user.status === 'active' && !isTemporarilyDeactivated(user)
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-red-600 dark:text-red-400'
+                                <span className={`text-sm font-semibold ${user?.status === 'active' && !isTemporarilyDeactivated(user)
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : 'text-red-600 dark:text-red-400'
                                   }`}>
                                   {user.status === 'active' && !isTemporarilyDeactivated(user) ? 'Active' : 'Inactive'}
                                 </span>
@@ -787,7 +752,7 @@ export default function UsersPage() {
         open={addAdminModalOpen}
         onOpenChange={setAddAdminModalOpen}
         onSubmit={handleAddUser}
-        defaultRole="admin"
+        defaultRole={UserRole.Admin}
       />
       <ViewUserModal
         open={viewModalOpen}
@@ -797,7 +762,7 @@ export default function UsersPage() {
       <EditUserModal
         open={editModalOpen}
         onOpenChange={setEditModalOpen}
-        onSubmit={handleUpdateUser}
+        onUpdate={handleUpdateUser}
         user={selectedUser}
       />
 
@@ -884,11 +849,12 @@ export default function UsersPage() {
       <DeactivationPeriodModal
         open={deactivationModalOpen}
         onOpenChange={setDeactivationModalOpen}
-        onSave={handleSaveDeactivationPeriod}
-        currentDateFrom={userForDeactivation?.deactivationFrom}
-        currentDateTo={userForDeactivation?.deactivationTo}
-        entityName={userForDeactivation?.name || ''}
-        entityType="User"
+        onSuccess={handleSaveDeactivationPeriod}
+        currentFromDate={userForDeactivation?.deactivationFrom}
+        currentToDate={userForDeactivation?.deactivationTo}
+        itemName={userForDeactivation?.name || ''}
+        itemType="User"
+        adminId={userForDeactivation?.id}
       />
     </div>
   );

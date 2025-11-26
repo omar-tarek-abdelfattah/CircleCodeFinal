@@ -1,7 +1,7 @@
-import React from 'react';
+
 import { motion } from 'motion/react';
 import { Package, Eye, Edit, Plus, ArrowRight } from 'lucide-react';
-import { Shipment } from '../types';
+import { OrderResponse, Shipment } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -15,10 +15,10 @@ import {
 } from './ui/table';
 
 interface NewShipmentsTableProps {
-  shipments: Shipment[];
+  shipments: OrderResponse[];
   maxItems?: number;
-  onViewDetails?: (shipment: Shipment) => void;
-  onEditShipment?: (shipment: Shipment) => void;
+  onViewDetails?: (shipment: OrderResponse) => void;
+  onEditShipment?: (shipment: OrderResponse) => void;
   onAddShipment?: () => void;
   showAddButton?: boolean;
   onViewAll?: () => void;
@@ -82,7 +82,7 @@ export function NewShipmentsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>Tracking ID</TableHead>
-                <TableHead>Customer Name</TableHead>     
+                <TableHead>Customer Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -123,9 +123,9 @@ export function NewShipmentsTable({
                       </div>
                     </TableCell>
                     <TableCell>
-                    
-                      <Badge className={getStatusColor(shipment.statusOrder)}>
-                        {shipment.statusOrder.replace('_', ' ')}
+
+                      <Badge className={getStatusColor(shipment?.statusOrder as string)}>
+                        {shipment.statusOrder?.replace('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono">

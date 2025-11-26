@@ -20,7 +20,7 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Package, Loader2, Plus, Trash2 } from 'lucide-react';
-import type { ItemsRequest, OrderRequest, Seller, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '@/types';
+import type { ItemsRequest, OrderRequest, Seller, SellerResponse, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '@/types';
 import { sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 
@@ -57,7 +57,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   const [zones, setZones] = useState<ZoneResponse[]>([])
   const [sellerZones, setSellerZones] = useState<ZonesForSellerResponse[]>([])
   const [selectedRegions, setSelectedRegions] = useState<ZoneRegion[]>([])
-  const [sellers, setSellers] = useState<Seller[]>([])
+  const [sellers, setSellers] = useState<SellerResponse[]>([])
 
 
   const populateZonesForSeller = async () => {

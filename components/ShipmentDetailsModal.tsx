@@ -9,6 +9,7 @@ import {
   Truck,
   Clock,
   FileText,
+  MapPinned,
 } from "lucide-react";
 import { OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString } from "../types";
 import {
@@ -237,6 +238,24 @@ export function ShipmentDetailsModal({
                 <p className="text-sm">{shipmentDetails.agentName}</p>
               </div>
             )}
+            {shipmentDetails.regionName && (
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                  <MapPinned className="w-4 h-4" />
+                  <span className="text-xs">Region</span>
+                </div>
+                <p className="text-sm">{shipmentDetails.regionName} </p>
+              </div>
+            )}
+            {shipmentDetails.inPickupStage && (
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                  <MapPinned className="w-4 h-4" />
+                  <span className="text-xs">Pickup Stage</span>
+                </div>
+                <p className="text-sm">{shipmentDetails.inPickupStage ? "Yes" : "No"} </p>
+              </div>
+            )}
           </motion.div>
 
           {/* Additional Info */}
@@ -281,15 +300,33 @@ export function ShipmentDetailsModal({
                 shipmentDetails.delivered_Agent_date ||
                 shipmentDetails.dateCreated)}</p>
             </div>
-            {/* {shipmentDetails.estimatedDelivery && (
+            {shipmentDetails.delivered_date && (
               <div>
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                   <Calendar className="w-4 h-4" />
-                  <span className="text-xs">Estimated Delivery</span>
+                  <span className="text-xs">Delivered Date</span>
                 </div>
-                <p>{formatDate(shipment.estimatedDelivery)}</p>
+                <p>{formatDate(shipmentDetails.delivered_date)}</p>
               </div>
-            )} */}
+            )}
+            {shipmentDetails.inWarehouseDate && (
+              <div>
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs">In Warehouse Date</span>
+                </div>
+                <p>{formatDate(shipmentDetails.inWarehouseDate)}</p>
+              </div>
+            )}
+            {shipmentDetails.delivered_Agent_date && (
+              <div>
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs">Delivered Agent Date</span>
+                </div>
+                <p>{formatDate(shipmentDetails.delivered_Agent_date)}</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Actions */}

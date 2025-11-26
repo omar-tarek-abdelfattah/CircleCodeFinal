@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   Users,
@@ -12,13 +12,10 @@ import {
   Eye,
   Edit,
   EyeOff,
-  MailIcon,
-  Phone,
   Building2,
-  Calendar,
   CalendarClock,
 } from 'lucide-react';
-import { Seller } from '../types';
+import { SellerResponse } from '../types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -45,15 +42,16 @@ import { StatCard } from '../components/StatCard';
 import { toast } from 'sonner';
 import { AddSellerModal } from '../components/AddSellerModal';
 import { EditSellerModal } from '../components/EditSellerModal';
-import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
 import { sellersAPI } from '../services/api.ts';
+import { DeactivationPeriodModal } from '@/components/DeactivationPeriodModal.tsx';
 
 
 export function SellersPage() {
-  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [sellers, setSellers] = useState<SellerResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+  const [selectedSeller, setSelectedSeller] = useState<SellerResponse | null>(null);
+  const [activeSellersCount, setActiveSellersCount] = useState(0);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addSellerModalOpen, setAddSellerModalOpen] = useState(false);
   const [editSellerModalOpen, setEditSellerModalOpen] = useState(false);
@@ -64,6 +62,7 @@ export function SellersPage() {
   // Load sellers
   useEffect(() => {
     loadSellers();
+    loadActiveSellersCount();
   }, []);
 
   const loadSellers = async () => {
@@ -87,36 +86,47 @@ export function SellersPage() {
     }
   };
 
+  const loadActiveSellersCount = async () => {
+    try {
+      const response = await sellersAPI.getActiveCount();
+      console.log(response)
+      setActiveSellersCount(response);
+    } catch (error) {
+      console.error('Failed to load active sellers count:', error);
+      toast.error('Failed to load active sellers count');
+    }
+  }
+
   // Calculate statistics (excluding hidden sellers)
-  const visibleSellers = sellers.filter(s => !hiddenSellerIds.has(s.id));
+  const visibleSellers = sellers.filter(s => !hiddenSellerIds.has(s.id.toString()));
   const totalSellers = visibleSellers.length;
 
   // Active sellers (those with active shipments or recent activity - for demo, we'll use those with active shipments > 0)
-  const activeSellers = visibleSellers.filter(s => s.activeShipments > 0).length;
+  // const activeSellers = visibleSellers.filter(s => s.activeShipments > 0).length;
 
   // Total revenue (sum of all wallet balances)
-  const totalRevenue = visibleSellers.reduce((sum, s) => sum + (s.walletBalance || 0), 0);
+  const totalRevenue = visibleSellers.reduce((sum, s) => sum + (s.profit || 0), 0);
 
   // Apply search filter (excluding hidden sellers)
   const filteredSellers = visibleSellers.filter(seller => {
     const query = searchQuery.toLowerCase();
     return (
-      seller.name.toLowerCase().includes(query) ||
-      seller.email.toLowerCase().includes(query) ||
-      (seller.storeName && seller.storeName.toLowerCase().includes(query)) ||
-      seller.phone.includes(query)
+      seller.name?.toLowerCase().includes(query) ||
+      // seller.email?.toLowerCase().includes(query) ||
+      (seller.storeName?.toLowerCase().includes(query))
+      // seller.phone?.includes(query)
     );
   });
 
   // Get hidden sellers
-  const hiddenSellers = sellers.filter(s => hiddenSellerIds.has(s.id));
+  const hiddenSellers = sellers.filter(s => hiddenSellerIds.has(s.id.toString()));
 
-  const handleViewDetails = (seller: Seller) => {
+  const handleViewDetails = (seller: SellerResponse) => {
     setSelectedSeller(seller);
     setDetailsModalOpen(true);
   };
 
-  const handleEditSeller = (seller: Seller) => {
+  const handleEditSeller = (seller: SellerResponse) => {
     setSelectedSeller(seller);
     setEditSellerModalOpen(true);
   };
@@ -145,17 +155,17 @@ export function SellersPage() {
     toast.success('All sellers restored successfully');
   };
 
-  const handleToggleStatus = async (sellerId: string, currentStatus: 'active' | 'inactive') => {
+  const handleToggleStatus = async (sellerId: number, currentStatus: 'active' | 'inactive') => {
     const newStatus = currentStatus === 'active' ? 'active' : 'inactive';
 
     try {
       // TODO: Connect to backend API
-      // await sellersAPI.updateStatus(sellerId, newStatus);
+      await sellersAPI.activate(sellerId.toString(), true);
 
       // Update local state
       setSellers(prev =>
         prev.map(s =>
-          s.id === sellerId ? { ...s, status: newStatus } : s
+          s.id === sellerId ? { ...s, isActive: newStatus === 'active' } : s
         )
       );
 
@@ -165,7 +175,7 @@ export function SellersPage() {
     }
   };
 
-  const handleSetDeactivationPeriod = (seller: Seller) => {
+  const handleSetDeactivationPeriod = (seller: SellerResponse) => {
     setSelectedSeller(seller);
     setDeactivationModalOpen(true);
   };
@@ -187,40 +197,40 @@ export function SellersPage() {
     );
   };
 
-  const isTemporarilyDeactivated = (seller: Seller): boolean => {
-    if (!seller.deactivationFrom || !seller.deactivationTo) return false;
+  // const isTemporarilyDeactivated = (seller: SellerResponse): boolean => {
+  //   // if (!seller.deactivationFrom || !seller.deactivationTo) return false;
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
+  //   const now = new Date();
+  //   now.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
 
-    const from = new Date(seller.deactivationFrom);
-    from.setHours(0, 0, 0, 0);
+  //   const from = new Date(seller.deactivationFrom);
+  //   from.setHours(0, 0, 0, 0);
 
-    const to = new Date(seller.deactivationTo);
-    to.setHours(23, 59, 59, 999); // End of day
+  //   const to = new Date(seller.deactivationTo);
+  //   to.setHours(23, 59, 59, 999); // End of day
 
-    return now >= from && now <= to;
-  };
+  //   return now >= from && now <= to;
+  // };
 
-  const isScheduledForFuture = (seller: Seller): boolean => {
-    if (!seller.deactivationFrom) return false;
+  // const isScheduledForFuture = (seller: SellerResponse): boolean => {
+  //   if (!seller.deactivationFrom) return false;
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+  //   const now = new Date();
+  //   now.setHours(0, 0, 0, 0);
 
-    const from = new Date(seller.deactivationFrom);
-    from.setHours(0, 0, 0, 0);
+  //   const from = new Date(seller.deactivationFrom);
+  //   from.setHours(0, 0, 0, 0);
 
-    return from > now;
-  };
+  //   return from > now;
+  // };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString)?.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   return new Date(dateString)?.toLocaleDateString('en-US', {
+  //     month: 'short',
+  //     day: 'numeric',
+  //     year: 'numeric',
+  //   });
+  // };
 
   const formatCurrency = (amount: number | undefined | null) => {
     if (amount === undefined || amount === null || isNaN(amount)) {
@@ -279,7 +289,7 @@ export function SellersPage() {
         >
           <StatCard
             title="Active Sellers"
-            value={activeSellers.toString()}
+            value={activeSellersCount.toString()}
             icon={UserCheck}
 
           />
@@ -410,7 +420,7 @@ export function SellersPage() {
                             <div>
                               <p className="font-semibold">{seller.name}</p>
                               <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {seller.email}
+
                               </p>
                             </div>
                           </TableCell>
@@ -448,18 +458,19 @@ export function SellersPage() {
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-3">
                                 <Switch
-                                  checked={seller.status === 'active' && !isTemporarilyDeactivated(seller)}
-                                  onCheckedChange={() => handleToggleStatus(seller.id, seller.status)}
+                                  // checked={seller.isActive === true && !isTemporarilyDeactivated(seller)}
+                                  checked={seller.isActive}
+                                  onCheckedChange={() => handleToggleStatus(seller.id, seller.isActive ? 'active' : 'inactive')}
                                   className="data-[state=checked]:bg-green-500"
                                 />
-                                <span className={`text-sm font-semibold ${seller.status === 'active' && !isTemporarilyDeactivated(seller)
+                                <span className={`text-sm font-semibold ${seller.isActive
                                   ? 'text-green-600 dark:text-green-400'
                                   : 'text-red-600 dark:text-red-400'
                                   }`}>
-                                  {seller.status === 'active' && !isTemporarilyDeactivated(seller) ? 'Active' : 'Inactive'}
+                                  {seller.isActive ? 'Active' : 'Inactive'}
                                 </span>
                               </div>
-                              {isTemporarilyDeactivated(seller) && seller.deactivationTo && (
+                              {/* {isTemporarilyDeactivated(seller) && seller.deactivationTo && (
                                 <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-2.5 py-1.5">
                                   <div className="flex items-center gap-1.5 mb-1">
                                     <CalendarClock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 flex-shrink-0" />
@@ -469,23 +480,13 @@ export function SellersPage() {
                                     Deactivated until {formatDate(seller.deactivationTo)}. Cannot log in during this period.
                                   </p>
                                 </div>
-                              )}
-                              {seller.deactivationFrom && seller.deactivationTo && !isTemporarilyDeactivated(seller) && isScheduledForFuture(seller) && (
-                                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1.5">
-                                  <div className="flex items-center gap-1.5 mb-1">
-                                    <CalendarClock className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
-                                    {/* <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span> */}
-                                  </div>
-                                  <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-                                    From {formatDate(seller.deactivationFrom)} to {formatDate(seller.deactivationTo)}.
-                                  </p>
-                                </div>
-                              )}
+                              )} */}
+
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm">
+                          {/* <TableCell className="text-sm">
                             {formatDate(seller.joinedDate)}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button
@@ -518,7 +519,7 @@ export function SellersPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleHideSeller(seller.id)}
+                                onClick={() => handleHideSeller(seller.id.toString())}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="Hide Seller"
                               >
@@ -557,10 +558,10 @@ export function SellersPage() {
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Seller ID</p>
                   <p className="font-mono font-semibold">{selectedSeller.id}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Joined Date</p>
                   <p className="font-semibold">{formatDate(selectedSeller.joinedDate)}</p>
-                </div>
+                </div> */}
               </div>
 
               {/* Contact Info */}
@@ -600,24 +601,24 @@ export function SellersPage() {
                 <div className="pl-6 space-y-2">
                   <div className="flex items-center gap-2">
                     <Badge
-                      variant={selectedSeller.status === 'active' && !isTemporarilyDeactivated(selectedSeller) ? 'default' : 'secondary'}
-                      className={selectedSeller.status === 'active' && !isTemporarilyDeactivated(selectedSeller) ? 'bg-green-500' : 'bg-red-500'}
+                      variant={selectedSeller.isActive ? 'default' : 'secondary'}
+                      className={selectedSeller.isActive ? 'bg-green-500' : 'bg-red-500'}
                     >
-                      {selectedSeller.status === 'active' && !isTemporarilyDeactivated(selectedSeller) ? 'Active' : 'Inactive'}
+                      {selectedSeller.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
-                  {isTemporarilyDeactivated(selectedSeller) && selectedSeller.deactivationTo && (
+                  {selectedSeller.isActive && (
                     <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
                       <p className="text-sm text-amber-800 dark:text-amber-300 flex items-center gap-2">
                         <CalendarClock className="w-4 h-4" />
-                        Account deactivated until <span className="font-semibold">{formatDate(selectedSeller.deactivationTo)}</span>
+                        Account deactivated until <span className="font-semibold">UNIMPLEMENTED</span>
                       </p>
                     </div>
                   )}
-                  {selectedSeller.deactivationFrom && selectedSeller.deactivationTo && !isTemporarilyDeactivated(selectedSeller) && isScheduledForFuture(selectedSeller) && (
+                  {selectedSeller.isActive && (
                     <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
                       <p className="text-sm text-blue-800 dark:text-blue-300">
-                        Scheduled deactivation: {formatDate(selectedSeller.deactivationFrom)} - {formatDate(selectedSeller.deactivationTo)}
+                        Scheduled deactivation: yet to be implemented
                       </p>
                     </div>
                   )}
@@ -634,20 +635,20 @@ export function SellersPage() {
                   <Card>
                     <CardContent className="p-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Total Shipments</p>
-                      <p className="text-2xl font-bold">{selectedSeller.totalShipments}</p>
+                      <p className="text-2xl font-bold">{selectedSeller.numberofOrder}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Active</p>
-                      <p className="text-2xl font-bold text-green-600">{selectedSeller.activeShipments}</p>
+                      <p className="text-2xl font-bold text-green-600">{selectedSeller.numberofOrder}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Wallet</p>
                       <p className="text-xl font-bold text-emerald-600">
-                        {formatCurrency(selectedSeller.walletBalance)}
+                        {formatCurrency(selectedSeller.profit)}
                       </p>
                     </CardContent>
                   </Card>
@@ -722,27 +723,27 @@ export function SellersPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{seller.email}</TableCell>
-                        <TableCell>{seller.phone}</TableCell>
+                        {/* <TableCell>{seller.email}</TableCell>
+                        <TableCell>{seller.phone}</TableCell> */}
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Package className="w-4 h-4 text-blue-500" />
-                            <span className="font-semibold">{seller.totalShipments}</span>
+                            <span className="font-semibold">{seller.numberofOrder}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={seller.status === 'active' ? 'default' : 'secondary'}
-                            className={seller.status === 'active' ? 'bg-green-500' : 'bg-red-500'}
+                            variant={seller.isActive ? 'default' : 'secondary'}
+                            className={seller.isActive ? 'bg-green-500' : 'bg-red-500'}
                           >
-                            {seller.status === 'active' ? 'Active' : 'Inactive'}
+                            {seller.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleRestoreSeller(seller.id)}
+                            onClick={() => handleRestoreSeller(seller.id.toString())}
                             className="gap-2 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
                           >
                             <Eye className="w-4 h-4" />
@@ -779,10 +780,8 @@ export function SellersPage() {
         <DeactivationPeriodModal
           open={deactivationModalOpen}
           onOpenChange={setDeactivationModalOpen}
-          sellerId={selectedSeller.id}
-          sellerName={selectedSeller.name}
-          currentFromDate={selectedSeller.deactivationFrom}
-          currentToDate={selectedSeller.deactivationTo}
+          sellerId={selectedSeller.id.toString()}
+          sellerName={selectedSeller.name as string}
           onSuccess={handleDeactivationPeriodSuccess}
         />
       )}

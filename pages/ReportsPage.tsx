@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -55,7 +55,6 @@ import * as XLSX from 'xlsx';
 type DateFilterType = 'today' | 'lastWeek' | 'lastMonth' | 'last3Months' | 'lastYear' | 'custom' | null;
 
 export default function ReportsPage() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('shipments');
   const [dateFilter, setDateFilter] = useState<DateFilterType>(null);
   const [customDateRange, setCustomDateRange] = useState<{
@@ -64,14 +63,16 @@ export default function ReportsPage() {
   }>({ from: undefined, to: undefined });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  const { role } = useAuth();
+
   // Data states - empty until backend is connected
-  const [shipmentTrend, setShipmentTrend] = useState<Array<{month: string; shipments: number; delivered: number; pending: number}>>([]);
-  const [statusDistribution, setStatusDistribution] = useState<Array<{name: string; value: number; color: string}>>([]);
-  const [revenueData, setRevenueData] = useState<Array<{month: string; revenue: number; cost: number; profit: number}>>([]);
-  const [performanceData, setPerformanceData] = useState<Array<{name: string; shipments: number; delivered: number; rating: number; revenue: number}>>([]);
-  const [branchData, setBranchData] = useState<Array<{branch: string; shipments: number; revenue: number; efficiency: number}>>([]);
-  const [deliveryTimeData, setDeliveryTimeData] = useState<Array<{range: string; count: number; percentage: number}>>([]);
-  
+  const [shipmentTrend, setShipmentTrend] = useState<Array<{ month: string; shipments: number; delivered: number; pending: number }>>([]);
+  const [statusDistribution, setStatusDistribution] = useState<Array<{ name: string; value: number; color: string }>>([]);
+  const [revenueData, setRevenueData] = useState<Array<{ month: string; revenue: number; cost: number; profit: number }>>([]);
+  const [performanceData, setPerformanceData] = useState<Array<{ name: string; shipments: number; delivered: number; rating: number; revenue: number }>>([]);
+  const [branchData, setBranchData] = useState<Array<{ branch: string; shipments: number; revenue: number; efficiency: number }>>([]);
+  const [deliveryTimeData, setDeliveryTimeData] = useState<Array<{ range: string; count: number; percentage: number }>>([]);
+
   // TODO: Load data from backend API
   // useEffect(() => {
   //   loadReportsData();
@@ -580,7 +581,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Branch Performance - Only visible for Admin */}
-          {user?.role === 'admin' && (
+          {role === UserRole.Admin && (
             <Card>
               <CardHeader>
                 <CardTitle>Branch Performance</CardTitle>
@@ -874,15 +875,14 @@ export default function ReportsPage() {
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2 max-w-[100px]">
                             <div
-                              className={`h-2 rounded-full ${
-                                index === 0
-                                  ? 'bg-green-500'
-                                  : index === 1
+                              className={`h-2 rounded-full ${index === 0
+                                ? 'bg-green-500'
+                                : index === 1
                                   ? 'bg-blue-500'
                                   : index === 2
-                                  ? 'bg-amber-500'
-                                  : 'bg-red-500'
-                              }`}
+                                    ? 'bg-amber-500'
+                                    : 'bg-red-500'
+                                }`}
                               style={{ width: `${item.percentage}%` }}
                             />
                           </div>
@@ -896,19 +896,19 @@ export default function ReportsPage() {
                             index === 0
                               ? 'text-green-600 border-green-600'
                               : index === 1
-                              ? 'text-blue-600 border-blue-600'
-                              : index === 2
-                              ? 'text-amber-600 border-amber-600'
-                              : 'text-red-600 border-red-600'
+                                ? 'text-blue-600 border-blue-600'
+                                : index === 2
+                                  ? 'text-amber-600 border-amber-600'
+                                  : 'text-red-600 border-red-600'
                           }
                         >
                           {index === 0
                             ? 'Excellent'
                             : index === 1
-                            ? 'Good'
-                            : index === 2
-                            ? 'Average'
-                            : 'Needs Improvement'}
+                              ? 'Good'
+                              : index === 2
+                                ? 'Average'
+                                : 'Needs Improvement'}
                         </Badge>
                       </TableCell>
                     </TableRow>

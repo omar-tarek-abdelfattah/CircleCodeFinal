@@ -20,7 +20,7 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Edit, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { Agent, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '../types';
+import { Agent, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, SellerResponse, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '../types';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { agentsAPI, sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
 import { getAvailableStatuses, getStatusLabel } from '@/lib/statusUtils';
@@ -57,7 +57,7 @@ export function EditShipmentModal({
 
   const [shipmentDetails, setShipmentDetails] = useState<Partial<OrderResponseDetails>>({} as OrderResponseDetails)
   const [agents, setAgents] = useState<Agent[]>([])
-  const [sellers, setSellers] = useState<Seller[]>([])
+  const [sellers, setSellers] = useState<SellerResponse[]>([])
   const [sellerZones, setSellerZones] = useState<ZonesForSellerResponse[]>([])
 
   const [zones, setZones] = useState<ZoneResponse[]>([])
@@ -161,7 +161,7 @@ export function EditShipmentModal({
       if (defaultSeller) {
         setFormData((prev) => ({
           ...prev,
-          sellerId: parseInt(defaultSeller.id),
+          sellerId: defaultSeller.id,
         }))
       }
     } catch (error) {
@@ -393,6 +393,19 @@ export function EditShipmentModal({
           items: products,
           id: shipment.id,
 
+        });
+        toast.success('Shipment updated successfully');
+        onClose();
+        if (onSuccess) {
+          onSuccess();
+        }
+        return;
+      }
+      if (role === UserRole.agent) {
+        await shipmentsAPI.updateForAgent(shipment.id, {
+          id: shipment.id,
+          statusOrder: formData.statusOrder as unknown as ShipmentStatus,
+          cancelledNotes: formData.cancellednotes,
         });
         toast.success('Shipment updated successfully');
         onClose();

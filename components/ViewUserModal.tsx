@@ -8,6 +8,7 @@ import {
 import { Badge } from './ui/badge';
 import { User } from '../types';
 import { Users, Mail, Phone, ShieldCheck, Briefcase, UserCog, DollarSign, Calendar } from 'lucide-react';
+import { UserRole } from '@/contexts/AuthContext';
 
 interface ViewUserModalProps {
   open: boolean;
@@ -20,11 +21,13 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
 
   const getRoleColor = () => {
     switch (user.role) {
-      case 'admin':
+      case UserRole.SuperAdmin:
         return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700';
-      case 'seller':
+      case UserRole.Admin:
+        return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700';
+      case UserRole.Seller:
         return 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700';
-      case 'agent':
+      case UserRole.agent:
         return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700';
       default:
         return 'bg-slate-100 dark:bg-slate-900/20 text-slate-700 dark:text-slate-400 border-slate-300 dark:border-slate-700';
@@ -33,11 +36,13 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
 
   const getRoleIcon = () => {
     switch (user.role) {
-      case 'admin':
+      case UserRole.SuperAdmin:
         return <ShieldCheck className="w-4 h-4" />;
-      case 'seller':
+      case UserRole.Admin:
+        return <ShieldCheck className="w-4 h-4" />;
+      case UserRole.Seller:
         return <Briefcase className="w-4 h-4" />;
-      case 'agent':
+      case UserRole.agent:
         return <UserCog className="w-4 h-4" />;
       default:
         return <Users className="w-4 h-4" />;
@@ -142,7 +147,7 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
               <div>
                 <p className="text-xs text-green-700 dark:text-green-400">Salary</p>
                 <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                  ${user.salary.toLocaleString()}
+                  ${user.salary?.toLocaleString()}
                 </p>
               </div>
             </div>

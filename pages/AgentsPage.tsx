@@ -87,7 +87,7 @@ export function AgentsPage() {
       filtered = filtered.filter(agent =>
         agent.name.toLowerCase().includes(query) ||
         agent.email.toLowerCase().includes(query) ||
-        agent.id.toLowerCase().includes(query) ||
+        // agent.id.toLowerCase().includes(query) ||
         (agent.branch && agent.branch.includes(query))
       );
     }
@@ -784,6 +784,8 @@ export function AgentsPage() {
         itemId={selectedAgent?.id || ''}
         itemName={selectedAgent?.name || ''}
         itemType="Agent"
+        agentId={selectedAgent?.id || ''}
+        agentName={selectedAgent?.name || ''}
         currentFromDate={selectedAgent?.deactivationFrom}
         currentToDate={selectedAgent?.deactivationTo}
         onSuccess={handleDeactivationPeriodSuccess}

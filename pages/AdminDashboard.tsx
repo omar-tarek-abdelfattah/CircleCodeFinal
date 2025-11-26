@@ -8,7 +8,7 @@ import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
 import { AddShipmentModal } from '../components/AddShipmentModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Shipment } from '../types';
+import { OrderResponse } from '../types';
 import { Activity } from '../lib/mockData';
 import { sellersAPI, agentsAPI, shipmentsAPI, log, branchesAPI } from '../services/api';
 
@@ -17,7 +17,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
   const [shipments, setShipments] = useState<any[]>([]);
@@ -44,18 +44,19 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       // Filter active sellers & agents
       setSellers(sellersData.filter((s: any) => s.isActive || s.isActive === 'true'));
       setAgents(agentsData.filter((a: any) => a.isactive || a.isactive === true));
-      setShipments(shipmentsData);
-      setLogData(logsData);
       setBranches(branchesData.data || []); // branches API returns an object with `data` array
+      const reversedShipmentsData = shipmentsData.reverse().slice(0, 5);
+      setShipments(reversedShipmentsData);
+      setLogData(logsData);
 
       // Totals
       setCompletedShipments(shipmentsData.filter((s: any) => s.statusOrder === 'Delivered').length);
       setInPickupCount(shipmentsData.filter((s: any) => s.statusOrder === 'DeliveredToAgent').length);
       setTotalCollection(
-  shipmentsData
-    .filter((s: any) => s.statusOrder === 'Delivered') // بس الشحنات اللي تم توصيلها
-    .reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0)
-);
+        shipmentsData
+          .filter((s: any) => s.statusOrder === 'Delivered') // بس الشحنات اللي تم توصيلها
+          .reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0)
+      );
 
     };
 
@@ -66,7 +67,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const activeAgents = agents.length;
   const totalSellers = sellers.length;
 
-  const handleViewDetails = (shipment: Shipment) => {
+  const handleViewDetails = (shipment: OrderResponse) => {
     setSelectedShipment(shipment);
     setDetailsModalOpen(true);
   };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,10 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
-import { agentsAPI } from '../services/api';
-import { parse } from 'path';
+import { agentsAPI, branchesAPI } from '../services/api';
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { BranchData } from '@/types';
 
 interface AddAgentModalProps {
   open: boolean;
@@ -23,6 +25,9 @@ interface AddAgentModalProps {
 
 export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalProps) {
   const [loading, setLoading] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [branches, setBranches] = useState<BranchData[]>([]);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,12 +37,54 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
     confirmPassword: ''
   });
 
+  const loadBranches = async () => {
+    setLoadingBranches(true);
+    try {
+      const response = await branchesAPI.getAll();
+      if (response && response.data) {
+        setBranches(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load branches:', error);
+      toast.error('Failed to load branches');
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBranches();
+  }, [open]);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
-    if (!formData.name.trim()) {
-      toast.error('Please enter agent name');
+    if (!formData.name.trim() || formData.name.trim().length < 3) {
+      if (formData.name.trim().split(' ').length > 1) {
+        toast.error(`Please enter a username that doesn't contain spaces`);
+        return;
+      }
+
+      toast.error('Please enter a valid user name');
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error('Please enter email');
+      return;
+    }
+
+    if (!formData.password.trim()) {
+      toast.error('Please enter password');
+      return;
+    }
+    if (!formData.confirmPassword.trim()) {
+      toast.error('Please enter confirm password');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
       return;
     }
     if (!formData.email.trim()) {
@@ -55,6 +102,11 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
       toast.error('Please enter a valid email address');
       return;
     }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,15}$/;
+    if (!passwordRegex.test(formData.password)) {
+      toast.error('Please enter a valid password that contains at least one lowercase letter, one uppercase letter, one digit, and one special character');
+      return;
+    }
 
     setLoading(true);
 
@@ -62,13 +114,13 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
       // TODO: Connect to backend API
       console.log('Submitting new agent:', formData);
       await agentsAPI.create(formData);
-      
+
 
       // Simulate API call
       // await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast.success('Agent added successfully');
-      
+
       // Reset form
       setFormData({
         name: '',
@@ -78,9 +130,9 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
         password: '',
         confirmPassword: ''
       });
-      
+
       onOpenChange(false);
-      
+
       // Refresh the agents list
       if (onSuccess) {
         onSuccess();
@@ -118,11 +170,11 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Full Name <span className="text-red-500">*</span>
+                UserName <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="John Doe"
+                placeholder="JohnDoe"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 disabled={loading}
@@ -164,13 +216,22 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
               <Label htmlFor="branshId">
                 Branch <span className="text-slate-400">(Optional)</span>
               </Label>
-              <Input
-                id="branshId"
-                placeholder="1,2,3,"
-                // value={formData.branchId}
-                onChange={(e) => handleChange('branshId', parseInt(e.target.value))}
+              <Select
+                value={formData.branshId.toString()}
+                onValueChange={(e) => handleChange('branshId', e)}
                 disabled={loading}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id.toString()}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Zone */}
@@ -186,7 +247,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
                 disabled={loading}
               />
             </div> */}
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="passowrd">
                 Password <span className="text-slate-400"></span>
               </Label>
@@ -198,7 +259,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
                 disabled={loading}
               />
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="confirmPassowrd">
                 Confirm Password <span className="text-slate-400"></span>
               </Label>

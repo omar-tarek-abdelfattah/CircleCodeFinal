@@ -192,6 +192,20 @@ export function SignUpPage() {
                   />
                 </div>
               </div>
+              <div>
+                <Label>Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Input
+                    type="password"
+                    placeholder="Confirm Password"
+                    value={passwordConfirmed}
+                    onChange={(e) => setPasswordConfirmed(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
 
               {role === "Agent" && (
                 <div>
@@ -216,7 +230,7 @@ export function SignUpPage() {
                   type="number"
                   placeholder="Branch ID"
                   value={branchId}
-                 onChange={(e) => setBranchId(e.target.value ? Number(e.target.value) : "")}
+                  onChange={(e) => setBranchId(e.target.value ? Number(e.target.value) : "")}
                   required
                 />
               </div>
