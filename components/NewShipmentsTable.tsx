@@ -34,6 +34,7 @@ export function NewShipmentsTable({
   onViewAll,
 }: NewShipmentsTableProps) {
   const displayShipments = shipments.slice(0, maxItems);
+  console.log(displayShipments)
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -81,7 +82,7 @@ export function NewShipmentsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>Tracking ID</TableHead>
-                <TableHead>Customer Name</TableHead>
+                <TableHead>Customer Name</TableHead>     
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -106,22 +107,29 @@ export function NewShipmentsTable({
                     transition={{ delay: index * 0.05 }}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   >
-                    <TableCell className="font-mono text-sm">
-                      {shipment.trackingNumber}
-                    </TableCell>
                     <TableCell>
                       <div>
-                        <p>{shipment.recipient.name}</p>
-                        <p className="text-xs text-slate-500">{shipment.recipient.phone}</p>
+                        <p>{shipment.id}</p>
+                        {/* <p className="text-xs text-slate-500">{shipment.phone}</p> */}
+                      </div>
+                    </TableCell>
+                    {/* <TableCell className="font-mono text-sm">
+                      {shipment.trackingNumber}
+                    </TableCell> */}
+                    <TableCell>
+                      <div>
+                        <p>{shipment.clientName}</p>
+                        {/* <p className="text-xs text-slate-500">{shipment.phone}</p> */}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(shipment.status)}>
-                        {shipment.status.replace('_', ' ')}
+                    
+                      <Badge className={getStatusColor(shipment.statusOrder)}>
+                        {shipment.statusOrder.replace('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono">
-                      ${shipment.price.toFixed(2)}
+                      ${shipment.totalPrice.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

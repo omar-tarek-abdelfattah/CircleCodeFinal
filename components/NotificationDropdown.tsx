@@ -11,6 +11,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from './ui/popover';
+import { useState, useEffect } from 'react';
+import { sellersAPI } from '../services/api';
+import { agentsAPI } from '../services/api';
 
 // Format timestamp to relative time
 const formatRelativeTime = (timestamp: string) => {
@@ -42,6 +45,28 @@ const getNotificationIcon = (type: string) => {
 export function NotificationDropdown() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
   const [open, setOpen] = React.useState(false);
+  const [seller, setSeller] = useState<any[]>([]);
+    const [agent, setAgent] = useState<any[]>([]);
+  
+  
+    useEffect(() => {
+      // Fetch sellers and agents data from API if needed
+      const fetchData = async () => {
+        // Example API calls - replace with real API calls
+        const sellersData = await sellersAPI.getAll(); 
+        const agentsData = await agentsAPI.getAll();
+        const filtersellersData=sellersData.filter((user:any)=>user.isActive==='false');
+        const filteragentsData=agentsData.filter((user:any)=>user.isActive==='false');
+  
+        setSeller(filtersellersData);
+        setAgent(filteragentsData);
+      }
+      fetchData();
+    }
+    ,[]);
+    console.log(seller);
+    console.log(agent);
+  
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

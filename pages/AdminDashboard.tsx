@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Package, Users, TrendingUp, DollarSign, Building2, MapPin, Clock } from 'lucide-react';
+import { Package, Users, TrendingUp, DollarSign, Building2, Clock } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { NewShipmentsTable } from '../components/NewShipmentsTable';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { Shipment } from '../types';
 import { Activity } from '../lib/mockData';
+import { sellersAPI, agentsAPI, shipmentsAPI, log, branchesAPI } from '../services/api';
 
 interface AdminDashboardProps {
   onNavigate?: (page: string) => void;
@@ -19,20 +20,51 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
+  const [shipments, setShipments] = useState<any[]>([]);
+  const [logData, setLogData] = useState<Activity[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [sellers, setSellers] = useState<any[]>([]);
 
-  // Empty data - to be replaced with API calls
-  const shipments: Shipment[] = [];
-  const activities: Activity[] = [];
-  const agents: any[] = [];
-  const branches: any[] = [];
-  const zones: any[] = [];
-  const sellers: any[] = [];
+  const [completedShipments, setCompletedShipments] = useState(0);
+  const [inPickupCount, setInPickupCount] = useState(0);
+  const [totalCollection, setTotalCollection] = useState(0);
 
-  const totalShipments = 0;
-  const completedShipments = 0;
-  const inPickupCount = 0;
-  const totalCollection = 0;
-  const activeAgents = 0;
+  useEffect(() => {
+    const fetchData = async () => {
+      // Fetch all data
+      const [sellersData, agentsData, shipmentsData, logsData, branchesData] = await Promise.all([
+        sellersAPI.getAll(),
+        agentsAPI.getAll(),
+        shipmentsAPI.getAll(),
+        log.getAll(),
+        branchesAPI.getAll(),
+      ]);
+
+      // Filter active sellers & agents
+      setSellers(sellersData.filter((s: any) => s.isActive || s.isActive === 'true'));
+      setAgents(agentsData.filter((a: any) => a.isactive || a.isactive === true));
+      setShipments(shipmentsData);
+      setLogData(logsData);
+      setBranches(branchesData.data || []); // branches API returns an object with `data` array
+
+      // Totals
+      setCompletedShipments(shipmentsData.filter((s: any) => s.statusOrder === 'Delivered').length);
+      setInPickupCount(shipmentsData.filter((s: any) => s.statusOrder === 'DeliveredToAgent').length);
+      setTotalCollection(
+  shipmentsData
+    .filter((s: any) => s.statusOrder === 'Delivered') // بس الشحنات اللي تم توصيلها
+    .reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0)
+);
+
+    };
+
+    fetchData();
+  }, []);
+
+  const totalShipments = shipments.length;
+  const activeAgents = agents.length;
+  const totalSellers = sellers.length;
 
   const handleViewDetails = (shipment: Shipment) => {
     setSelectedShipment(shipment);
@@ -44,7 +76,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   };
 
   const handleShipmentCreated = () => {
-    // TODO: Refresh shipments list from API
     console.log('Shipment created, refreshing list...');
   };
 
@@ -59,76 +90,28 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10">
           <h1 className="text-3xl mb-2">System Overview 📊</h1>
-          <p className="text-purple-100">
-            Monitor and manage all aspects of Circle Code System.
-          </p>
+          <p className="text-purple-100">Monitor and manage all aspects of Circle Code System.</p>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          title="Total Shipments"
-          value={totalShipments}
-          icon={Package}
-          trend={{ value: 12, positive: true }}
-          delay={0.1}
-          gradient="from-blue-500 to-blue-600"
-        />
-        <StatCard
-          title="In Pickup Stage"
-          value={inPickupCount}
-          icon={Clock}
-          delay={0.15}
-          gradient="from-orange-500 to-orange-600"
-        />
-        <StatCard
-          title="Completed"
-          value={completedShipments}
-          icon={TrendingUp}
-          trend={{ value: 8, positive: true }}
-          delay={0.2}
-          gradient="from-green-500 to-green-600"
-        />
-        <StatCard
-          title="Collection Amount"
-          value={`$${totalCollection.toFixed(0)}`}
-          icon={DollarSign}
-          trend={{ value: 15, positive: true }}
-          delay={0.25}
-          gradient="from-purple-500 to-purple-600"
-        />
-        <StatCard
-          title="Active Agents"
-          value={activeAgents}
-          icon={Users}
-          delay={0.3}
-          gradient="from-pink-500 to-pink-600"
-        />
-        <StatCard
-          title="Total Sellers"
-          value={sellers.length}
-          icon={Users}
-          delay={0.35}
-          gradient="from-indigo-500 to-indigo-600"
-        />
+        <StatCard title="Total Shipments" value={totalShipments} icon={Package} gradient="from-blue-500 to-blue-600" />
+        <StatCard title="In Pickup Stage" value={inPickupCount} icon={Clock} gradient="from-orange-500 to-orange-600" />
+        <StatCard title="Completed" value={completedShipments} icon={TrendingUp} gradient="from-green-500 to-green-600" />
+        <StatCard title="Collection Amount" value={`$${totalCollection.toFixed(0)}`} icon={DollarSign} gradient="from-purple-500 to-purple-600" />
+        <StatCard title="Active Agents" value={activeAgents} icon={Users} gradient="from-pink-500 to-pink-600" />
+        <StatCard title="Total Sellers" value={totalSellers} icon={Users} gradient="from-indigo-500 to-indigo-600" />
       </div>
 
       {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <RecentActivity activities={activities} />
-      </motion.div>
+      <Card className="p-4 shadow-md">
+        <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
+        <RecentActivity activities={logData} />
+      </Card>
 
       {/* New Shipments Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
         <NewShipmentsTable
           shipments={shipments.slice(0, 5)}
           onViewDetails={handleViewDetails}
@@ -141,11 +124,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       {/* Quick Insights Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Performing Agents */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
           <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -155,14 +134,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </CardHeader>
             <CardContent>
               {agents.length === 0 ? (
-                <p className="text-center text-slate-500 dark:text-slate-400 py-8">
-                  No agents data available
-                </p>
+                <p className="text-center text-slate-500 dark:text-slate-400 py-8">No agents data available</p>
               ) : (
                 <div className="space-y-3">
                   {agents
-                    .sort((a, b) => b.completedShipments - a.completedShipments)
-                    .slice(0, 3)
+                    .sort((a, b) => (b.numberofOrder || 0) - (a.numberofOrder || 0))
+                    .slice(0, 5)
                     .map((agent, index) => (
                       <motion.div
                         key={agent.id}
@@ -177,17 +154,11 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                           </div>
                           <div>
                             <p>{agent.name}</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {agent.zone}
-                            </p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">{agent.branshName}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p>{agent.completedShipments}</p>
-                          <div className="flex items-center gap-1 text-sm text-yellow-600">
-                            <span>★</span>
-                            <span>{agent.rating}</span>
-                          </div>
+                          <p>{agent.numberofOrder || 0} Orders</p>
                         </div>
                       </motion.div>
                     ))}
@@ -197,12 +168,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </Card>
         </motion.div>
 
-        {/* Active Branches */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
+        {/* Top Performing Branches */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
           <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -212,32 +179,29 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </CardHeader>
             <CardContent>
               {branches.length === 0 ? (
-                <p className="text-center text-slate-500 dark:text-slate-400 py-8">
-                  No branches data available
-                </p>
+                <p className="text-center text-slate-500 dark:text-slate-400 py-8">No branches data available</p>
               ) : (
                 <div className="space-y-3">
-                  {branches.map((branch, index) => (
-                    <motion.div
-                      key={branch.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
-                    >
-                      <div>
-                        <p>{branch.name}</p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {branch.city}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="secondary">
-                          {branch.activeShipments || 0} active
-                        </Badge>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {branches
+                    .sort((a, b) => (b.ordersNumber || 0) - (a.ordersNumber || 0))
+                    .slice(0, 5)
+                    .map((branch, index) => (
+                      <motion.div
+                        key={branch.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + index * 0.1 }}
+                        className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                      >
+                        <div>
+                          <p>{branch.name}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">{branch.address}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant="secondary">{branch.ordersNumber || 0} Orders</Badge>
+                        </div>
+                      </motion.div>
+                    ))}
                 </div>
               )}
             </CardContent>
@@ -245,63 +209,11 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         </motion.div>
       </div>
 
-      {/* Zones Overview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-      >
-        <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Coverage Zones
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {zones.length === 0 ? (
-              <p className="text-center text-slate-500 dark:text-slate-400 py-8">
-                No zones data available
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {zones.map((zone, index) => (
-                  <motion.div
-                    key={zone.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.0 + index * 0.1 }}
-                    className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                    <h4 className="mb-2">{zone.name}</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                      {zone.coverage}
-                    </p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-500">Active Agents</span>
-                      <Badge variant="secondary">{zone.activeAgents || 0}</Badge>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
       {/* Shipment Details Modal */}
-      <ShipmentDetailsModal
-        shipment={selectedShipment}
-        isOpen={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
-      />
+      <ShipmentDetailsModal shipment={selectedShipment} isOpen={detailsModalOpen} onClose={() => setDetailsModalOpen(false)} />
 
       {/* Add Shipment Modal */}
-      <AddShipmentModal
-        isOpen={addShipmentModalOpen}
-        onClose={() => setAddShipmentModalOpen(false)}
-        onSuccess={handleShipmentCreated}
-      />
+      <AddShipmentModal isOpen={addShipmentModalOpen} onClose={() => setAddShipmentModalOpen(false)} onSuccess={handleShipmentCreated} />
     </div>
   );
 }

@@ -58,7 +58,7 @@ export interface Shipment { // or order
     phone: string;
     address: string;
   };
-  status: ShipmentStatusString;
+  status: ShipmentStatus;
   assignedAgent?: {
     id: string;
     name: string;

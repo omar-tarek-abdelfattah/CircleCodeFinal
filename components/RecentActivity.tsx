@@ -19,31 +19,14 @@ interface RecentActivityProps {
 }
 
 export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps) {
-  const displayActivities = activities.slice(0, maxItems);
+  // Filter last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const getActivityIcon = (type: Activity['type']) => {
-    const icons = {
-      shipment_created: Package,
-      shipment_updated: TrendingUp,
-      status_changed: CheckCircle,
-      agent_assigned: UserPlus,
-      payment_received: DollarSign,
-      withdrawal_completed: CreditCard,
-    };
-    return icons[type] || Clock;
-  };
-
-  const getActivityColor = (type: Activity['type']) => {
-    const colors = {
-      shipment_created: 'from-blue-500 to-blue-600',
-      shipment_updated: 'from-purple-500 to-purple-600',
-      status_changed: 'from-green-500 to-green-600',
-      agent_assigned: 'from-orange-500 to-orange-600',
-      payment_received: 'from-yellow-500 to-yellow-600',
-      withdrawal_completed: 'from-pink-500 to-pink-600',
-    };
-    return colors[type] || 'from-slate-500 to-slate-600';
-  };
+  const recentActivities = activities
+    .filter(act => new Date(act.actionTIme) >= sevenDaysAgo)
+    .sort((a, b) => new Date(b.actionTIme).getTime() - new Date(a.actionTIme).getTime())
+    .slice(0, maxItems);
 
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date();
@@ -52,14 +35,40 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInDays > 0) {
-      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-    } else if (diffInHours > 0) {
-      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    } else {
-      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-    }
+    if (diffInDays > 0) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    if (diffInHours > 0) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+  };
+
+  const getActivityIcon = (action: string) => {
+    const icons: Record<string, any> = {
+      shipment_created: Package,
+      shipment_updated: TrendingUp,
+      status_changed: CheckCircle,
+      agent_assigned: UserPlus,
+      payment_received: DollarSign,
+      withdrawal_completed: CreditCard,
+      update: TrendingUp,
+      create: Package,
+      delete: CheckCircle,
+    };
+    return icons[action.toLowerCase()] || Clock;
+  };
+
+  const getActivityColor = (action: string) => {
+    const colors: Record<string, string> = {
+      shipment_created: 'from-blue-500 to-blue-600',
+      shipment_updated: 'from-purple-500 to-purple-600',
+      status_changed: 'from-green-500 to-green-600',
+      agent_assigned: 'from-orange-500 to-orange-600',
+      payment_received: 'from-yellow-500 to-yellow-600',
+      withdrawal_completed: 'from-pink-500 to-pink-600',
+      update: 'from-purple-500 to-purple-600',
+      create: 'from-blue-500 to-blue-600',
+      delete: 'from-red-500 to-red-600',
+    };
+    return colors[action.toLowerCase()] || 'from-slate-500 to-slate-600';
   };
 
   return (
@@ -76,9 +85,9 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
-            {displayActivities.map((activity, index) => {
-              const Icon = getActivityIcon(activity.type);
-              const gradient = getActivityColor(activity.type);
+            {recentActivities.map((activity, index) => {
+              const Icon = getActivityIcon(activity.action);
+              const gradient = getActivityColor(activity.action);
 
               return (
                 <motion.div
@@ -94,21 +103,21 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
                   >
                     <Icon className="w-4 h-4 text-white" />
                   </motion.div>
-                  
+
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">{activity.title}</p>
+                    <p className="font-medium">
+                      {activity.tableName} (ID: {activity.id})
+                    </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                       {activity.description}
                     </p>
-                    {activity.user && (
-                      <p className="text-xs text-slate-500 mt-1">
-                        by {activity.user}
-                      </p>
+                    {activity.userName && (
+                      <p className="text-xs text-slate-500 mt-1">by {activity.userName}</p>
                     )}
                   </div>
 
                   <div className="text-xs text-slate-500 flex-shrink-0">
-                    {formatTimeAgo(activity.timestamp)}
+                    {formatTimeAgo(activity.actionTIme)}
                   </div>
                 </motion.div>
               );
@@ -119,3 +128,4 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
     </Card>
   );
 }
+

@@ -28,6 +28,7 @@ import {
   OrderRequestSeller,
   OrderUpdateSeller,
 } from "../types";
+import { Activity } from "../lib/mockData";
 
 // -------------------- Base URLs --------------------
 
@@ -113,6 +114,8 @@ export async function loginApi(
       },
       undefined,
       apiMode.auth
+
+      
     );
     if (result.token) {
       localStorage.setItem("token", result.token);
@@ -734,11 +737,13 @@ export const zonesAPI = {
 
 // Users API
 export const usersAPI = {
-  // GET /api/users - Get all users
+  // GET /Admin - Get all users
   getAll: async (): Promise<User[]> => {
-    // TODO: Replace with actual API call to .NET backend
-    return apiCall<User[]>(`/Admin`, undefined, UserRole.Admin);
+    return apiCall<User[]>(`/Admin`, {
+      method: 'GET',
+    });
   },
+
 
   // GET /api/users/:id - Get user by ID
   getById: async (_id: string): Promise<any> => {
@@ -789,10 +794,10 @@ export const usersAPI = {
     status: "active" | "inactive"
   ): Promise<any> => {
     // TODO: Replace with actual API call to .NET backend
-    // return apiCall<any>(`/users/${id}/status`, {
-    //   method: 'PATCH',
-    //   body: JSON.stringify({ status }),
-    // });
+    return apiCall<any>(`/Admin/lockout/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
 
     console.log("Backend API: Update user status", { id, status });
     throw new Error("Not implemented - connect to backend");
@@ -1063,5 +1068,20 @@ export const notificationsAPI = {
     // });
 
     console.log("Backend API: Clear all notifications");
+  },
+};
+// Generic API call function
+// dashboard
+export const log = {
+  // GET /api/branches - Get all branches
+  getAll: async (): Promise<Activity[]> => {
+    // TODO: Replace with actual API call to .NET backend
+    // console.log("Fetching log activities from backend...");
+    console.log(log)
+    return apiCall<Activity[]>("/Log");
+    
+
+    // const { mockBranches } = await import('../lib/mockData');
+    // return mockBranches;
   },
 };

@@ -1,13 +1,15 @@
 import { Shipment, Transaction, WalletSummary, Agent, Seller, Branch, Zone, User } from '../types';
 
 export interface Activity {
-  id: string;
+  id: number;
   type: 'shipment_created' | 'shipment_updated' | 'status_changed' | 'agent_assigned' | 'payment_received' | 'withdrawal_completed';
-  title: string;
+  // title: string;
+  action: string;
   description: string;
-  timestamp: string;
-  user?: string;
+  actionTIme: string;
+  userName: string;
   shipmentId?: string;
+  tableName: string;
 }
 
 export const mockActivities: Activity[] = [
