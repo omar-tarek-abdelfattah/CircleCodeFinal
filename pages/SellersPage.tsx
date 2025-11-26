@@ -70,13 +70,13 @@ export function SellersPage() {
     setLoading(true);
     try {
       // TODO: Connect to backend API
-      const response = await sellersAPI.getAll(); 
+      const response = await sellersAPI.getAll();
       // setSellers(response);
       console.log(response)
-      
+
       // Simulate API delay
       // await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       // Empty state until backend is connected
       setSellers(response);
     } catch (error) {
@@ -90,10 +90,10 @@ export function SellersPage() {
   // Calculate statistics (excluding hidden sellers)
   const visibleSellers = sellers.filter(s => !hiddenSellerIds.has(s.id));
   const totalSellers = visibleSellers.length;
-  
+
   // Active sellers (those with active shipments or recent activity - for demo, we'll use those with active shipments > 0)
   const activeSellers = visibleSellers.filter(s => s.activeShipments > 0).length;
-  
+
   // Total revenue (sum of all wallet balances)
   const totalRevenue = visibleSellers.reduce((sum, s) => sum + s.walletBalance, 0);
 
@@ -147,18 +147,18 @@ export function SellersPage() {
 
   const handleToggleStatus = async (sellerId: string, currentStatus: 'active' | 'inactive') => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
+
     try {
       // TODO: Connect to backend API
       // await sellersAPI.updateStatus(sellerId, newStatus);
-      
+
       // Update local state
       setSellers(prev =>
         prev.map(s =>
           s.id === sellerId ? { ...s, status: newStatus } : s
         )
       );
-      
+
       toast.success(`Seller ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
       toast.error('Failed to update seller status');
@@ -178,10 +178,10 @@ export function SellersPage() {
       prev.map(s =>
         s.id === selectedSeller.id
           ? {
-              ...s,
-              deactivationFrom: fromDate || undefined,
-              deactivationTo: toDate || undefined,
-            }
+            ...s,
+            deactivationFrom: fromDate || undefined,
+            deactivationTo: toDate || undefined,
+          }
           : s
       )
     );
@@ -189,33 +189,33 @@ export function SellersPage() {
 
   const isTemporarilyDeactivated = (seller: Seller): boolean => {
     if (!seller.deactivationFrom || !seller.deactivationTo) return false;
-    
+
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
-    
+
     const from = new Date(seller.deactivationFrom);
     from.setHours(0, 0, 0, 0);
-    
+
     const to = new Date(seller.deactivationTo);
     to.setHours(23, 59, 59, 999); // End of day
-    
+
     return now >= from && now <= to;
   };
 
   const isScheduledForFuture = (seller: Seller): boolean => {
     if (!seller.deactivationFrom) return false;
-    
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    
+
     const from = new Date(seller.deactivationFrom);
     from.setHours(0, 0, 0, 0);
-    
+
     return from > now;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString)?.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -223,7 +223,7 @@ export function SellersPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${amount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -278,7 +278,7 @@ export function SellersPage() {
             title="Active Sellers"
             value={activeSellers.toString()}
             icon={UserCheck}
-            
+
           />
         </motion.div>
         <motion.div
@@ -342,7 +342,7 @@ export function SellersPage() {
                     {hiddenSellerIds.size} Hidden {hiddenSellerIds.size === 1 ? 'Seller' : 'Sellers'}
                   </Button>
                 )}
-                <Button 
+                <Button
                   className="gap-2 bg-gradient-to-r from-blue-500 to-purple-600"
                   onClick={() => setAddSellerModalOpen(true)}
                 >
@@ -449,11 +449,10 @@ export function SellersPage() {
                                   onCheckedChange={() => handleToggleStatus(seller.id, seller.status)}
                                   className="data-[state=checked]:bg-green-500"
                                 />
-                                <span className={`text-sm font-semibold ${
-                                  seller.status === 'active' && !isTemporarilyDeactivated(seller)
-                                    ? 'text-green-600 dark:text-green-400' 
+                                <span className={`text-sm font-semibold ${seller.status === 'active' && !isTemporarilyDeactivated(seller)
+                                    ? 'text-green-600 dark:text-green-400'
                                     : 'text-red-600 dark:text-red-400'
-                                }`}>
+                                  }`}>
                                   {seller.status === 'active' && !isTemporarilyDeactivated(seller) ? 'Active' : 'Inactive'}
                                 </span>
                               </div>
@@ -597,7 +596,7 @@ export function SellersPage() {
                 </h3>
                 <div className="pl-6 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Badge 
+                    <Badge
                       variant={selectedSeller.status === 'active' && !isTemporarilyDeactivated(selectedSeller) ? 'default' : 'secondary'}
                       className={selectedSeller.status === 'active' && !isTemporarilyDeactivated(selectedSeller) ? 'bg-green-500' : 'bg-red-500'}
                     >
@@ -729,7 +728,7 @@ export function SellersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge 
+                          <Badge
                             variant={seller.status === 'active' ? 'default' : 'secondary'}
                             className={seller.status === 'active' ? 'bg-green-500' : 'bg-red-500'}
                           >

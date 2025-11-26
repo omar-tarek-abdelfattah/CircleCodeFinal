@@ -17,7 +17,7 @@ import {
   EyeOff,
   CalendarClock,
 } from 'lucide-react';
-import { User, UserRole } from '../types';
+import { User } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -56,6 +56,7 @@ import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { usersAPI } from '../services/api';
+import { UserRole } from '@/contexts/AuthContext';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -88,10 +89,15 @@ export default function UsersPage() {
       console.log()
       const response = await usersAPI.getAll();
       setUsers(response);
-      
+
       // Simulate API call
+<<<<<<< HEAD
       // await new Promise((resolve) => setTimeout(resolve, 500));
       
+=======
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+>>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
       // Empty state until backend is connected
       // setUsers([]);
     } catch (error) {
@@ -131,9 +137,9 @@ export default function UsersPage() {
   // Calculate stats (excluding hidden users)
   const visibleUsers = users.filter((u) => !hiddenUserIds.has(u.id));
   const totalUsers = visibleUsers.length;
-  const totalAdmins = visibleUsers.filter((u) => u.role === 'admin').length;
-  const totalSellers = visibleUsers.filter((u) => u.role === 'seller').length;
-  const totalAgents = visibleUsers.filter((u) => u.role === 'agent').length;
+  const totalAdmins = visibleUsers.filter((u) => u.role === UserRole.Admin).length;
+  const totalSellers = visibleUsers.filter((u) => u.role === UserRole.Seller).length;
+  const totalAgents = visibleUsers.filter((u) => u.role === UserRole.agent).length;
 
   // Apply filters
   const filteredUsers = visibleUsers.filter((user) => {
@@ -265,6 +271,7 @@ export default function UsersPage() {
   //   }
   // };
 
+<<<<<<< HEAD
   // const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
   //   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
   //   setUsers(
@@ -279,6 +286,22 @@ export default function UsersPage() {
   //   );
   //   toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
   // };
+=======
+  const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    setUsers(
+      users.map((u) =>
+        u.id === userId
+          ? {
+            ...u,
+            status: newStatus,
+          }
+          : u
+      )
+    );
+    toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+  };
+>>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
 
   const handleSetDeactivationPeriod = (user: User) => {
     setUserForDeactivation(user);
@@ -291,10 +314,10 @@ export default function UsersPage() {
         users.map((u) =>
           u.id === userForDeactivation.id
             ? {
-                ...u,
-                deactivationFrom: dateFrom?.toISOString(),
-                deactivationTo: dateTo?.toISOString(),
-              }
+              ...u,
+              deactivationFrom: dateFrom?.toISOString(),
+              deactivationTo: dateTo?.toISOString(),
+            }
             : u
         )
       );
@@ -323,11 +346,11 @@ export default function UsersPage() {
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case UserRole.Admin:
         return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700';
-      case 'seller':
+      case UserRole.Seller:
         return 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700';
-      case 'agent':
+      case UserRole.agent:
         return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700';
       default:
         return 'bg-slate-100 dark:bg-slate-900/20 text-slate-700 dark:text-slate-400 border-slate-300 dark:border-slate-700';
@@ -336,11 +359,11 @@ export default function UsersPage() {
 
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case UserRole.Admin:
         return <ShieldCheck className="w-4 h-4" />;
-      case 'seller':
+      case UserRole.Seller:
         return <Briefcase className="w-4 h-4" />;
-      case 'agent':
+      case UserRole.agent:
         return <UserCog className="w-4 h-4" />;
       default:
         return <Users className="w-4 h-4" />;
@@ -352,16 +375,16 @@ export default function UsersPage() {
     if (words.length >= 2) {
       return (words[0][0] + words[1][0]).toUpperCase();
     }
-    return name.substring(0, 2).toUpperCase();
+    return name.substring(0, 2)?.toUpperCase();
   };
 
   const getAvatarColor = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case UserRole.Admin:
         return 'bg-purple-500 text-white';
-      case 'seller':
+      case UserRole.Seller:
         return 'bg-orange-500 text-white';
-      case 'agent':
+      case UserRole.agent:
         return 'bg-green-500 text-white';
       default:
         return 'bg-blue-500 text-white';
@@ -573,7 +596,7 @@ export default function UsersPage() {
                   </Popover> */}
                 </div>
 
-                <Button variant="default" size="sm" onClick={() => {}}>
+                <Button variant="default" size="sm" onClick={() => { }}>
                   <Filter className="w-4 h-4 mr-2" />
                   Apply Filter
                 </Button>
@@ -660,11 +683,10 @@ export default function UsersPage() {
                                   onCheckedChange={() => handleStatusToggle(user.id, user.status)}
                                   className="data-[state=checked]:bg-green-500"
                                 />
-                                <span className={`text-sm font-semibold ${
-                                  user.status === 'active' && !isTemporarilyDeactivated(user)
-                                    ? 'text-green-600 dark:text-green-400' 
+                                <span className={`text-sm font-semibold ${user.status === 'active' && !isTemporarilyDeactivated(user)
+                                    ? 'text-green-600 dark:text-green-400'
                                     : 'text-red-600 dark:text-red-400'
-                                }`}>
+                                  }`}>
                                   {user.status === 'active' && !isTemporarilyDeactivated(user) ? 'Active' : 'Inactive'}
                                 </span>
                               </div>

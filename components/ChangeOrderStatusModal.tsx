@@ -18,7 +18,7 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle } from 'lucide-react';
-import { Shipment, ShipmentStatus } from '../types';
+import { OrderResponse, Shipment, ShipmentStatus, ShipmentStatusString } from '../types';
 import { Badge } from './ui/badge';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,28 +26,28 @@ import { useAuth } from '../contexts/AuthContext';
 interface ChangeOrderStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
-  shipment: Shipment | null;
+  shipments: OrderResponse[];
   onSuccess?: () => void;
 }
 
 // Agent-allowed statuses
 const agentAllowedStatuses: { value: ShipmentStatus; label: string }[] = [
-  { value: 'delivered', label: 'Delivered' },
-  { value: 'postponed', label: 'Post Pond' },
-  { value: 'customer_unreachable', label: 'Customer Unreachable' },
-  { value: 'rejected_no_shipping_fees', label: 'Rejected No Shipping Fees' },
-  { value: 'rejected_with_shipping_fees', label: 'Rejected With Shipping Fees' },
-  { value: 'partially_delivered', label: 'Partially Delivered' },
-  { value: 'returned', label: 'Returned' },
+  { value: ShipmentStatus.Delivered, label: 'Delivered' },
+  { value: ShipmentStatus.Postponed, label: 'Post Pond' },
+  { value: ShipmentStatus.CustomerUnreachable, label: 'Customer Unreachable' },
+  { value: ShipmentStatus.RejectedNoShippingFees, label: 'Rejected No Shipping Fees' },
+  { value: ShipmentStatus.RejectedWithShippingFees, label: 'Rejected With Shipping Fees' },
+  { value: ShipmentStatus.PartiallyDelivered, label: 'Partially Delivered' },
+  { value: ShipmentStatus.Returned, label: 'Returned' },
 ];
 
 export function ChangeOrderStatusModal({
   isOpen,
   onClose,
-  shipment,
+  shipments,
   onSuccess,
 }: ChangeOrderStatusModalProps) {
-  const [newStatus, setNewStatus] = useState<ShipmentStatus | ''>('');
+  const [newStatus, setNewStatus] = useState<ShipmentStatusString | ''>('');
   const [loading, setLoading] = useState(false);
   const { notifyStatusChanged } = useNotifications();
   const { user } = useAuth();
@@ -55,30 +55,37 @@ export function ChangeOrderStatusModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newStatus || !shipment) {
-      toast.error('Please select a status');
-      return;
-    }
+    shipments.map(shipment => {
+      if (!newStatus || !shipment.statusOrder) {
+        toast.error('Please select a status');
+        return;
+      }
 
-    if (newStatus === shipment.status) {
-      toast.error('Please select a different status');
-      return;
-    }
+      if (newStatus === shipment.statusOrder) {
+        toast.error('Please select a different status');
+        return;
+      }
+
+
+
+
+
+    })
 
     setLoading(true);
 
     try {
       // TODO: Connect to backend API to change order status
       // await shipmentsAPI.updateStatus(shipment.id, newStatus);
-      
+
       // TODO: Notify the notification system about the status change
       // notifyStatusChanged(shipment.id, shipment.trackingNumber, shipment.status, newStatus, 'Agent Name');
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const statusLabel = agentAllowedStatuses.find(s => s.value === newStatus)?.label || newStatus;
-      toast.success(`Order status changed to "${statusLabel}" successfully`);
+      // const statusLabel = agentAllowedStatuses.find(s => s.value === newStatus)?.label || newStatus;
+      // toast.success(`Order status changed to "${statusLabel}" successfully`);
 
       // Reset form
       setNewStatus('');
@@ -113,24 +120,24 @@ export function ChangeOrderStatusModal({
           </DialogDescription>
         </DialogHeader>
 
-        {shipment && (
+        {shipments.length > 0 && (
           <form onSubmit={handleSubmit}>
             <div className="space-y-6 py-4">
               {/* Order Information */}
               <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Tracking Number</p>
-                    <p className="font-mono">{shipment.trackingNumber}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">bulk update</p>
+                    <p className="font-mono">{shipments.length}</p>
                   </div>
                   <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                    {formatStatus(shipment.status)}
+                    {formatStatus(ShipmentStatus.New)}
                   </Badge>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">Customer</p>
-                  <p>{shipment.recipient.name}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{shipment.recipient.phone}</p>
+                  <p>{shipments[0]?.clientName}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{shipments[0]?.clientName}</p>
                 </div>
               </div>
 
@@ -141,7 +148,7 @@ export function ChangeOrderStatusModal({
                 </Label>
                 <Select
                   value={newStatus}
-                  onValueChange={(value) => setNewStatus(value as ShipmentStatus)}
+                  onValueChange={(value) => setNewStatus(value as ShipmentStatusString)}
                   disabled={loading}
                 >
                   <SelectTrigger id="newStatus">
@@ -149,19 +156,19 @@ export function ChangeOrderStatusModal({
                   </SelectTrigger>
                   <SelectContent>
                     {agentAllowedStatuses.map((status) => (
-                      <SelectItem 
-                        key={status.value} 
+                      <SelectItem
+                        key={status.value}
                         value={status.value}
-                        disabled={status.value === shipment.status}
+                        // disabled={status.value === shipments[0]?.statusOrder}
                       >
                         {status.label}
-                        {status.value === shipment.status && ' (Current)'}
+                       'former statuses'
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Current status: {formatStatus(shipment.status)}
+                  Current status: {formatStatus(shipments[0].statusOrder)}
                 </p>
               </div>
             </div>

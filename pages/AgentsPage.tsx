@@ -156,7 +156,7 @@ export function AgentsPage() {
       })
       console.log(branchId)
       console.log(branches)
-      await agentsAPI.updateStatus(agentId, branchId[0].id);
+      await agentsAPI.updateStatus(agentId, branchId[0]?.id?.toString() as string);
       // const response = await agentsAPI.getAll();
       // console.log('API Response:', response);
       console.log(branshName)

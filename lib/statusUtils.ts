@@ -1,91 +1,92 @@
-import { ShipmentStatus, UserRole } from '../types';
+import { UserRole } from '@/contexts/AuthContext';
+import { ShipmentStatusString } from '../types';
 
 // All available statuses (admin only)
-export const ALL_STATUSES: ShipmentStatus[] = [
-  'new',
-  'in_pickup_stage',
-  'in_warehouse',
-  'delivered_to_agent',
-  'delivered',
-  'postponed',
-  'customer_unreachable',
-  'rejected_no_shipping_fees',
-  'rejected_with_shipping_fees',
-  'canceled_by_merchant',
-  'partially_delivered',
-  'rejected_by_us',
-  'returned',
+export const ALL_STATUSES: ShipmentStatusString[] = [
+  ShipmentStatusString.New,
+  ShipmentStatusString.InPickupStage,
+  ShipmentStatusString.InWarehouse,
+  ShipmentStatusString.DeliveredToAgent,
+  ShipmentStatusString.Delivered,
+  ShipmentStatusString.Postponed,
+  ShipmentStatusString.CustomerUnreachable,
+  ShipmentStatusString.RejectedNoShippingFees,
+  ShipmentStatusString.RejectedWithShippingFees,
+  // ShipmentStatusString.CanceledByMerchant,
+  ShipmentStatusString.PartiallyDelivered,
+  ShipmentStatusString.RejectedByUs,
+  ShipmentStatusString.Returned,
 ];
 
 // Limited statuses for seller role
-export const SELLER_STATUSES: ShipmentStatus[] = [
-  'new',
-  'in_pickup_stage',
-  'in_warehouse',
-  'delivered_to_agent',
-  'delivered',
-  'returned',
+export const SELLER_STATUSES: ShipmentStatusString[] = [
+  ShipmentStatusString.New,
+  ShipmentStatusString.InPickupStage,
+  ShipmentStatusString.InWarehouse,
+  ShipmentStatusString.DeliveredToAgent,
+  ShipmentStatusString.Delivered,
+  ShipmentStatusString.Returned,
 ];
 
 // Limited statuses for agent role
-export const AGENT_STATUSES: ShipmentStatus[] = [
-  'in_pickup_stage',
-  'delivered_to_agent',
-  'delivered',
-  'postponed',
-  'customer_unreachable',
-  'partially_delivered',
-  'returned',
+export const AGENT_STATUSES: ShipmentStatusString[] = [
+  ShipmentStatusString.InPickupStage,
+  ShipmentStatusString.DeliveredToAgent,
+  ShipmentStatusString.Delivered,
+  ShipmentStatusString.Postponed,
+  ShipmentStatusString.CustomerUnreachable,
+  ShipmentStatusString.PartiallyDelivered,
+  ShipmentStatusString.Returned,
 ];
 
 // Get status label (human-readable)
-export const getStatusLabel = (status: ShipmentStatus): string => {
-  const labels: Record<ShipmentStatus, string> = {
-    new: 'New',
-    in_pickup_stage: 'In Pickup Stage',
-    in_warehouse: 'In Warehouse',
-    delivered_to_agent: 'Delivered To Agent',
-    delivered: 'Delivered',
-    postponed: 'Postponed',
-    customer_unreachable: 'Customer Unreachable',
-    rejected_no_shipping_fees: 'Rejected No Shipping Fees',
-    rejected_with_shipping_fees: 'Rejected With Shipping Fees',
-    canceled_by_merchant: 'Canceled By Merchant',
-    partially_delivered: 'Partially Delivered',
-    rejected_by_us: 'Rejected By Us',
-    returned: 'Returned',
+export const getStatusLabel = (status: ShipmentStatusString): string => {
+  const labels: Record<ShipmentStatusString, string> = {
+    New: 'New',
+    InPickupStage: 'In Pickup Stage',
+    InWarehouse: 'In Warehouse',
+    DeliveredToAgent: 'Delivered To Agent',
+    Delivered: 'Delivered',
+    Postponed: 'Postponed',
+    CustomerUnreachable: 'Customer Unreachable',
+    RejectedNoShippingFees: 'Rejected No Shipping Fees',
+    RejectedWithShippingFees: 'Rejected With Shipping Fees',
+    // CanceledByMerchant: 'Canceled By Merchant',
+    PartiallyDelivered: 'Partially Delivered',
+    RejectedByUs: 'Rejected By Us',
+    Returned: 'Returned',
   };
   return labels[status] || status;
 };
 
 // Get status color
-export const getStatusColor = (status: ShipmentStatus): string => {
-  const colors: Record<ShipmentStatus, string> = {
-    new: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    in_pickup_stage: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
-    in_warehouse: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    delivered_to_agent: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
-    delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    postponed: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    customer_unreachable: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    rejected_no_shipping_fees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    rejected_with_shipping_fees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    canceled_by_merchant: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
-    partially_delivered: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
-    rejected_by_us: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
-    returned: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+export const getStatusColor = (status: ShipmentStatusString): string => {
+  const colors: Record<ShipmentStatusString, string> = {
+    New: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    InPickupStage: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
+    InWarehouse: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    DeliveredToAgent: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
+    Delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    Postponed: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    CustomerUnreachable: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    RejectedNoShippingFees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    RejectedWithShippingFees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    // CanceledByMerchant: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
+    PartiallyDelivered: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
+    RejectedByUs: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
+    Returned: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   };
   return colors[status] || 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400';
 };
 
 // Get available statuses based on user role
-export const getAvailableStatuses = (role: UserRole): ShipmentStatus[] => {
+export const getAvailableStatuses = (role: UserRole): ShipmentStatusString[] => {
   switch (role) {
-    case 'admin':
+    case UserRole.Admin:
       return ALL_STATUSES;
-    case 'seller':
+    case UserRole.Seller:
       return SELLER_STATUSES;
-    case 'agent':
+    case UserRole.agent:
       return AGENT_STATUSES;
     default:
       return ALL_STATUSES;
@@ -93,19 +94,18 @@ export const getAvailableStatuses = (role: UserRole): ShipmentStatus[] => {
 };
 
 // Check if a status is in-progress
-export const isInProgressStatus = (status: ShipmentStatus): boolean => {
+export const isInProgressStatus = (status: ShipmentStatusString): boolean => {
   return [
-    'in_pickup_stage',
-    'in_warehouse',
-    'delivered_to_agent',
-    'postponed',
-    'customer_unreachable',
-    'partially_delivered',
+    ShipmentStatusString.InPickupStage,
+    ShipmentStatusString.InWarehouse,
+    ShipmentStatusString.DeliveredToAgent,
+    ShipmentStatusString.Postponed,
+    ShipmentStatusString.PartiallyDelivered,
   ].includes(status);
 };
 
 // Check if a status is completed/delivered
-export const isCompletedStatus = (status: ShipmentStatus): boolean => {
+export const isCompletedStatus = (status: ShipmentStatusString): boolean => {
   // Exclude all rejected, returned, and canceled statuses
   const excludedStatuses = [
     'rejected_no_shipping_fees',
@@ -114,12 +114,12 @@ export const isCompletedStatus = (status: ShipmentStatus): boolean => {
     'canceled_by_merchant',
     'returned',
   ];
-  
-  return !excludedStatuses.includes(status) && status === 'delivered';
+
+  return !excludedStatuses.includes(status) && status === ShipmentStatusString.Delivered;
 };
 
 // Check if a status is rejected/cancelled
-export const isRejectedStatus = (status: ShipmentStatus): boolean => {
+export const isRejectedStatus = (status: ShipmentStatusString): boolean => {
   return [
     'rejected_no_shipping_fees',
     'rejected_with_shipping_fees',

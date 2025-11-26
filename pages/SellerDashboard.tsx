@@ -9,7 +9,7 @@ import { AddShipmentModal } from '../components/AddShipmentModal';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Shipment } from '../types';
+import { OrderResponse, Shipment } from '../types';
 import { Activity } from '../lib/mockData';
 
 interface SellerDashboardProps {
@@ -17,14 +17,14 @@ interface SellerDashboardProps {
 }
 
 export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
 
   // Empty data - to be replaced with API calls
-  const shipments: Shipment[] = [];
+  const shipments: OrderResponse[] = [];
   const activities: Activity[] = [];
-  
+
   const recentShipments = shipments.slice(0, 5);
   const completedCount = 0;
   const pendingCount = 0;
@@ -32,7 +32,7 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
   const totalShipments = 0;
   const totalCollection = 0;
 
-  const handleViewDetails = (shipment: Shipment) => {
+  const handleViewDetails = (shipment: OrderResponse) => {
     setSelectedShipment(shipment);
     setDetailsModalOpen(true);
   };
