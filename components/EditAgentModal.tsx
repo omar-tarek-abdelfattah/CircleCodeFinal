@@ -12,41 +12,50 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
-import { Agent } from '../types';
+import { AgentResponse, AgentUpdateRequest, BranchData } from '../types';
+import { agentsAPI, branchesAPI } from '@/services/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface EditAgentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  agent: Agent | null;
+  agent: AgentResponse | null;
   onSuccess?: () => void;
 }
 
 export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAgentModalProps) {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    branch: '',
-    zone: '',
-  });
+  const [formData, setFormData] = useState<AgentUpdateRequest>({} as AgentUpdateRequest);
+  const [branches, setBranches] = useState<BranchData[]>([]);
 
   // Populate form when agent changes
+
+  const populateBranches = async () => {
+    try {
+      const response = await branchesAPI.getAll();
+      setBranches(response.data as BranchData[]);
+    } catch (error) {
+      console.error('Failed to fetch branches:', error);
+      toast.error('Failed to fetch branches');
+    }
+  };
   useEffect(() => {
+    populateBranches();
     if (agent) {
       setFormData({
+        id: agent.id,
         name: agent.name,
         email: agent.email,
-        phone: agent.phone,
-        branch: agent.branch || '',
-        zone: agent.zone || '',
+        phone: agent.phoneNumber,
+        branchId: branches.find((branch) => branch.name === agent.branshName)?.id as number,
+
       });
     }
-  }, [agent]);
+  }, [agent, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!agent) return;
 
     // Validation
@@ -62,6 +71,10 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
       toast.error('Please enter phone number');
       return;
     }
+    if (!formData.branchId) {
+      toast.error('Please select a branch');
+      return;
+    }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,15 +87,13 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
 
     try {
       // TODO: Connect to backend API
-      // await agentsAPI.update(agent.id, formData);
+      await agentsAPI.update(agent.id.toString(), formData);
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      toast.success('Agent updated successfully');
-      
+
       onOpenChange(false);
-      
+
       // Refresh the agents list
       if (onSuccess) {
         onSuccess();
@@ -117,19 +128,6 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
-            {/* Agent ID (read-only) */}
-            {agent && (
-              <div className="space-y-2">
-                <Label htmlFor="agentId">Agent ID</Label>
-                <Input
-                  id="agentId"
-                  value={agent.id}
-                  disabled
-                  className="bg-slate-50 dark:bg-slate-800"
-                />
-              </div>
-            )}
-
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
@@ -179,17 +177,26 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
               <Label htmlFor="branch">
                 Branch <span className="text-slate-400">(Optional)</span>
               </Label>
-              <Input
-                id="branch"
-                placeholder="فرع القاهرة"
-                value={formData.branch}
-                onChange={(e) => handleChange('branch', e.target.value)}
+              <Select
+                value={branches.find((branch) => branch.id === formData.branchId)?.id.toString()}
+                onValueChange={(value) => handleChange('branchId', value)}
                 disabled={loading}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id.toString()}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Zone */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="zone">
                 Zone <span className="text-slate-400">(Optional)</span>
               </Label>
@@ -200,7 +207,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
                 onChange={(e) => handleChange('zone', e.target.value)}
                 disabled={loading}
               />
-            </div>
+            </div> */}
           </div>
 
           <DialogFooter>

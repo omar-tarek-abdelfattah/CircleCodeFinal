@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Branch, NewBranchRequest, BranchData } from '../types';
+import { NewBranchRequest, BranchData, BranchResponseDetails } from '../types';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -34,53 +34,75 @@ import {
   Eye,
   EyeOff,
   MapPin,
-  Phone,
   User,
   Package,
   Clock,
   RefreshCw,
+  CircleX,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { branchesAPI } from '@/services/api';
 
 export function BranchesPage() {
-  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branches, setBranches] = useState<BranchData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<BranchData | null>(null);
+  const [branchDetails, setBranchDetails] = useState<BranchResponseDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [hiddenBranchIds, setHiddenBranchIds] = useState<Set<string>>(new Set());
+  const [hiddenBranchIds, setHiddenBranchIds] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hiddenBranchIds');
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    }
+    return new Set();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hiddenBranchIds', JSON.stringify(Array.from(hiddenBranchIds)));
+  }, [hiddenBranchIds]);
   const [hiddenBranchesDialogOpen, setHiddenBranchesDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [stats, setStats] = useState({
+    totalBranches: 0,
+    activeBranches: 0,
+    totalOrders: 0,
+    totalAgents: 0,
+    inactiveBranches: 0,
+  });
   const itemsPerPage = 10;
 
   // Helper function to map BranchData[] to Branch[]
-  const mapBranchDataToBranch = (branchData: BranchData): Branch => ({
-    id: String(branchData.id),
+  const mapBranchDataToBranch = (branchData: BranchData): BranchData => ({
+    id: branchData.id,
     name: branchData.name,
     address: branchData.address || '',
     country: branchData.country || '',
-    phone: '', // Not provided in API response
-    manager: branchData.managerName,
-    managerId: undefined, // Not provided in API response
-    totalOrders: branchData.ordersNumber,
-    totalAgents: branchData.agentsNumber,
-    businessHours: undefined, // Not provided in API response
-    openingTime: undefined, // Not provided in API response
-    closingTime: undefined, // Not provided in API response
-    status: branchData.isActive ? 'active' : 'inactive',
-    createdAt: new Date().toISOString(), // Default value
+    managerName: branchData.managerName,
+    ordersNumber: branchData.ordersNumber,
+    agentsNumber: branchData.agentsNumber,
+    isActive: branchData.isActive,
   });
   const getAllBranches = async () => {
     setLoading(true)
     try {
       const result = await branchesAPI.getAll();
-      const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
+
+      const mappedBranches: BranchData[] = (result.data || []).map(mapBranchDataToBranch) as BranchData[];
 
       setBranches(mappedBranches);
-      console.log(branches);
+      setStats({
+        totalBranches: result.totalBranch,
+        activeBranches: result.activeBranchNumber,
+        totalOrders: result.totalOrders,
+        totalAgents: result.totalAgents,
+        inactiveBranches: result.inActiveBranchNumber,
+      });
     } catch (error) {
       console.error('Failed to fetch branches:', error);
       toast.error('Failed to load branches');
@@ -97,23 +119,12 @@ export function BranchesPage() {
   }
 
   // Calculate statistics
-  const stats = useMemo(() => {
-    const activeBranches = branches.filter(b => b.status === 'active').length;
-    const totalOrders = branches.reduce((sum, b) => sum + b.totalOrders, 0);
-    const totalAgents = branches.reduce((sum, b) => sum + b.totalAgents, 0);
 
-    return {
-      totalBranches: branches.length,
-      activeBranches,
-      totalOrders,
-      totalAgents,
-    };
-  }, [branches]);
 
   // Filter branches based on search and hidden status
   const filteredBranches = useMemo(() => {
     // First filter out hidden branches
-    const visibleBranches = branches.filter(branch => !hiddenBranchIds.has(branch.id));
+    const visibleBranches = branches.filter(branch => !hiddenBranchIds.has(branch.id.toString()));
 
     if (!searchQuery.trim()) return visibleBranches;
 
@@ -121,16 +132,16 @@ export function BranchesPage() {
     return visibleBranches.filter(
       (branch) =>
         branch.name.toLowerCase().includes(query) ||
-        branch.address.toLowerCase().includes(query) ||
-        branch.country.toLowerCase().includes(query) ||
-        branch.manager?.toLowerCase().includes(query) ||
-        branch.id.toLowerCase().includes(query)
+        branch.address?.toLowerCase().includes(query) ||
+        branch.country?.toLowerCase().includes(query) ||
+        branch.managerName?.toLowerCase().includes(query) ||
+        branch.id?.toString().toLowerCase().includes(query)
     );
   }, [branches, searchQuery, hiddenBranchIds]);
 
   // Get hidden branches
   const hiddenBranches = useMemo(() => {
-    return branches.filter(branch => hiddenBranchIds.has(branch.id));
+    return branches.filter(branch => hiddenBranchIds.has(branch.id.toString()));
   }, [branches, hiddenBranchIds]);
 
   // Pagination
@@ -140,33 +151,54 @@ export function BranchesPage() {
     currentPage * itemsPerPage
   );
 
-  const handleToggleStatus = async (branchId: string, currentStatus: string) => {
+  const handleToggleStatus = async (branchId: string, currentStatus: boolean) => {
 
-    await branchesAPI.toggleActivation(branchId, currentStatus === 'active' ? true : false);
+    await branchesAPI.toggleActivation(parseInt(branchId), currentStatus);
 
     setBranches(prevBranches =>
       prevBranches.map(branch =>
-        branch.id === branchId
-          ? { ...branch, status: currentStatus === 'active' ? 'active' : 'inactive' }
+        branch.id.toString() === branchId
+          ? { ...branch, isActive: currentStatus }
           : branch
       )
     );
     toast.success(
-      currentStatus === 'active'
+      currentStatus === false
         ? 'Branch deactivated successfully'
         : 'Branch activated successfully'
     );
   };
 
-  const handleViewDetails = (branch: Branch) => {
+  const handleViewDetails = (branch: BranchData) => {
     setSelectedBranch(branch);
     setIsViewModalOpen(true);
   };
 
-  const handleEdit = (branch: Branch) => {
+  const handleEdit = (branch: BranchData) => {
     setSelectedBranch(branch);
     setIsEditModalOpen(true);
   };
+
+  useEffect(() => {
+    const fetchBranchDetails = async () => {
+      if (selectedBranch && isViewModalOpen) {
+        setDetailsLoading(true);
+        try {
+          const details = await branchesAPI.getById(selectedBranch.id.toString());
+          setBranchDetails(details);
+        } catch (error) {
+          console.error('Failed to fetch branch details:', error);
+          toast.error('Failed to load branch details');
+        } finally {
+          setDetailsLoading(false);
+        }
+      } else {
+        setBranchDetails(null);
+      }
+    };
+
+    fetchBranchDetails();
+  }, [selectedBranch, isViewModalOpen]);
 
   const handleHideBranch = (branchId: string) => {
     setHiddenBranchIds(prev => {
@@ -197,7 +229,7 @@ export function BranchesPage() {
     const getAllBranches = async () => {
       try {
         const result = await branchesAPI.getAll();
-        const mappedBranches: Branch[] = (result.data || []).map(mapBranchDataToBranch);
+        const mappedBranches: BranchData[] = (result.data || []).map(mapBranchDataToBranch);
         setBranches(mappedBranches);
       } catch (error) {
         console.error('Failed to refresh branches:', error);
@@ -206,18 +238,14 @@ export function BranchesPage() {
     getAllBranches();
   };
 
-  const handleEditSuccess = (updatedBranch: Branch) => {
-    setBranches(prevBranches =>
-      prevBranches.map(branch =>
-        branch.id === updatedBranch.id ? updatedBranch : branch
-      )
-    );
+  const handleEditSuccess = () => {
+    getAllBranches();
   };
 
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -238,6 +266,17 @@ export function BranchesPage() {
             </div>
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Inactive </p>
+              <p className="text-3xl font-bold mt-1">{stats.inactiveBranches}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+              <CircleX className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
           </div>
         </Card>
@@ -330,14 +369,14 @@ export function BranchesPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50 dark:bg-slate-800/50">
-                  <TableHead className="w-16">ID</TableHead>
+                  {/* <TableHead className="w-16">ID</TableHead> */}
                   <TableHead>BRANCH NAME</TableHead>
                   <TableHead>ADDRESS</TableHead>
                   <TableHead>COUNTRY</TableHead>
                   <TableHead>MANAGER</TableHead>
                   <TableHead className="text-center">ORDERS</TableHead>
                   <TableHead className="text-center">AGENTS</TableHead>
-                  <TableHead>BUSINESS HOURS</TableHead>
+                  {/* <TableHead>BUSINESS HOURS</TableHead> */}
                   <TableHead>STATUS</TableHead>
                   <TableHead className="text-right">ACTIONS</TableHead>
                 </TableRow>
@@ -352,40 +391,40 @@ export function BranchesPage() {
                 ) : (
                   paginatedBranches.map((branch) => (
                     <TableRow key={branch.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                      <TableCell className="font-medium">{branch.id}</TableCell>
+                      {/* <TableCell className="font-medium">{branch.id}</TableCell> */}
                       <TableCell className="font-medium">{branch.name}</TableCell>
                       <TableCell className="text-sm text-slate-600 dark:text-slate-400">
                         {branch.address}
                       </TableCell>
                       <TableCell>{branch.country}</TableCell>
                       <TableCell className="text-sm text-slate-600 dark:text-slate-400">
-                        {branch.manager || 'Not assigned'}
+                        {branch.managerName || 'Not assigned'}
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-medium">{branch.totalOrders}</span>
+                        <span className="font-medium">{branch.ordersNumber}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-medium">{branch.totalAgents}</span>
+                        <span className="font-medium">{branch.agentsNumber}</span>
                       </TableCell>
-                      <TableCell className="text-sm text-blue-600 dark:text-blue-400">
-                        {branch.businessHours || 'Not specified'}
-                      </TableCell>
+                      {/* <TableCell className="text-sm text-blue-600 dark:text-blue-400">
+                        {branch. || 'Not specified'}
+                      </TableCell> */}
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={branch.status === 'active' ? true : false}
-                            onCheckedChange={() => handleToggleStatus(branch.id, branch.status)}
+                            checked={branch.isActive}
+                            onCheckedChange={() => handleToggleStatus(branch.id.toString(), branch.isActive ? false : true)}
                             className="data-[state=checked]:bg-green-500"
                           />
                           <Badge
-                            variant={branch.status === 'active' ? 'default' : 'secondary'}
+                            variant={branch.isActive ? 'default' : 'secondary'}
                             className={
-                              branch.status === 'active'
+                              branch.isActive
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                 : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                             }
                           >
-                            {branch.status === 'active' ? 'Active' : 'Deactivate'}
+                            {branch.isActive ? 'Active' : 'Deactivate'}
                           </Badge>
                         </div>
                       </TableCell>
@@ -412,7 +451,7 @@ export function BranchesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleHideBranch(branch.id)}
+                            onClick={() => handleHideBranch(branch.id.toString())}
                             className="h-8 w-8 text-slate-600 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
                             title="Hide Branch"
                           >
@@ -480,19 +519,23 @@ export function BranchesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedBranch && (
+          {detailsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : branchDetails ? (
             <div className="space-y-6 py-4">
               {/* Status Badge */}
               <div className="flex items-center gap-2">
                 <Badge
-                  variant={selectedBranch.status === 'active' ? 'default' : 'secondary'}
+                  variant={branchDetails.isActive ? 'default' : 'secondary'}
                   className={
-                    selectedBranch.status === 'active'
+                    branchDetails.isActive
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                   }
                 >
-                  {selectedBranch.status === 'active' ? 'Active' : 'Inactive'}
+                  {branchDetails.isActive ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
 
@@ -504,7 +547,7 @@ export function BranchesPage() {
                       <Building2 className="w-4 h-4" />
                       Branch Name
                     </div>
-                    <p className="font-medium">{selectedBranch.name}</p>
+                    <p className="font-medium">{branchDetails.name}</p>
                   </div>
 
                   <div>
@@ -512,7 +555,7 @@ export function BranchesPage() {
                       <MapPin className="w-4 h-4" />
                       Address
                     </div>
-                    <p className="font-medium">{selectedBranch.address}</p>
+                    <p className="font-medium">{branchDetails.address}</p>
                   </div>
 
                   <div>
@@ -520,15 +563,7 @@ export function BranchesPage() {
                       <MapPin className="w-4 h-4" />
                       Country
                     </div>
-                    <p className="font-medium">{selectedBranch.country}</p>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-1">
-                      <Phone className="w-4 h-4" />
-                      Phone
-                    </div>
-                    <p className="font-medium">{selectedBranch.phone}</p>
+                    <p className="font-medium">{branchDetails.country}</p>
                   </div>
                 </div>
 
@@ -538,7 +573,7 @@ export function BranchesPage() {
                       <User className="w-4 h-4" />
                       Manager
                     </div>
-                    <p className="font-medium">{selectedBranch.manager || 'Not assigned'}</p>
+                    <p className="font-medium">{branchDetails.managerName || 'Not assigned'}</p>
                   </div>
 
                   <div>
@@ -546,7 +581,7 @@ export function BranchesPage() {
                       <Package className="w-4 h-4" />
                       Total Orders
                     </div>
-                    <p className="font-medium">{selectedBranch.totalOrders}</p>
+                    <p className="font-medium">{branchDetails.ordersNumber}</p>
                   </div>
 
                   <div>
@@ -554,7 +589,7 @@ export function BranchesPage() {
                       <Users className="w-4 h-4" />
                       Total Agents
                     </div>
-                    <p className="font-medium">{selectedBranch.totalAgents}</p>
+                    <p className="font-medium">{branchDetails.agentsNumber}</p>
                   </div>
 
                   <div>
@@ -562,12 +597,14 @@ export function BranchesPage() {
                       <Clock className="w-4 h-4" />
                       Business Hours
                     </div>
-                    <p className="font-medium">{selectedBranch.closingTime || 'Not specified'}</p>
+                    <p className="font-medium">
+                      {branchDetails.open} - {branchDetails.close}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
 
@@ -623,7 +660,7 @@ export function BranchesPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRestoreBranch(branch.id)}
+                      onClick={() => handleRestoreBranch(branch.id.toString())}
                       className="gap-2"
                     >
                       <Eye className="w-4 h-4" />

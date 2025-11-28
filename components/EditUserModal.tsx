@@ -10,15 +10,15 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { AdminUpdateRequest, User } from '../types';
+import { AdminUpdateRequest, AdminResponse } from '../types';
 import { toast } from 'react-toastify';
 import { usersAPI } from '../services/api';
 
 interface EditUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User | null;
-  onUpdate: (updatedUser: User) => void;
+  user: AdminResponse | null;
+  onUpdate: (updatedUser: AdminResponse) => void;
 }
 
 export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserModalProps) {
@@ -28,10 +28,10 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
     if (user) {
       setFormData({
         id: 0,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        salary: user.salary || 0,
+        name: user.name as string,
+        email: user.email as string,
+        salary: user.salary as number,
+        phone: 'user.phone' as string,
       });
     }
   }, [user]);
@@ -49,8 +49,8 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
       id: 0,
       name: '',
       email: '',
-      phone: '',
       salary: 0,
+      phone: '',
     });
     onOpenChange(false);
   };
@@ -65,7 +65,7 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
     };
 
     try {
-      const updatedUser = await usersAPI.update(user.id, updatedData);
+      const updatedUser = await usersAPI.update(user.id.toString(), updatedData);
       onUpdate(updatedUser);
       toast.success('User updated successfully');
       handleClose();
@@ -105,15 +105,6 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
 
 
             <div className="grid gap-2">

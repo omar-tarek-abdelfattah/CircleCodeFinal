@@ -17,7 +17,6 @@ import {
   NewBranchRequest,
   BranchResponse,
   // BranchData,
-  User,
   OrderUpdate,
   ZoneUpdate,
   BranchResponseDetails,
@@ -32,6 +31,9 @@ import {
   SellerUpdateRequest,
   SellerResponseDetails,
   AdminUpdateRequest,
+  AgentResponse,
+  AgentUpdateRequest,
+  AdminResponse,
 } from "../types";
 import { Activity } from "../lib/mockData";
 
@@ -411,21 +413,27 @@ export const walletAPI = {
 // Agents API
 export const agentsAPI = {
   // GET /api/agents - Get all agents
-  getAll: async (): Promise<Agent[]> => {
+  getAll: async (): Promise<AgentResponse[]> => {
     // TODO: Replace with actual API call to .NET backend
-    return apiCall<Agent[]>('/Agent', {
+    return apiCall<AgentResponse[]>('/Agent', {
+      method: 'GET',
+    });
+  },
+  getActiveCount: async (): Promise<number> => {
+    // TODO: Replace with actual API call to .NET backend
+    return apiCall<number>('/Agent/true', {
       method: 'GET',
     });
   },
 
   // GET /api/agents - Get all inactive agents
-  getAllInactive: async (): Promise<Agent[]> => {
-    return apiCall<Agent[]>('/Agent?isActive=false', {
+  getAllInactive: async (): Promise<AgentResponse[]> => {
+    return apiCall<AgentResponse[]>('/Agent?isActive=false', {
       method: 'GET',
     });
   },
   activate: async (_id: string): Promise<Boolean> => {
-    return apiCall<Boolean>(`/Agent/Activation?id=${parseInt(_id)}&branchId=3`, {
+    return apiCall<Boolean>(`/Agent/Activation?id=${parseInt(_id)}`, {
       method: 'GET',
     });
   },
@@ -447,12 +455,11 @@ export const agentsAPI = {
   },
 
   // PUT /api/Agent/Update - Update agent
-  update: async (id: string, agentData: Partial<Agent>): Promise<Agent> => {
-    // TODO: Replace with actual API call to .NET backend
-    const dataToSend = { ...agentData, id };
-    return apiCall<Agent>(`/Agent/Update`, {
+  update: async (id: string, agentData: Partial<AgentUpdateRequest>) => {
+    const idToBeUpdated = parseInt(id);
+    return apiCall<AgentUpdateRequest>('/Agent/Update', {
       method: 'PUT',
-      body: JSON.stringify(dataToSend),
+      body: JSON.stringify({ ...agentData, id: idToBeUpdated }),
     });
   },
 
@@ -482,6 +489,13 @@ export const agentsAPI = {
       method: 'GET',
     });
   },
+  getLockedAgents: async (): Promise<AgentResponse[]> => {
+    return apiCall<AgentResponse[]>(`/Agent/LookOut`, {
+      method: 'GET',
+    });
+  },
+
+
 
   // PUT /api/Agent/ToggleHidden
   toggleHidden: async (id: string, isHidden: boolean): Promise<Agent> => {
@@ -559,8 +573,8 @@ export const sellersAPI = {
   },
 
   // GET /api/Seller/lockout/all
-  getHiddenSellers: async (): Promise<Seller[]> => {
-    return await apiCall<Seller[]>("/Seller/lockout/all");
+  getLockedSellers: async (): Promise<SellerResponse[]> => {
+    return await apiCall<SellerResponse[]>("/Seller/lockout/all");
   },
 
   // GET /api/Seller/active-count
@@ -625,7 +639,7 @@ export const branchesAPI = {
     });
   },
   // PUT /api/Branch/{id}/activation/{isActive} - Toggle Branch Status
-  toggleActivation: async (id: string, isActive: boolean): Promise<void> => {
+  toggleActivation: async (id: number, isActive: boolean): Promise<void> => {
     return apiCall<void>(`/Branch/activation/${isActive}`, {
       method: "PUT",
       body: JSON.stringify([id]),
@@ -665,6 +679,14 @@ export const zonesAPI = {
     });
   },
 
+  // POST /api/Zone/{id}/activation/{isActive} - Toggle Zone Status
+  toggleActivation: async (id: number, isActive: boolean): Promise<void> => {
+    return apiCall<void>(`/Zone/${isActive}`, {
+      method: "PUT",
+      body: JSON.stringify([id]),
+    });
+  },
+
   // PUT /api/Zone/{id} - Update zone
   update: async (id: number, payload: ZoneUpdate): Promise<void> => {
     return apiCall<void>(`/Zone/${id}`, {
@@ -684,8 +706,8 @@ export const zonesAPI = {
 // Users API
 export const usersAPI = {
   // GET /Admin - Get all users
-  getAll: async (): Promise<User[]> => {
-    return apiCall<User[]>(`/Admin`, {
+  getAll: async (): Promise<AdminResponse[]> => {
+    return apiCall<AdminResponse[]>(`/Admin`, {
       method: 'GET',
     });
   },
@@ -716,10 +738,11 @@ export const usersAPI = {
   },
 
   // DELETE /api/users/:id - Delete user
-  delete: async (id: string): Promise<void> => {
+  lockout: async (id: number, toLock: boolean, dateTime: string): Promise<boolean> => {
     // TODO: Replace with actual API call to .NET backend
-    console.log("Backend API: Delete user", id);
-    throw new Error("Not implemented - connect to backend");
+    return apiCall<boolean>(`/Admin/lockout/${id}?date=${dateTime}&toLock=${toLock}`, {
+      method: 'PUT',
+    });
   },
 
   // PATCH /api/users/:id/status - Update user status

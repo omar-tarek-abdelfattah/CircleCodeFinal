@@ -24,11 +24,11 @@ interface DeactivationPeriodModalProps {
   // Support both old props (for sellers) and new props (for agents)
   adminId?: string;
   adminName?: string;
-  agentId?: string;
+  agentId?: string | number;
   agentName?: string;
-  sellerId?: string;
+  sellerId?: string | number;
   sellerName?: string;
-  itemId?: string;
+  itemId?: string | number;
   itemName?: string;
   itemType?: string;
   currentFromDate?: string | any;
@@ -57,67 +57,58 @@ export function DeactivationPeriodModal({
   const entityName = itemName || sellerName || agentName || adminName || '';
   const entityType = itemType || UserRole.Seller || UserRole.agent || UserRole.Admin;
   const [loading, setLoading] = useState(false);
-  const [fromDate, setFromDate] = useState<Date | undefined>(
-    currentFromDate ? new Date(currentFromDate) : undefined
-  );
+  // fromDate is no longer needed as the backend handles it (defaults to now)
   const [toDate, setToDate] = useState<Date | undefined>(
     currentToDate ? new Date(currentToDate) : undefined
   );
 
   useEffect(() => {
     if (open) {
-      setFromDate(currentFromDate ? new Date(currentFromDate) : undefined);
       setToDate(currentToDate ? new Date(currentToDate) : undefined);
     }
-  }, [open, currentFromDate, currentToDate]);
+  }, [open, currentToDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // console.log(adminId);
-
     e.preventDefault();
 
     // Validation
-    if (!fromDate) {
-      toast.error('Please select a start date');
-      return;
-    }
     if (!toDate) {
       toast.error('Please select an end date');
       return;
     }
-    if (toDate < fromDate) {
-      toast.error('End date must be after start date');
+    // Ensure toDate is in the future
+    if (toDate < new Date()) {
+      toast.error('End date must be in the future');
       return;
     }
 
     setLoading(true);
 
     try {
-      if (adminId || adminId) {
-        await usersAPI.adminLockout(adminId, true, fromDate.toISOString())
+      if (adminId) {
+        await usersAPI.lockout(Number(adminId), true, toDate.toISOString())
         toast.success('Lockout period set successfully');
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess(fromDate.toISOString(), toDate.toISOString());
+          onSuccess(null, toDate.toISOString());
         }
       }
 
       if (agentId) {
-        console.log(agentId);
-        await agentsAPI.agentLockout(agentId, fromDate.toISOString(), true)
+        await agentsAPI.agentLockout(agentId.toString(), toDate.toISOString(), true)
         toast.success('Lockout period set successfully');
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess(fromDate.toISOString(), toDate.toISOString());
+          onSuccess(null, toDate.toISOString());
         }
       }
 
       if (sellerId) {
-        await sellersAPI.sellersLockout(sellerId, fromDate.toISOString(), true)
+        await sellersAPI.sellersLockout(sellerId.toString(), toDate.toISOString(), true)
         toast.success('Lockout period set successfully');
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess(fromDate.toISOString(), toDate.toISOString());
+          onSuccess(null, toDate.toISOString());
         }
       }
     } catch (error) {
@@ -132,15 +123,12 @@ export function DeactivationPeriodModal({
     setLoading(true);
 
     try {
-      // TODO: Connect to backend API
-      // await sellersAPI.clearDeactivationPeriod(sellerId);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (adminId) {
+        await usersAPI.lockout(Number(adminId), false, new Date().toISOString());
+      }
 
       toast.success('Deactivation period cleared');
 
-      setFromDate(undefined);
       setToDate(undefined);
 
       onOpenChange(false);
@@ -157,8 +145,6 @@ export function DeactivationPeriodModal({
     }
   };
 
-  const hasExistingPeriod = currentFromDate && currentToDate;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -166,40 +152,12 @@ export function DeactivationPeriodModal({
           <DialogTitle>Set Deactivation Period</DialogTitle>
           <DialogDescription>
             Set a temporary deactivation period for <span className="font-semibold text-slate-900 dark:text-slate-100">{entityName}</span>.
-            The account will be inactive during this period.
+            The account will be inactive until the selected date.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            {/* From Date */}
-            <div className="space-y-2">
-              <Label>From Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !fromDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {fromDate ? format(fromDate, 'PPP') : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={fromDate}
-                    onSelect={setFromDate}
-                    initialFocus
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* To Date */}
             <div className="space-y-2">
               <Label>To Date</Label>
@@ -224,9 +182,6 @@ export function DeactivationPeriodModal({
                     initialFocus
                     disabled={(date) => {
                       const today = new Date(new Date().setHours(0, 0, 0, 0));
-                      if (fromDate) {
-                        return date < fromDate || date < today;
-                      }
                       return date < today;
                     }}
                   />
@@ -235,11 +190,10 @@ export function DeactivationPeriodModal({
             </div>
 
             {/* Info Alert */}
-            {fromDate && toDate && (
+            {toDate && (
               <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                  The {entityType.toLowerCase()} will be unable to log in from{' '}
-                  <span className="font-semibold">{format(fromDate, 'PPP')}</span> to{' '}
+                  The {entityType.toLowerCase()} will be unable to log in until{' '}
                   <span className="font-semibold">{format(toDate, 'PPP')}</span>.
                 </p>
               </div>

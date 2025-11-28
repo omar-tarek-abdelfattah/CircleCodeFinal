@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Package, Users, TrendingUp, DollarSign, Building2, Clock } from 'lucide-react';
+import { Package, Users, TrendingUp, DollarSign, Building2, Clock, RefreshCw, Download, Plus } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { NewShipmentsTable } from '../components/NewShipmentsTable';
@@ -8,21 +8,26 @@ import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
 import { AddShipmentModal } from '../components/AddShipmentModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { OrderResponse } from '../types';
+import { OrderResponse, SellerResponse, ShipmentStatusString } from '../types';
 import { Activity } from '../lib/mockData';
 import { sellersAPI, agentsAPI, shipmentsAPI, log, branchesAPI } from '../services/api';
+import { Button } from '@/components/ui/button';
 
 interface AdminDashboardProps {
   onNavigate?: (page: string) => void;
 }
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+
+  const [loading, setLoading] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
   const [shipments, setShipments] = useState<any[]>([]);
+  const [shipmentsCount, setShipmentsCount] = useState(0);
   const [logData, setLogData] = useState<Activity[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
+  const [agentsCount, setAgentsCount] = useState(0);
   const [branches, setBranches] = useState<any[]>([]);
   const [sellers, setSellers] = useState<any[]>([]);
 
@@ -30,32 +35,54 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [inPickupCount, setInPickupCount] = useState(0);
   const [totalCollection, setTotalCollection] = useState(0);
 
+
+  const loadShipments = async () => {
+    setLoading(true);
+    const shipmentsData = await shipmentsAPI.getAll();
+    const reversedShipmentsData = shipmentsData.reverse().slice(0, 5);
+    const shipmentsCountt = shipmentsData.length;
+    setShipmentsCount(shipmentsCountt);
+    setShipments(reversedShipmentsData);
+    setLoading(false);
+  }
   useEffect(() => {
     const fetchData = async () => {
       // Fetch all data
-      const [sellersData, agentsData, shipmentsData, logsData, branchesData] = await Promise.all([
+      const [sellersData, agentsData, agentsCount, shipmentsData, logsData, branchesData] = await Promise.all([
         sellersAPI.getAll(),
         agentsAPI.getAll(),
+        agentsAPI.getActiveCount(),
         shipmentsAPI.getAll(),
         log.getAll(),
         branchesAPI.getAll(),
       ]);
 
       // Filter active sellers & agents
-      setSellers(sellersData.filter((s: any) => s.isActive || s.isActive === 'true'));
-      setAgents(agentsData.filter((a: any) => a.isactive || a.isactive === true));
+      setSellers(sellersData.filter((s: SellerResponse) => s.isActive || s.isActive === false));
+      setAgents(agentsData.filter((a: any) => a.isctive || a.isactive === true));
+      setAgentsCount(agentsCount);
       setBranches(branchesData.data || []); // branches API returns an object with `data` array
       const reversedShipmentsData = shipmentsData.reverse().slice(0, 5);
+      const shipmentsCountt = shipmentsData.length;
+      setShipmentsCount(shipmentsCountt);
       setShipments(reversedShipmentsData);
       setLogData(logsData);
 
       // Totals
-      setCompletedShipments(shipmentsData.filter((s: any) => s.statusOrder === 'Delivered').length);
-      setInPickupCount(shipmentsData.filter((s: any) => s.statusOrder === 'DeliveredToAgent').length);
+
+      setCompletedShipments(shipmentsData.filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered).length);
+      setInPickupCount(shipmentsData.filter((s: OrderResponse) =>
+        s.statusOrder === ShipmentStatusString.InPickupStage
+        || s.statusOrder === ShipmentStatusString.New
+        || s.statusOrder === ShipmentStatusString.InWarehouse
+        || s.statusOrder === ShipmentStatusString.DeliveredToAgent
+        || s.statusOrder === ShipmentStatusString.Postponed
+        || s.statusOrder === ShipmentStatusString.CustomerUnreachable
+      ).length);
       setTotalCollection(
         shipmentsData
-          .filter((s: any) => s.statusOrder === 'Delivered') // بس الشحنات اللي تم توصيلها
-          .reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0)
+          .filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees) // بس الشحنات اللي تم توصيلها
+          .reduce((sum: number, s: OrderResponse) => sum + (s.totalPrice || 0), 0)
       );
 
     };
@@ -63,7 +90,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     fetchData();
   }, []);
 
-  const totalShipments = shipments.length;
+  // const totalShipments = shipments.length;
   const activeAgents = agents.length;
   const totalSellers = sellers.length;
 
@@ -97,11 +124,11 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Total Shipments" value={totalShipments} icon={Package} gradient="from-blue-500 to-blue-600" />
-        <StatCard title="In Pickup Stage" value={inPickupCount} icon={Clock} gradient="from-orange-500 to-orange-600" />
+        <StatCard title="Total Shipments" value={shipmentsCount} icon={Package} gradient="from-blue-500 to-blue-600" />
+        <StatCard title="Pending" value={inPickupCount} icon={Clock} gradient="from-orange-500 to-orange-600" />
         <StatCard title="Completed" value={completedShipments} icon={TrendingUp} gradient="from-green-500 to-green-600" />
         <StatCard title="Collection Amount" value={`$${totalCollection.toFixed(0)}`} icon={DollarSign} gradient="from-purple-500 to-purple-600" />
-        <StatCard title="Active Agents" value={activeAgents} icon={Users} gradient="from-pink-500 to-pink-600" />
+        <StatCard title="Active Agents" value={agentsCount} icon={Users} gradient="from-pink-500 to-pink-600" />
         <StatCard title="Total Sellers" value={totalSellers} icon={Users} gradient="from-indigo-500 to-indigo-600" />
       </div>
 
@@ -113,6 +140,17 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
       {/* New Shipments Table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+        <div className="flex gap-2 justify-end">
+
+          <Button
+            variant="outline"
+            onClick={loadShipments}
+            className="gap-2"
+            disabled={loading}
+          >
+            <RefreshCw className={`w-4 h-4`} />
+          </Button>
+        </div>
         <NewShipmentsTable
           shipments={shipments.slice(0, 5)}
           onViewDetails={handleViewDetails}

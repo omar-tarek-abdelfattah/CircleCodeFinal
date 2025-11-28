@@ -19,7 +19,7 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { NewBranchRequest, User } from '../types';
+import { AdminResponse, NewBranchRequest, User } from '../types';
 import { branchesAPI, usersAPI } from '@/services/api';
 
 
@@ -41,7 +41,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
     isActive: true,
   });
 
-  const [admins, setAdmins] = useState<User[]>([]);
+  const [admins, setAdmins] = useState<AdminResponse[]>([]);
 
   const getAdmins = async () => {
     const adminsResponse = await usersAPI.getAll();

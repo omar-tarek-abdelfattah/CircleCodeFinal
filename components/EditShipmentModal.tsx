@@ -20,7 +20,7 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Edit, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { Agent, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, SellerResponse, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '../types';
+import { Agent, AgentResponse, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, SellerResponse, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '../types';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { agentsAPI, sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
 import { getAvailableStatuses, getStatusLabel } from '@/lib/statusUtils';
@@ -56,7 +56,7 @@ export function EditShipmentModal({
   const { role } = useAuth();
 
   const [shipmentDetails, setShipmentDetails] = useState<Partial<OrderResponseDetails>>({} as OrderResponseDetails)
-  const [agents, setAgents] = useState<Agent[]>([])
+  const [agents, setAgents] = useState<AgentResponse[]>([])
   const [sellers, setSellers] = useState<SellerResponse[]>([])
   const [sellerZones, setSellerZones] = useState<ZonesForSellerResponse[]>([])
 
@@ -121,7 +121,7 @@ export function EditShipmentModal({
       if (defaultAgent) {
         setFormData((prev) => ({
           ...prev,
-          agentId: parseInt(defaultAgent.id),
+          agentId: parseInt(defaultAgent.id.toString()),
         }))
       }
     } catch (error) {

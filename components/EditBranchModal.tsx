@@ -11,62 +11,64 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
-import { Branch, BranchUpdate } from '../types';
-import { branchesAPI } from '@/services/api';
+import { Loader2, RefreshCw } from 'lucide-react';
+import { AdminResponse, BranchData, BranchUpdate } from '../types';
+import { branchesAPI, usersAPI } from '@/services/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface EditBranchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  branch: Branch | null;
+  branch: BranchData | null;
   onSuccess: (branch: any) => void;
 }
 
 export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditBranchModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BranchUpdate>({} as BranchUpdate);
+  const [managers, setManagers] = useState<AdminResponse[] | null>(null);
 
+  const fetchData = async () => {
+    if (branch && open) {
+      setLoading(true);
+      try {
+        const [branchDetails, usersResult] = await Promise.all([
+          branchesAPI.getById(branch.id.toString()),
+          usersAPI.getAll()
+        ]);
 
-  const populateForm = async () => {
-    setLoading(true)
-    try {
-      const result = await branchesAPI.getById(branch?.id.toString() as string)
-      return result;
-    } catch (error) {
-      console.error('failed to get branch details', error)
-      return null;
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    const init = async () => {
-      if (branch && open) {
-        const details = await populateForm();
+        setManagers(usersResult);
 
         // Parse times from businessHours or use defaults
         let openingTime = '09:00';
         let closingTime = '17:00';
 
-        if (details?.open) {
-          openingTime = details.open;
-          closingTime = details.close;
+        if (branchDetails?.open) {
+          openingTime = branchDetails.open;
+          closingTime = branchDetails.close;
         }
 
         setFormData({
-          id: branch?.id as unknown as number,
-          name: details?.name as string || branch.name,
-          managerId: 1,
-          address: details?.address as string || branch.address,
-          country: details?.country as string || branch.country,
+          id: branch.id as unknown as number,
+          name: branchDetails?.name || branch.name,
+          managerId: usersResult.find((manager) => manager.name === branch.managerName)?.id || 0,
+          address: branchDetails?.address || branch.address || '',
+          country: branchDetails?.country || branch.country || '',
           open: openingTime,
           close: closingTime,
-          isActive: details?.isActive ?? (branch.status === 'active'),
+          isActive: branchDetails?.isActive ?? branch.isActive,
         });
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        toast.error('Failed to load branch details');
+      } finally {
+        setLoading(false);
       }
-    };
-    init();
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, [branch, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,7 +107,9 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
     try {
       // TODO: Connect to backend API
       try {
-        const result = await branchesAPI.update(branch.id, formData);
+        console.log(formData);
+
+        const result = await branchesAPI.update(branch.id.toString(), formData);
 
         onSuccess(result)
 
@@ -115,20 +119,18 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
         toast.error('failed to edit branch')
       }
 
-      // Simulate API call
-      // await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Format times to display format
-      const formatTime = (time: string) => {
-        const [hours, minutes] = time.split(':');
-        const hour = parseInt(hours as string);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour % 12 || 12;
-        return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
-      };
+      // const formatTime = (time: string) => {
+      //   const [hours, minutes] = time.split(':');
+      //   const hour = parseInt(hours as string);
+      //   const ampm = hour >= 12 ? 'PM' : 'AM';
+      //   const displayHour = hour % 12 || 12;
+      //   return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+      // };
 
       const updatedBranch: BranchUpdate = {
-        id: parseInt(branch.id),
+        id: branch.id,
         name: formData.name,
         managerId: 1,
         address: formData.address,
@@ -152,8 +154,17 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-center gap-2">
           <DialogTitle>Edit Branch</DialogTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={fetchData}
+            title="Refresh Details"
+            className="h-6 w-6"
+          >
+            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -175,12 +186,21 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
               <Label htmlFor="managerId">
                 Manager ID <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="managerId"
-                value={formData.managerId}
-                onChange={(e) => setFormData({ ...formData, managerId: parseInt(e.target.value) })}
-                placeholder="Enter manager ID"
-              />
+              <Select
+                value={formData.managerId?.toString() || '0'}
+                onValueChange={(value) => setFormData({ ...formData, managerId: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  {managers?.map((manager) => (
+                    <SelectItem key={manager.id} value={manager.id.toString()}>
+                      {manager.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

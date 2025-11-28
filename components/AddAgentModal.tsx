@@ -52,6 +52,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
     }
   };
 
+
   useEffect(() => {
     loadBranches();
   }, [open]);

@@ -563,7 +563,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
 
         <div>
           <StatCard
-            title="Packages"
+            title="Pending"
             value={loadingStats ? "..." : packagesInProgress.toString()}
             icon={Clock}
           // subtitle="In progress"

@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
   { label: 'Zones', icon: <MapPin className="w-5 h-5" />, path: 'zones', roles: [UserRole.Admin, UserRole.SuperAdmin] },
   { label: 'Wallet', icon: <Wallet className="w-5 h-5" />, path: 'wallet', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
   { label: 'Reports', icon: <FileText className="w-5 h-5" />, path: 'reports', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Users', icon: <User className="w-5 h-5" />, path: 'users', roles: [UserRole.SuperAdmin] },
+  { label: 'Admins', icon: <User className="w-5 h-5" />, path: 'users', roles: [UserRole.SuperAdmin] },
   { label: 'Profile', icon: <User className="w-5 h-5" />, path: 'profile', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
 ];
 

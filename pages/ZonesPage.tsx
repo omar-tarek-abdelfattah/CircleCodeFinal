@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Zone } from '../types';
+import { Zone, ZoneResponseDetails } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -24,6 +24,7 @@ import {
   Package,
   Navigation,
   Map as MapIcon,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -33,47 +34,61 @@ export function ZonesPage() {
   const [zones, setZones] = useState<Zone[]>([]);
   const [branches] = useState<any[]>([]);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
+  const [zoneDetails, setZoneDetails] = useState<ZoneResponseDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [hiddenZoneIds, setHiddenZoneIds] = useState<Set<string>>(new Set());
+  const [hiddenZoneIds, setHiddenZoneIds] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hiddenZoneIds');
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    }
+    return new Set();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hiddenZoneIds', JSON.stringify(Array.from(hiddenZoneIds)));
+  }, [hiddenZoneIds]);
   const [hiddenZonesDialogOpen, setHiddenZonesDialogOpen] = useState(false);
-  const [mapCentered, setMapCentered] = useState(true);
   const [totalRegions, setTotalRegions] = useState<number>(0)
 
   // Fetch zones on component mount
+  const fetchZones = async () => {
+    try {
+      const response = await zonesAPI.getAll();
+      // Map ZoneResponse to Zone format
+      const mappedZones: Zone[] = response.map((zone) => ({
+        id: zone.id,
+        name: zone.name,
+        regions: [], // ZoneResponse doesn't include regions, will be empty initially
+        associatedBranches: [], // ZoneResponse doesn't include branches, will be empty initially
+        orders: zone.noOrders,
+        status: zone.isActive ? 'active' : 'inactive',
+      }));
+      setZones(mappedZones);
+    } catch (error) {
+      console.error('Failed to fetch zones:', error);
+      toast.error('Failed to load zones');
+    }
+  };
+
+  const fetchRegionCount = async () => {
+    try {
+      const response = await zonesAPI.getAllRegionCount();
+      setTotalRegions(response);
+    } catch (error) {
+      console.error('Failed to fetch zones:', error);
+      toast.error('Failed to load zones');
+    }
+  };
+
+  // Fetch zones on component mount
   useEffect(() => {
-    const fetchZones = async () => {
-      try {
-        const response = await zonesAPI.getAll();
-        // Map ZoneResponse to Zone format
-        const mappedZones: Zone[] = response.map((zone) => ({
-          id: zone.id,
-          name: zone.name,
-          regions: [], // ZoneResponse doesn't include regions, will be empty initially
-          associatedBranches: [], // ZoneResponse doesn't include branches, will be empty initially
-          orders: zone.noOrders,
-          status: zone.isActive ? 'active' : 'inactive',
-        }));
-        setZones(mappedZones);
-      } catch (error) {
-        console.error('Failed to fetch zones:', error);
-        toast.error('Failed to load zones');
-      }
-    };
-    const fetchRegionCount = async () => {
-      try {
-        const response = await zonesAPI.getAllRegionCount();
-        setTotalRegions(response);
-
-
-      } catch (error) {
-        console.error('Failed to fetch zones:', error);
-        toast.error('Failed to load zones');
-      }
-    };
-
     fetchZones();
-    fetchRegionCount()
+    fetchRegionCount();
   }, []);
 
   // Helper function to get branch name
@@ -99,23 +114,46 @@ export function ZonesPage() {
   }, [zones, hiddenZoneIds]);
 
   const handleToggleStatus = async (zoneId: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const newStatus = currentStatus === 'active' ? false : true;
 
     try {
-      // TODO: Connect to backend API
-      // await zonesAPI.updateStatus(zoneId, newStatus);
+      await zonesAPI.toggleActivation(parseInt(zoneId), newStatus);
 
-      setZones(prev =>
-        prev.map(z =>
-          z.id === zoneId ? { ...z, status: newStatus } : z
-        )
-      );
+      fetchZones();
+      fetchRegionCount();
 
-      toast.success(`Zone ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+      toast.success(`Zone ${newStatus ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
+      console.error('Failed to update zone status:', error);
       toast.error('Failed to update zone status');
     }
   };
+
+  const handleViewDetails = (zone: Zone) => {
+    setSelectedZone(zone);
+    setIsViewModalOpen(true);
+  };
+
+  useEffect(() => {
+    const fetchZoneDetails = async () => {
+      if (selectedZone && isViewModalOpen) {
+        setDetailsLoading(true);
+        try {
+          const details = await zonesAPI.getById(parseInt(selectedZone.id));
+          setZoneDetails(details);
+        } catch (error) {
+          console.error('Failed to fetch zone details:', error);
+          toast.error('Failed to load zone details');
+        } finally {
+          setDetailsLoading(false);
+        }
+      } else {
+        setZoneDetails(null);
+      }
+    };
+
+    fetchZoneDetails();
+  }, [selectedZone, isViewModalOpen]);
 
   const handleEdit = (zone: Zone) => {
     setSelectedZone(zone);
@@ -146,16 +184,14 @@ export function ZonesPage() {
     toast.success('All zones restored successfully');
   };
 
-  const handleAddSuccess = (newZone: Zone) => {
-    setZones(prev => [newZone, ...prev]);
+  const handleAddSuccess = () => {
+    fetchZones();
+    fetchRegionCount();
   };
 
-  const handleEditSuccess = (updatedZone: Zone) => {
-    setZones(prev =>
-      prev.map(zone =>
-        zone.id === updatedZone.id ? updatedZone : zone
-      )
-    );
+  const handleEditSuccess = () => {
+    fetchZones();
+    fetchRegionCount();
   };
 
   return (
@@ -237,25 +273,8 @@ export function ZonesPage() {
           <Card className="border-slate-200 dark:border-slate-800">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Delivery Zone Map</CardTitle>
+                <CardTitle>Delivery Zone Map (Coming SOON!)</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setMapCentered(!mapCentered)}
-                    className="gap-2"
-                  >
-                    <MapIcon className="w-4 h-4" />
-                    Center
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Maximize className="w-4 h-4" />
-                    Fullscreen
-                  </Button>
                   <Button
                     size="sm"
                     onClick={() => setIsAddModalOpen(true)}
@@ -304,7 +323,7 @@ export function ZonesPage() {
                 <div className="absolute top-4 left-4 z-10 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-lg shadow-lg p-3 border border-slate-200 dark:border-slate-700">
                   <h4 className="text-xs font-medium mb-2 text-slate-700 dark:text-slate-300">Delivery Zones</h4>
                   <div className="space-y-1.5">
-                    {visibleZones.map((zone) => (
+                    {visibleZones.slice(0, 5).map((zone) => (
                       <div key={zone.id} className="flex items-center gap-2 text-xs">
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-slate-800"
@@ -474,8 +493,8 @@ export function ZonesPage() {
                       <div className="flex items-center gap-3 flex-1">
                         {/* Color Indicator */}
                         <div
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                        // style={{ backgroundColor: zone.color }}
+                          className={`w-3 h-3 rounded-full flex-shrink-0 ${zone.status === 'active' ? 'bg-green-500' : 'bg-red-500'
+                            }`}
                         />
 
                         {/* Zone Info */}
@@ -528,6 +547,15 @@ export function ZonesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => handleViewDetails(zone)}
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleEdit(zone)}
                             className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                             title="Edit Zone"
@@ -553,6 +581,82 @@ export function ZonesPage() {
           </Card>
         </motion.div>
       </div>
+
+      {/* View Details Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              Zone Details
+            </DialogTitle>
+            <DialogDescription>
+              View complete information about this zone
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : zoneDetails ? (
+            <div className="space-y-6 py-4">
+              {/* Status Badge */}
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={zoneDetails.isActive ? 'default' : 'secondary'}
+                  className={
+                    zoneDetails.isActive
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                  }
+                >
+                  {zoneDetails.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+
+              {/* Zone Information */}
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-1">
+                    <MapPin className="w-4 h-4" />
+                    Zone Name
+                  </div>
+                  <p className="font-medium">{zoneDetails.name}</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-1">
+                    <Navigation className="w-4 h-4" />
+                    Regions ({zoneDetails.regions.length})
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {zoneDetails.regions.map((region, index) => (
+                      <Badge key={index} variant="outline">
+                        {region.name} ({region.price} SAR)
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-1">
+                    <Package className="w-4 h-4" />
+                    Associated Branches
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {zoneDetails.branchName.map((branch, index) => (
+                      <Badge key={index} variant="secondary">
+                        {branch}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       {/* Add Zone Modal */}
       <AddZoneModal

@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import { Users, Loader2 } from 'lucide-react';
 import { branchesAPI, sellersAPI } from '../services/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { BranchData, BranchResponse } from '@/types';
+import { BranchData } from '@/types';
+import { Switch } from './ui/switch';
 
 interface AddSellerModalProps {
   open: boolean;
@@ -24,7 +25,6 @@ interface AddSellerModalProps {
 
 export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModalProps) {
   const [loading, setLoading] = useState(false);
-  const [loadingBranches, setLoadingBranches] = useState(false);
   const [branches, setBranches] = useState<BranchData[]>([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -39,7 +39,6 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
   });
 
   const loadBranches = async () => {
-    setLoadingBranches(true);
     try {
       const response = await branchesAPI.getAll();
       if (response && response.data) {
@@ -48,8 +47,6 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
     } catch (error) {
       console.error('Failed to load branches:', error);
       toast.error('Failed to load branches');
-    } finally {
-      setLoadingBranches(false);
     }
   };
 
@@ -84,13 +81,6 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
     setLoading(true);
 
     try {
-      // TODO: Connect to backend API
-      // await sellersAPI.create(formData);
-
-
-      // Simulate API call
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-
       console.log('Form Data Submitted:', formData);
 
       const addedSeller = await sellersAPI.create(formData);
@@ -218,12 +208,12 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="passowrd">
-                Passowrd <span className="text-red-500">*</span>
+              <Label htmlFor="password">
+                Password <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="passowrd"
-                type="passowrd"
+                id="password"
+                type="password"
                 placeholder="Enter password"
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
@@ -232,11 +222,11 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">
-                Confirm Passowrd <span className="text-red-500">*</span>
+                Confirm Password <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="confirmPassword"
-                type="passowrd"
+                type="password"
                 placeholder="Confirm password"
                 value={formData.confirmPassword}
                 onChange={(e) => handleChange('confirmPassword', e.target.value)}
@@ -245,7 +235,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="branchId">
-                BranchId <span className="text-red-500">*</span>
+                Branch <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.branchId.toString()}
@@ -264,16 +254,18 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="vip">
-                Vip <span className="text-red-500">*</span>
-              </Label>
-              <Input
+            {/* VIP Status */}
+            <div className="flex items-center justify-between space-x-2 border p-3 rounded-md">
+              <div className="space-y-0.5">
+                <Label htmlFor="vip">VIP Seller</Label>
+                <div className="text-sm text-slate-500">
+                  Enable VIP status for this seller
+                </div>
+              </div>
+              <Switch
                 id="vip"
-                type="text"
-                placeholder="true,false"
-                // value={formData.vip}
-                onChange={(e) => handleChange('vip', e.target.value === 'true' ? true as unknown as string : false as unknown as string)}
+                checked={formData.vip}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, vip: checked }))}
                 disabled={loading}
               />
             </div>

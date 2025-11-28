@@ -252,6 +252,14 @@ export interface Agent {
   deactivationTo?: string;
 }
 
+export interface AgentUpdateRequest {
+  id: number;
+  name: string;
+  phone: string;
+  branchId: number;
+  email: string;
+}
+
 export interface SellerUpdateRequest {
   name: string;
   id: number;
@@ -306,6 +314,16 @@ export interface NewBranchRequest {
   close: string
 }
 
+
+export interface BranchResponse {
+  totalBranch: number;
+  activeBranchNumber: number;
+  inActiveBranchNumber: number;
+  totalOrders: number;
+  totalAgents: number;
+  data?: BranchData[] | null;
+}
+
 export interface BranchData {
   id: number
   name: string
@@ -317,14 +335,7 @@ export interface BranchData {
   isActive: boolean
 }
 
-export interface BranchResponse {
-  totalBranch: number
-  activeBranchNumber: number
-  inactiveBranchNumber: number
-  totalOrders: number
-  totalAgents: number
-  data: BranchData[]
-}
+
 export interface BranchResponseDetails {
   id: number,
   name: string,
@@ -408,6 +419,38 @@ export interface RegionDetails {
 
 
 
+export interface AdmenRequest {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  salary: number;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface AdminResponse {
+  id: number;
+  email?: string | null;
+  name?: string | null;
+  branshName?: string[] | null;
+  isLock: boolean;
+  lockDate?: string | null;
+  salary: number;
+  hiringDate: string;
+  address?: string | null;
+}
+
+export type AdminSearchType = 1 | 2 | 3 | 4 | 5;
+
+export interface AdminUpdateRequest {
+  id: number;
+  name: string;
+  email: string;
+  salary: number;
+  lockout?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -446,6 +489,8 @@ export interface SellerResponse {
   numberofOrder: number;
   profit: number;
   isActive: boolean;
+  isConfermid: boolean;
+  deliveryCost: number;
 }
 
 export interface SellerResponseDetails {
@@ -461,6 +506,7 @@ export interface SellerResponseDetails {
   isConfermid: boolean;
   isLookout: boolean;
   lookoutDate?: string | null;
+  date?: string | null;
 }
 export type NotificationType =
   | 'order_created'
@@ -489,18 +535,7 @@ export interface LoggedInUser {
   id: string
 }
 
-export interface AdminResponse {
-  id: number;
-  email?: string | null;
-  name?: string | null;
-  branshName?: string[] | null;
-  isLock: boolean;
-  lockDate?: string | null;
-  salary: number;
-  hiringDate: string;
-  address?: string | null;
-  phone?: string | null; // Added based on usage in EditUserModal, though not in schema
-}
+
 
 export interface AdminUpdateRequest {
   id: number;
@@ -509,4 +544,13 @@ export interface AdminUpdateRequest {
   email: string;
   salary: number;
   lockout?: string;
+}
+
+export interface LogResponse {
+  id: number;
+  tableName?: string | null;
+  description?: string | null;
+  action?: string | null;
+  actionTIme: string;
+  userName?: string | null;
 }

@@ -53,8 +53,10 @@ const WalletPage: React.FC = () => {
     try {
       setIsLoading(true);
       const ordersData = await shipmentsAPI.getAll();
-      const filteredData = ordersData.filter(order => order.statusOrder === ShipmentStatusString.Delivered);
-      setOrders(filteredData);
+      const filteredData = ordersData.filter(order => order.statusOrder === ShipmentStatusString.Delivered
+        || order.statusOrder === ShipmentStatusString.RejectedWithShippingFees);
+      const reversedData = filteredData.reverse();
+      setOrders(reversedData);
     } catch (error) {
       console.error('Error loading orders data:', error);
       toast.error('Failed to load orders data');

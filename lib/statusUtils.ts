@@ -12,7 +12,6 @@ export const ALL_STATUSES: ShipmentStatusString[] = [
   ShipmentStatusString.CustomerUnreachable,
   ShipmentStatusString.RejectedNoShippingFees,
   ShipmentStatusString.RejectedWithShippingFees,
-  // ShipmentStatusString.CanceledByMerchant,
   ShipmentStatusString.PartiallyDelivered,
   ShipmentStatusString.RejectedByUs,
   ShipmentStatusString.Returned,
@@ -44,19 +43,18 @@ export const AGENT_STATUSES: ShipmentStatusString[] = [
 // Get status label (human-readable)
 export const getStatusLabel = (status: ShipmentStatusString): string => {
   const labels: Record<ShipmentStatusString, string> = {
-    New: 'New',
-    InPickupStage: 'In Pickup Stage',
-    InWarehouse: 'In Warehouse',
-    DeliveredToAgent: 'Delivered To Agent',
-    Delivered: 'Delivered',
-    Postponed: 'Postponed',
-    CustomerUnreachable: 'Customer Unreachable',
-    RejectedNoShippingFees: 'Rejected No Shipping Fees',
-    RejectedWithShippingFees: 'Rejected With Shipping Fees',
-    // CanceledByMerchant: 'Canceled By Merchant',
-    PartiallyDelivered: 'Partially Delivered',
-    RejectedByUs: 'Rejected By Us',
-    Returned: 'Returned',
+    New: ShipmentStatusString.New,
+    InPickupStage: ShipmentStatusString.InPickupStage,
+    InWarehouse: ShipmentStatusString.InWarehouse,
+    DeliveredToAgent: ShipmentStatusString.DeliveredToAgent,
+    Delivered: ShipmentStatusString.Delivered,
+    Postponed: ShipmentStatusString.Postponed,
+    CustomerUnreachable: ShipmentStatusString.CustomerUnreachable,
+    RejectedNoShippingFees: ShipmentStatusString.RejectedNoShippingFees,
+    RejectedWithShippingFees: ShipmentStatusString.RejectedWithShippingFees,
+    PartiallyDelivered: ShipmentStatusString.PartiallyDelivered,
+    RejectedByUs: ShipmentStatusString.RejectedByUs,
+    Returned: ShipmentStatusString.Returned,
   };
   return labels[status] || status;
 };
@@ -110,11 +108,10 @@ export const isInProgressStatus = (status: ShipmentStatusString): boolean => {
 export const isCompletedStatus = (status: ShipmentStatusString): boolean => {
   // Exclude all rejected, returned, and canceled statuses
   const excludedStatuses = [
-    'rejected_no_shipping_fees',
-    'rejected_with_shipping_fees',
-    'rejected_by_us',
-    'canceled_by_merchant',
-    'returned',
+    ShipmentStatusString.RejectedNoShippingFees,
+    ShipmentStatusString.RejectedWithShippingFees,
+    ShipmentStatusString.RejectedByUs,
+    ShipmentStatusString.Returned,
   ];
 
   return !excludedStatuses.includes(status) && status === ShipmentStatusString.Delivered;
@@ -123,10 +120,9 @@ export const isCompletedStatus = (status: ShipmentStatusString): boolean => {
 // Check if a status is rejected/cancelled
 export const isRejectedStatus = (status: ShipmentStatusString): boolean => {
   return [
-    'rejected_no_shipping_fees',
-    'rejected_with_shipping_fees',
-    'canceled_by_merchant',
-    'rejected_by_us',
-    'returned',
+    ShipmentStatusString.RejectedNoShippingFees,
+    ShipmentStatusString.RejectedWithShippingFees,
+    ShipmentStatusString.RejectedByUs,
+    ShipmentStatusString.Returned,
   ].includes(status);
 };

@@ -44,7 +44,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
       setLoading(true);
       try {
         const branchesResponse = await branchesAPI.getAll();
-        setBranches(branchesResponse.data);
+        setBranches(branchesResponse.data as BranchData[]);
         const fetchedSellerDetails = await sellersAPI.getById(seller?.id.toString() as string);
         setSellerDetails(fetchedSellerDetails);
 
@@ -55,7 +55,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             phone: fetchedSellerDetails?.phone as string,
             storeName: fetchedSellerDetails?.storeName as string,
             address: fetchedSellerDetails?.address as string,
-            branchId: branchesResponse.data.find((branch) => branch.name === fetchedSellerDetails?.branchName)?.id as number,
+            branchId: branchesResponse?.data?.find((branch) => branch.name === fetchedSellerDetails?.branchName)?.id as number,
             id: seller.id || 0,
             vip: false,
           });
@@ -76,7 +76,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
     setLoading(true);
     try {
       const apiBranches = await branchesAPI.getAll();
-      setBranches(apiBranches.data);
+      setBranches(apiBranches?.data as BranchData[]);
       const fetchedSellerDetails = await sellersAPI.getById(seller?.id.toString() as string);
       setSellerDetails(fetchedSellerDetails);
 
@@ -86,7 +86,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
         phone: fetchedSellerDetails?.phone as string,
         storeName: fetchedSellerDetails?.storeName as string,
         address: fetchedSellerDetails?.address as string,
-        branchId: apiBranches.data.find((branch) => branch.name === fetchedSellerDetails?.branchName)?.id as number,
+        branchId: apiBranches?.data?.find((branch) => branch.name === fetchedSellerDetails?.branchName)?.id as number,
         id: seller?.id || 0,
         vip: false,
       });
@@ -130,6 +130,9 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
     try {
       // TODO: Connect to backend API
       await sellersAPI.update(formData);
+      if (formData.vip) {
+        await sellersAPI.activate(formData.id as unknown as string, true);
+      }
 
       // Simulate API call
       // await new Promise(resolve => setTimeout(resolve, 1000));
@@ -182,7 +185,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             {/* Seller ID (read-only) */}
-            {seller && (
+            {/* {seller && (
               <div className="space-y-2">
                 <Label htmlFor="sellerId">Seller ID</Label>
                 <Input
@@ -192,7 +195,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
                   className="bg-slate-50 dark:bg-slate-800"
                 />
               </div>
-            )}
+            )} */}
 
             {/* Name */}
             <div className="space-y-2">

@@ -9,12 +9,12 @@ import {
   CreditCard,
   Clock,
 } from 'lucide-react';
-import { Activity } from '../lib/mockData';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
+import { LogResponse } from '@/types';
 
 interface RecentActivityProps {
-  activities: Activity[];
+  activities: LogResponse[];
   maxItems?: number;
 }
 
@@ -23,21 +23,45 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+
   const recentActivities = activities
     .filter(act => new Date(act.actionTIme) >= sevenDaysAgo)
     .sort((a, b) => new Date(b.actionTIme).getTime() - new Date(a.actionTIme).getTime())
     .slice(0, maxItems);
 
   const formatTimeAgo = (timestamp: string) => {
+    if (!timestamp) return '';
+
+    let activityDate = new Date(timestamp);
     const now = new Date();
-    const activityDate = new Date(timestamp);
+
+    // Fix for server sending PST time (UTC-8) without timezone offset
+    // If the timestamp doesn't end with Z and doesn't have an offset, assume it's UTC-8
+    if (!timestamp.includes('Z') && !timestamp.match(/[+-]\d{2}:?\d{2}$/)) {
+      // Check if the date is valid before modifying
+      if (!isNaN(activityDate.getTime())) {
+        // Create a new date string with the offset
+        // We need to be careful with the format. 
+        // If it's ISO-like "YYYY-MM-DDTHH:mm:ss", we can just append "-08:00"
+        // If it has spaces "YYYY-MM-DD HH:mm:ss", we might need to replace space with T or handle it.
+        // But Date parsing usually handles T or space.
+        // Let's try to construct it safely.
+        const isoLike = timestamp.replace(' ', 'T');
+        activityDate = new Date(`${isoLike}-08:00`);
+      }
+    }
+
     const diffInMs = now.getTime() - activityDate.getTime();
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInHours / 24);
 
     if (diffInDays > 0) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
     if (diffInHours > 0) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    // Handle cases where diff is very small or negative (due to slight clock skew)
+    if (diffInMinutes <= 0) return 'Just now';
+
     return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
   };
 
@@ -79,15 +103,15 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
             <Clock className="w-5 h-5" />
             Recent Activity
           </CardTitle>
-          <CardDescription>Last 7 days of system activities</CardDescription>
+          <CardDescription>Last 7 actions on the system</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             {recentActivities.map((activity, index) => {
-              const Icon = getActivityIcon(activity.action);
-              const gradient = getActivityColor(activity.action);
+              const Icon = getActivityIcon(activity.action as string);
+              const gradient = getActivityColor(activity.action as string);
 
               return (
                 <motion.div

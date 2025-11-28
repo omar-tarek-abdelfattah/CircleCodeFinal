@@ -7,15 +7,15 @@ import {
   Plus,
   Eye,
   Edit,
-  UserCog,
-  ShieldCheck,
-  Briefcase,
   Filter,
   X,
   EyeOff,
   CalendarClock,
+  Calendar,
 } from 'lucide-react';
-import { User } from '../types';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { Calendar as CalendarComponent } from '../components/ui/calendar';
+import { AdminResponse } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -42,7 +42,7 @@ import { usersAPI } from '../services/api';
 import { UserRole } from '@/contexts/AuthContext';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
@@ -52,13 +52,11 @@ export default function UsersPage() {
   const [addAdminModalOpen, setAddAdminModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminResponse | null>(null);
   const [hiddenUserIds, setHiddenUserIds] = useState<Set<string>>(new Set());
   const [hiddenUsersDialogOpen, setHiddenUsersDialogOpen] = useState(false);
   const [deactivationModalOpen, setDeactivationModalOpen] = useState(false);
-  const [userForDeactivation, setUserForDeactivation] = useState<User | null>(null);
+  const [userForDeactivation, setUserForDeactivation] = useState<AdminResponse | null>(null);
 
   // Load users
   useEffect(() => {
@@ -74,13 +72,8 @@ export default function UsersPage() {
       setUsers(response);
 
       // Simulate API call
-<<<<<<< HEAD
       // await new Promise((resolve) => setTimeout(resolve, 500));
-      
-=======
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
->>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
       // Empty state until backend is connected
       // setUsers([]);
     } catch (error) {
@@ -92,19 +85,18 @@ export default function UsersPage() {
   };
 
   // Helper function to check if user is temporarily deactivated (within deactivation period)
-  const isTemporarilyDeactivated = (user: User) => {
-    if (!user.deactivationFrom || !user.deactivationTo) return false;
+  const isTemporarilyDeactivated = (user: AdminResponse) => {
+    if (!user.lockDate) return false;
     const now = new Date();
-    const from = new Date(user.deactivationFrom);
-    const to = new Date(user.deactivationTo);
-    return now >= from && now <= to;
+    const from = new Date(user.lockDate);
+    return now >= from;
   };
 
   // Helper function to check if deactivation is scheduled for future
-  const isScheduledForFuture = (user: User) => {
-    if (!user.deactivationFrom) return false;
+  const isScheduledForFuture = (user: AdminResponse) => {
+    if (!user.lockDate) return false;
     const now = new Date();
-    const from = new Date(user.deactivationFrom);
+    const from = new Date(user.lockDate);
     return from > now;
   };
 
@@ -118,7 +110,7 @@ export default function UsersPage() {
   };
 
   // Calculate stats (excluding hidden users)
-  const visibleUsers = users.filter((u) => !hiddenUserIds.has(u.id));
+  const visibleUsers = users.filter((u) => !hiddenUserIds.has(u.id.toString()));
   const totalUsers = visibleUsers.length;
   // const totalAdmins = visibleUsers.filter((u) => u.role === UserRole.Admin).length;
   // const totalSellers = visibleUsers.filter((u) => u.role === UserRole.Seller).length;
@@ -131,11 +123,11 @@ export default function UsersPage() {
       user.name?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery?.toLowerCase());
 
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'all';
 
     let matchesDateRange = true;
     if (dateFrom || dateTo) {
-      const userDate = new Date(user.registrationDate);
+      const userDate = new Date(user.hiringDate);
       if (dateFrom && dateTo) {
         matchesDateRange = userDate >= dateFrom && userDate <= dateTo;
       } else if (dateFrom) {
@@ -192,20 +184,20 @@ export default function UsersPage() {
   };
 
   //  Delete User
-  const confirmDelete = async () => {
-    if (userToDelete) {
-      try {
-        await usersAPI.delete(userToDelete.id);
-        setUsers(users.filter((u) => u.id !== userToDelete.id));
-        toast.success(`User ${userToDelete.name} deleted successfully`);
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        toast.error("Error deleting user");
-      }
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
-  };
+  // const confirmDelete = async () => {
+  //   if (userToDelete) {
+  //     try {
+  //       await usersAPI.delete(userToDelete.id.toString());
+  //       setUsers(users.filter((u) => u.id !== userToDelete.id));
+  //       toast.success(`User ${userToDelete.name} deleted successfully`);
+  //     } catch (error) {
+  //       console.error("Error deleting user:", error);
+  //       toast.error("Error deleting user");
+  //     }
+  //     setDeleteDialogOpen(false);
+  //     setUserToDelete(null);
+  //   }
+  // };
 
   //  Activate / Deactivate User
   // const handleStatusToggle = async (userId: string, currentStatus: "active" | "inactive") => {
@@ -257,67 +249,35 @@ export default function UsersPage() {
   //   }
   // };
 
-<<<<<<< HEAD
-  // const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
-  //   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-  //   setUsers(
-  //     users.map((u) =>
-  //       u.id === userId
-  //         ? {
-  //             ...u,
-  //             status: newStatus,
-  //           }
-  //         : u
-  //     )
-  //   );
-  //   toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-  // };
-=======
-  const handleStatusToggle = (userId: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    setUsers(
-      users.map((u) =>
-        u.id === userId
-          ? {
-            ...u,
-            status: newStatus,
-          }
-          : u
-      )
-    );
-    toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+  const handleStatusToggle = (userId: string) => {
+    const user = users.find((u) => u.id.toString() === userId);
+    if (user) {
+      setUserForDeactivation(user);
+      setDeactivationModalOpen(true);
+    }
   };
->>>>>>> 252562b4e5149d507b7b1dc285c4458fd86ca8b0
 
-  const handleSetDeactivationPeriod = (user: User) => {
+  const handleSetDeactivationPeriod = (user: AdminResponse) => {
     setUserForDeactivation(user);
     setDeactivationModalOpen(true);
   };
 
-  const handleSaveDeactivationPeriod = (dateFrom: Date | undefined, dateTo: Date | undefined) => {
+  const handleSaveDeactivationPeriod = (_dateFrom: Date | undefined, dateTo: Date | undefined) => {
     if (userForDeactivation) {
+      const isLocking = !!dateTo;
       setUsers(
         users.map((u) =>
           u.id === userForDeactivation.id
             ? {
               ...u,
-              deactivationFrom: dateFrom?.toISOString(),
-              deactivationTo: dateTo?.toISOString(),
+              isLock: isLocking,
+              lockDate: dateTo ? dateTo.toString() : null,
             }
             : u
         )
       );
 
-      if (dateFrom && dateTo) {
-        const now = new Date();
-        if (now >= dateFrom && now <= dateTo) {
-          toast.success('User deactivation period set. User is currently deactivated.');
-        } else if (dateFrom > now) {
-          toast.success('User deactivation scheduled successfully.');
-        }
-      } else {
-        toast.success('Deactivation period cleared.');
-      }
+      // Toasts are handled in the modal
     }
     setDeactivationModalOpen(false);
     setUserForDeactivation(null);
@@ -330,31 +290,31 @@ export default function UsersPage() {
     setDateTo(undefined);
   };
 
-  const getRoleColor = (role: UserRole) => {
-    switch (role) {
-      case UserRole.Admin:
-        return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700';
-      case UserRole.Seller:
-        return 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700';
-      case UserRole.agent:
-        return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700';
-      default:
-        return 'bg-slate-100 dark:bg-slate-900/20 text-slate-700 dark:text-slate-400 border-slate-300 dark:border-slate-700';
-    }
-  };
+  // const getRoleColor = (role: UserRole) => {
+  //   switch (role) {
+  //     case UserRole.Admin:
+  //       return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700';
+  //     case UserRole.Seller:
+  //       return 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700';
+  //     case UserRole.agent:
+  //       return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700';
+  //     default:
+  //       return 'bg-slate-100 dark:bg-slate-900/20 text-slate-700 dark:text-slate-400 border-slate-300 dark:border-slate-700';
+  //   }
+  // };
 
-  const getRoleIcon = (role: UserRole) => {
-    switch (role) {
-      case UserRole.Admin:
-        return <ShieldCheck className="w-4 h-4" />;
-      case UserRole.Seller:
-        return <Briefcase className="w-4 h-4" />;
-      case UserRole.agent:
-        return <UserCog className="w-4 h-4" />;
-      default:
-        return <Users className="w-4 h-4" />;
-    }
-  };
+  // const getRoleIcon = (role: UserRole) => {
+  //   switch (role) {
+  //     case UserRole.Admin:
+  //       return <ShieldCheck className="w-4 h-4" />;
+  //     case UserRole.Seller:
+  //       return <Briefcase className="w-4 h-4" />;
+  //     case UserRole.agent:
+  //       return <UserCog className="w-4 h-4" />;
+  //     default:
+  //       return <Users className="w-4 h-4" />;
+  //   }
+  // };
 
   const getInitials = (name: string) => {
     if (!name) return '';
@@ -407,7 +367,7 @@ export default function UsersPage() {
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Admins</p>
                   <h2 className="text-slate-900 dark:text-slate-100">{totalUsers}</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    All users in system
+                    All Admins in system
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
@@ -545,7 +505,7 @@ export default function UsersPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
-                  {/* <Popover>
+                  <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -560,11 +520,11 @@ export default function UsersPage() {
                         initialFocus
                       />
                     </PopoverContent>
-                  </Popover> */}
+                  </Popover>
 
-                  {/* <span className="text-slate-500">To</span> */}
+                  <span className="text-slate-500">To</span>
 
-                  {/* <Popover>
+                  <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -580,7 +540,7 @@ export default function UsersPage() {
                         initialFocus
                       />
                     </PopoverContent>
-                  </Popover> */}
+                  </Popover>
                 </div>
 
                 <Button variant="default" size="sm" onClick={() => { }}>
@@ -613,14 +573,13 @@ export default function UsersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>USER ID</TableHead>
                       <TableHead>NAME</TableHead>
                       <TableHead>EMAIL</TableHead>
-                      {/* <TableHead>PHONE</TableHead> */}
-                      {/* <TableHead>ROLE</TableHead> */}
+                      <TableHead>BRANCHES</TableHead>
+                      <TableHead>ADDRESS</TableHead>
                       <TableHead>SALARY</TableHead>
+                      <TableHead>HIRING DATE</TableHead>
                       <TableHead>STATUS</TableHead>
-                      {/* <TableHead>REGISTRATION DATE</TableHead> */}
                       <TableHead className="text-right">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -628,86 +587,88 @@ export default function UsersPage() {
                     {loading ? (
                       [...Array(5)].map((_, i) => (
                         <TableRow key={i}>
-                          <TableCell colSpan={9}>
+                          <TableCell colSpan={8}>
                             <Skeleton className="h-12 w-full" />
                           </TableCell>
                         </TableRow>
                       ))
                     ) : filteredUsers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-slate-500">
+                        <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                           No users found
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredUsers.map((user) => (
                         <TableRow key={user.id}>
-                          <TableCell>{user.id}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar>
-                                <AvatarFallback className={getAvatarColor(user.role)}>
-                                  {getInitials(user.name)}
+                                <AvatarFallback className={getAvatarColor(UserRole.Admin)}>
+                                  {getInitials(user.name as string)}
                                 </AvatarFallback>
                               </Avatar>
                               <span>{user.name}</span>
                             </div>
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
-                          {/* <TableCell>{user.phone}</TableCell> */}
-                          {/* <TableCell> */}
-                          {/* <Badge variant="outline" className={getRoleColor(user.role)}>
-                              {getRoleIcon(user.role)}
-                              <span className="ml-1 capitalize">{user.role}</span>
-                            </Badge> */}
-                          {/* </TableCell> */}
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {user.branshName?.map((branch, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {branch}
+                                </Badge>
+                              )) || <span className="text-slate-400">-</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.address || <span className="text-slate-400">-</span>}</TableCell>
                           <TableCell>${user.salary?.toLocaleString()}</TableCell>
+                          <TableCell>
+                            {user.hiringDate ? new Date(user.hiringDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            }) : <span className="text-slate-400">-</span>}
+                          </TableCell>
                           <TableCell>
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-3">
                                 <Switch
-                                  checked={user.status === 'active' && !isTemporarilyDeactivated(user)}
-                                  onCheckedChange={() => handleStatusToggle(user.id, user.status)}
+                                  checked={user.isLock === false && !isTemporarilyDeactivated(user)}
+                                  onCheckedChange={() => handleStatusToggle(user.id.toString())}
                                   className="data-[state=checked]:bg-green-500"
                                 />
-                                <span className={`text-sm font-semibold ${user?.status === 'active' && !isTemporarilyDeactivated(user)
+                                <span className={`text-sm font-semibold ${user?.isLock === false && !isTemporarilyDeactivated(user)
                                   ? 'text-green-600 dark:text-green-400'
                                   : 'text-red-600 dark:text-red-400'
                                   }`}>
-                                  {user.status === 'active' && !isTemporarilyDeactivated(user) ? 'Active' : 'Inactive'}
+                                  {user.isLock === false && !isTemporarilyDeactivated(user) ? 'Active' : 'Inactive'}
                                 </span>
                               </div>
-                              {isTemporarilyDeactivated(user) && user.deactivationTo && (
+                              {isTemporarilyDeactivated(user) && user.isLock && (
                                 <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-2.5 py-1.5">
                                   <div className="flex items-center gap-1.5 mb-1">
                                     <CalendarClock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 flex-shrink-0" />
                                     <span className="text-xs text-amber-900 dark:text-amber-200 font-semibold">Currently Deactivated</span>
                                   </div>
                                   <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                                    Deactivated until {formatDate(user.deactivationTo)}. Cannot log in during this period.
+                                    Deactivated until {formatDate(user.isLock?.toString() || '')}. Cannot log in during this period.
                                   </p>
                                 </div>
                               )}
-                              {user.deactivationFrom && user.deactivationTo && !isTemporarilyDeactivated(user) && isScheduledForFuture(user) && (
+                              {user.isLock && !isTemporarilyDeactivated(user) && isScheduledForFuture(user) && (
                                 <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1.5">
                                   <div className="flex items-center gap-1.5 mb-1">
                                     <CalendarClock className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
                                     <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span>
                                   </div>
                                   <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-                                    From {formatDate(user.deactivationFrom)} to {formatDate(user.deactivationTo)}.
+                                    From {formatDate(user.isLock?.toString() || '')}
                                   </p>
                                 </div>
                               )}
                             </div>
                           </TableCell>
-                          {/* <TableCell>
-                            {new Date(user.registrationDate).toLocaleDateString('en-US', {
-                              month: '2-digit',
-                              day: '2-digit',
-                              year: 'numeric',
-                            })}
-                          </TableCell> */}
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
                               <Button
@@ -740,7 +701,7 @@ export default function UsersPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleHideUser(user.id)}
+                                onClick={() => handleHideUser(user.id.toString())}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="Hide User"
                               >
@@ -789,7 +750,7 @@ export default function UsersPage() {
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete User</AlertDialogTitle>
@@ -808,7 +769,7 @@ export default function UsersPage() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> */}
 
       {/* Hidden Users Dialog */}
       <AlertDialog open={hiddenUsersDialogOpen} onOpenChange={setHiddenUsersDialogOpen}>
@@ -825,28 +786,23 @@ export default function UsersPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
+
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users
-                  .filter((u) => hiddenUserIds.has(u.id))
+                  .filter((u) => hiddenUserIds.has(u.id.toString()))
                   .map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getRoleColor(user.role)}>
-                          {getRoleIcon(user.role)}
-                          <span className="ml-1 capitalize">{user.role}</span>
-                        </Badge>
-                      </TableCell>
+
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRestoreUser(user.id)}
+                          onClick={() => handleRestoreUser(user.id.toString())}
                           className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                         >
                           <Eye className="w-4 h-4 mr-2" />
@@ -872,12 +828,12 @@ export default function UsersPage() {
         open={deactivationModalOpen}
         onOpenChange={setDeactivationModalOpen}
         onSuccess={handleSaveDeactivationPeriod}
-        currentFromDate={userForDeactivation?.deactivationFrom}
-        currentToDate={userForDeactivation?.deactivationTo}
+        currentToDate={userForDeactivation?.lockDate as string}
         itemName={userForDeactivation?.name || ''}
         itemType="User"
-        adminId={userForDeactivation?.id}
+        adminId={userForDeactivation?.id.toString()}
+        adminName={userForDeactivation?.name || ''}
       />
-    </div>
+    </div >
   );
 }

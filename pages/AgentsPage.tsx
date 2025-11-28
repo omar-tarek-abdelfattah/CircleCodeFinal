@@ -23,26 +23,58 @@ import {
   DialogTitle,
   DialogFooter,
 } from '../components/ui/dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
 import { toast } from 'sonner';
 import { AddAgentModal } from '../components/AddAgentModal';
 import { EditAgentModal } from '../components/EditAgentModal';
 import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
-import { Agent } from '../types';
-import { agentsAPI, branchesAPI } from '../services/api';
+import { Agent, AgentResponse, ShipmentStatusString } from '../types';
+import { agentsAPI, shipmentsAPI } from '../services/api';
 import { useEffect } from 'react';
 
 export function AgentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [agents, setAgents] = useState<AgentResponse[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<AgentResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addAgentModalOpen, setAddAgentModalOpen] = useState(false);
+  const [activeAgentsCount, setActiveAgentsCount] = useState(0);
+  const [onDutyAgentsCount, setOnDutyAgentsCount] = useState(0);
   const [editAgentModalOpen, setEditAgentModalOpen] = useState(false);
   const [deactivationModalOpen, setDeactivationModalOpen] = useState(false);
-  const [hiddenAgentIds, setHiddenAgentIds] = useState<Set<string>>(new Set());
+  const [hiddenAgentIds, setHiddenAgentIds] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hiddenAgentIds');
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    }
+    return new Set();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hiddenAgentIds', JSON.stringify(Array.from(hiddenAgentIds)));
+  }, [hiddenAgentIds]);
   const [hiddenAgentsDialogOpen, setHiddenAgentsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [lockedAgents, setLockedAgents] = useState<AgentResponse[]>([]);
+  const [activeTab, setActiveTab] = useState("all");
+
+  const loadLockedAgents = async () => {
+    try {
+      const response = await agentsAPI.getLockedAgents();
+      setLockedAgents(response);
+    } catch (error) {
+      console.error('Failed to load locked agents:', error);
+      toast.error('Failed to load locked agents');
+    }
+  };
 
 
   const fetchAgents = async () => {
@@ -55,10 +87,42 @@ export function AgentsPage() {
       toast.error("Failed to load agents list.");
     }
   };
+  const fetchActiveAgentsCount = async () => {
+    try {
+      const data = await agentsAPI.getActiveCount();
+      console.log(data)
+      setActiveAgentsCount(data);
+    } catch (error) {
+      console.error("Failed to fetch active agents count:", error);
+      toast.error("Failed to load active agents count.");
+    }
+  };
+  const fetchOnDutyAgentsCount = async () => {
+    try {
+      const data = await shipmentsAPI.getAll();
+      console.log(data)
+      const onDutyAgents = data.filter(shipment => shipment.statusOrder === ShipmentStatusString.DeliveredToAgent
+        || shipment.statusOrder === ShipmentStatusString.Returned).length;
+      setOnDutyAgentsCount(onDutyAgents);
+    } catch (error) {
+      console.error("Failed to fetch on duty agents count:", error);
+      toast.error("Failed to load on duty agents count.");
+    }
+  };
 
   useEffect(() => {
     fetchAgents();
+    fetchActiveAgentsCount();
+    fetchOnDutyAgentsCount();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'locked') {
+      loadLockedAgents();
+    } else if (activeTab === 'all') {
+      fetchAgents();
+    }
+  }, [activeTab]);
 
   // Calculate statistics
   const totalAgents = agents.length;
@@ -66,21 +130,12 @@ export function AgentsPage() {
   // Active agents: those with assignments within 2 days
   const twoDaysAgo = new Date();
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-  const activeAgents = agents.filter(agent => {
-    if (!agent.lastAssignmentDate) return false;
-    const lastAssignment = new Date(agent.lastAssignmentDate);
-    return lastAssignment >= twoDaysAgo;
-  }).length;
-
   // console.log(twoDaysAgo)
-  // On duty: agents with orders today
-  const onDutyAgents = agents.filter(agent =>
-    agent.todayShipments && agent.todayShipments > 0
-  ).length;
+
 
   // Filter agents based on search and hidden status
   const filteredAgents = useMemo(() => {
-    let filtered = agents.filter(agent => !hiddenAgentIds.has(agent.id));
+    let filtered = agents.filter(agent => !hiddenAgentIds.has(agent.id.toString()));
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -88,14 +143,14 @@ export function AgentsPage() {
         agent.name.toLowerCase().includes(query) ||
         agent.email.toLowerCase().includes(query) ||
         // agent.id.toLowerCase().includes(query) ||
-        (agent.branch && agent.branch.includes(query))
+        (agent.branshName && agent.branshName.toLowerCase().includes(query))
       );
     }
 
     return filtered;
   }, [searchQuery, hiddenAgentIds, agents]);
 
-  const hiddenAgents = agents.filter(agent => hiddenAgentIds.has(agent.id));
+  const hiddenAgents = agents.filter(agent => hiddenAgentIds.has(agent.id.toString()));
 
   // Pagination
   const totalPages = Math.ceil(filteredAgents.length / itemsPerPage);
@@ -104,12 +159,12 @@ export function AgentsPage() {
     currentPage * itemsPerPage
   );
 
-  const handleViewDetails = (agent: Agent) => {
+  const handleViewDetails = (agent: AgentResponse) => {
     setSelectedAgent(agent);
     setDetailsModalOpen(true);
   };
 
-  const handleEditAgent = (agent: Agent) => {
+  const handleEditAgent = (agent: AgentResponse) => {
     setSelectedAgent(agent);
     setEditAgentModalOpen(true);
   };
@@ -138,39 +193,38 @@ export function AgentsPage() {
     toast.success('All agents restored successfully');
   };
 
-  const handleSetDeactivationPeriod = (agent: Agent) => {
+  const handleSetDeactivationPeriod = (agent: AgentResponse) => {
     setSelectedAgent(agent);
     setDeactivationModalOpen(true);
   };
 
-  const handleToggleStatus = async (agentId: string, branshName: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'active' : 'inactive';
+  const handleToggleStatus = async (agentId: string, currentStatus: 'active' | 'inactive') => {
+    if (currentStatus === 'active') {
+      // User wants to deactivate/lock
+      const agent = agents.find(a => a.id.toString() === agentId);
+      if (agent) {
+        handleSetDeactivationPeriod(agent);
+      }
+    } else {
+      // User wants to activate (unlock)
+      try {
+        await agentsAPI.activate(agentId);
 
-    console.log(agentId, currentStatus, newStatus);
+        // Update local state
+        setAgents(prev =>
+          prev.map(a =>
+            a.id.toString() === agentId ? { ...a, isactive: true, isLock: false } : a
+          )
+        );
 
-    try {
-      // TODO: Connect to backend API
-      const branches = await branchesAPI.getAll();
-      const branchId = branches.data.filter((b) => {
-        return branshName == b.name
-      })
-      console.log(branchId)
-      console.log(branches)
-      await agentsAPI.updateStatus(agentId, branchId[0]?.id?.toString() as string);
-      // const response = await agentsAPI.getAll();
-      // console.log('API Response:', response);
-      console.log(branshName)
-      // Update local state
-      setAgents(prev =>
-        prev.map(a =>
-          a.id === agentId ? { ...a, status: newStatus } : a
-        )
-      );
+        // Remove from locked agents list if present
+        setLockedAgents(prev => prev.filter(a => a.id.toString() !== agentId));
 
-      toast.success(`Agent ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-    } catch (error) {
-      console.error('Failed to update agent status:', error);
-      toast.error('Failed to update agent status');
+        toast.success('Agent activated successfully');
+      } catch (error) {
+        console.error('Failed to activate agent:', error);
+        toast.error('Failed to activate agent');
+      }
     }
   };
 
@@ -180,41 +234,46 @@ export function AgentsPage() {
     // Update the agent in the list
     setAgents(prev =>
       prev.map(a =>
-        a.id === selectedAgent.id
+        a.id.toString() === selectedAgent.id.toString()
           ? {
             ...a,
             deactivationFrom: fromDate || undefined,
             deactivationTo: toDate || undefined,
+            isLock: true,
           }
           : a
       )
     );
+
+    // Add to locked agents list if not already there (optional, but good for consistency)
+    // We might need to fetch the full agent details or just push the modified selectedAgent
+    // For now, let's just update the main list. If the user switches to the locked tab, it will refetch.
   };
 
-  const isTemporarilyDeactivated = (agent: Agent): boolean => {
+  const isTemporarilyDeactivated = (agent: AgentResponse): boolean => {
     // console.log(agent.deactivationFrom, agent.deactivationTo);
     // console.log(!agent.deactivationFrom || !agent.deactivationTo);
-    if (!agent.deactivationFrom || !agent.deactivationTo) return false;
+    if (!agent.isLock) return false;
 
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
 
-    const from = new Date(agent.deactivationFrom);
+    const from = new Date();
     from.setHours(0, 0, 0, 0);
 
-    const to = new Date(agent.deactivationTo);
+    const to = new Date(agent.date);
     to.setHours(23, 59, 59, 999); // End of day
 
     return now >= from && now <= to;
   };
 
-  const isScheduledForFuture = (agent: Agent): boolean => {
-    if (!agent.deactivationFrom) return false;
+  const isScheduledForFuture = (agent: AgentResponse): boolean => {
+    if (!agent.isLock) return false;
 
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    const from = new Date(agent.deactivationFrom);
+    const from = new Date();
     from.setHours(0, 0, 0, 0);
 
     return from > now;
@@ -304,7 +363,7 @@ export function AgentsPage() {
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
                     Active Agents
                   </p>
-                  <p className="text-3xl mb-1">{activeAgents}</p>
+                  <p className="text-3xl mb-1">{activeAgentsCount}</p>
                   <p className="text-sm text-slate-500">Active agents</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -328,7 +387,7 @@ export function AgentsPage() {
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
                     On Duty
                   </p>
-                  <p className="text-3xl mb-1">{onDutyAgents}</p>
+                  <p className="text-3xl mb-1">{onDutyAgentsCount}</p>
                   <p className="text-sm text-slate-500">Currently working agents</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
@@ -392,226 +451,387 @@ export function AgentsPage() {
         </Card>
       </motion.div>
 
-      {/* Agents Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card className="border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Manage and track your items
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>AGENT</TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead>BRANCH</TableHead>
-                    <TableHead>CONTACT</TableHead>
-                    <TableHead>EMAIL</TableHead>
-                    <TableHead>ACTIVE ORDERS</TableHead>
-                    <TableHead>TODAY'S ORDERS</TableHead>
-                    <TableHead>STATUS</TableHead>
-                    <TableHead className="text-right">ACTIONS</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedAgents.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center py-12">
-                        <div className="flex flex-col items-center gap-2 text-slate-500">
-                          <Users className="w-12 h-12 opacity-20" />
-                          <p>No agents found</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    paginatedAgents.map((agent, index) => (
-                      <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className={`${getAvatarColor(index)} text-white`}>
-                              <AvatarFallback className="bg-transparent">
-                                {getInitials(agent.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{agent.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-slate-600 dark:text-slate-400">
-                          {
-                            String(agent.id).includes('-')
-                              ? String(agent.id).split('-')[1]
-                              : String(agent.id)
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-slate-700 dark:text-slate-300">
-                            {agent.branch || '-'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-slate-400" />
-                            <span className="text-sm">{agent.phone}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-slate-600 dark:text-slate-400">
-                            {agent.email}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                            {agent.activeShipments}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={
-                              agent.todayShipments && agent.todayShipments > 0
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
-                            }
-                          >
-                            {agent.todayShipments || 0}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-3">
-                              <Switch
-                                checked={agent.status === 'active' && !isTemporarilyDeactivated(agent)}
-                                onCheckedChange={() => handleToggleStatus(agent.id, agent.branshName as unknown as string, agent.status)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                              <span className={`text-sm font-semibold ${agent.status === 'active' && !isTemporarilyDeactivated(agent)
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                                }`}>
-                                {agent.status === 'active' && !isTemporarilyDeactivated(agent) ? 'Active' : 'inactive'}
-                              </span>
-                            </div>
-                            {isTemporarilyDeactivated(agent) && agent.deactivationTo && (
-                              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-2.5 py-1.5">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <CalendarClock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 flex-shrink-0" />
-                                  <span className="text-xs text-amber-900 dark:text-amber-200 font-semibold">Currently Deactivated</span>
-                                </div>
-                                <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                                  Deactivated until {formatDate(agent.deactivationTo)}. Cannot log in during this period.
-                                </p>
-                              </div>
-                            )}
-                            {agent.deactivationFrom && agent.deactivationTo && !isTemporarilyDeactivated(agent) && isScheduledForFuture(agent) && (
-                              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1.5">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <CalendarClock className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
-                                  <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span>
-                                </div>
-                                <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-                                  From {formatDate(agent.deactivationFrom)} to {formatDate(agent.deactivationTo)}.
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleSetDeactivationPeriod(agent)}
-                              className="gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                              title="Set Deactivation Period"
-                            >
-                              <CalendarClock className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(agent)}
-                              className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-                              title="View Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditAgent(agent)}
-                              className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-                              title="Edit Agent"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleHideAgent(agent.id)}
-                              className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-                              title="Hide Agent"
-                            >
-                              <EyeOff className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+      {/* Tabs */}
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="all">All Agents</TabsTrigger>
+            <TabsTrigger value="locked">Locked Agents</TabsTrigger>
+          </TabsList>
+        </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAgents.length)} of {filteredAgents.length} items
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <div className="flex gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className={currentPage === page ? 'bg-blue-600' : ''}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
+        <TabsContent value="all" className="space-y-6">
+          {/* Agents Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="border-slate-200 dark:border-slate-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Manage and track your items
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>AGENT</TableHead>
+                        {/* <TableHead>ID</TableHead> */}
+                        <TableHead>BRANCH</TableHead>
+                        <TableHead>CONTACT</TableHead>
+                        <TableHead>EMAIL</TableHead>
+                        <TableHead>ACTIVE ORDERS</TableHead>
+                        <TableHead>TODAY'S ORDERS</TableHead>
+                        <TableHead>STATUS</TableHead>
+                        <TableHead className="text-right">ACTIONS</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedAgents.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-12">
+                            <div className="flex flex-col items-center gap-2 text-slate-500">
+                              <Users className="w-12 h-12 opacity-20" />
+                              <p>No agents found</p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginatedAgents.map((agent, index) => (
+                          <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className={`${getAvatarColor(index)} text-white`}>
+                                  <AvatarFallback className="bg-transparent">
+                                    {getInitials(agent.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{agent.name}</span>
+                              </div>
+                            </TableCell>
+                            {/* <TableCell className="text-slate-600 dark:text-slate-400">
+                              {
+                                String(agent.id).includes('-')
+                                  ? String(agent.id).split('-')[1]
+                                  : String(agent.id)
+                              }
+                            </TableCell> */}
+                            <TableCell>
+                              <span className="text-slate-700 dark:text-slate-300">
+                                {agent.branshName || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-slate-400" />
+                                <span className="text-sm">{agent.phoneNumber}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                {agent.email}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                {agent.numberofOrder}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="secondary"
+                                className={
+                                  agent.numberofOrder && agent.numberofOrder > 0
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
+                                }
+                              >
+                                {agent.numberofOrder || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-3">
+                                  <Switch
+                                    checked={agent.isactive && !isTemporarilyDeactivated(agent)}
+                                    onCheckedChange={() => handleToggleStatus(agent.id.toString(), agent.isactive ? 'active' : 'inactive')}
+                                    className="data-[state=checked]:bg-green-500"
+                                  />
+                                  <span className={`text-sm font-semibold ${agent.isactive === true && !isTemporarilyDeactivated(agent)
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-red-600 dark:text-red-400'
+                                    }`}>
+                                    {agent.isactive === true && !isTemporarilyDeactivated(agent) ? 'Active' : 'inactive'}
+                                  </span>
+                                </div>
+                                {isTemporarilyDeactivated(agent) && agent.isLock && (
+                                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-2.5 py-1.5">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                      <CalendarClock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 flex-shrink-0" />
+                                      <span className="text-xs text-amber-900 dark:text-amber-200 font-semibold">Currently Deactivated</span>
+                                    </div>
+                                    <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                                      Deactivated until {formatDate(new Date().toString())}. Cannot log in during this period.
+                                    </p>
+                                  </div>
+                                )}
+                                {agent.isLock && !isTemporarilyDeactivated(agent) && (
+                                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1.5">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                      <CalendarClock className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
+                                      <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span>
+                                    </div>
+                                    <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+                                      From {formatDate(new Date().toString())} to {formatDate(new Date().toString())}.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSetDeactivationPeriod(agent)}
+                                  className="gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  title="Set Deactivation Period"
+                                >
+                                  <CalendarClock className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewDetails(agent)}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAgent(agent)}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="Edit Agent"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleHideAgent(agent.id.toString())}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="Hide Agent"
+                                >
+                                  <EyeOff className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAgents.length)} of {filteredAgents.length} items
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <div className="flex gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={currentPage === page ? 'bg-blue-600' : ''}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="locked" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="border-slate-200 dark:border-slate-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Locked Agents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>AGENT</TableHead>
+                        <TableHead>BRANCH</TableHead>
+                        <TableHead>CONTACT</TableHead>
+                        <TableHead>EMAIL</TableHead>
+                        <TableHead>ACTIVE ORDERS</TableHead>
+                        <TableHead>TODAY'S ORDERS</TableHead>
+                        <TableHead>STATUS</TableHead>
+                        <TableHead className="text-right">ACTIONS</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {lockedAgents.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-12">
+                            <div className="flex flex-col items-center gap-2 text-slate-500">
+                              <Users className="w-12 h-12 opacity-20" />
+                              <p>No locked agents found</p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        lockedAgents.map((agent, index) => (
+                          <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className={`${getAvatarColor(index)} text-white`}>
+                                  <AvatarFallback className="bg-transparent">
+                                    {getInitials(agent.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{agent.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-slate-700 dark:text-slate-300">
+                                {agent.branshName || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-slate-400" />
+                                <span className="text-sm">{agent.phoneNumber}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                {agent.email}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                {agent.numberofOrder}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="secondary"
+                                className={
+                                  agent.numberofOrder && agent.numberofOrder > 0
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
+                                }
+                              >
+                                {agent.numberofOrder || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-3">
+                                  <Switch
+                                    checked={false}
+                                    onCheckedChange={() => handleToggleStatus(agent.id.toString(), 'inactive')}
+                                    className="data-[state=checked]:bg-green-500"
+                                  />
+                                  <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                                    Locked
+                                  </span>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSetDeactivationPeriod(agent)}
+                                  className="gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  title="Set Deactivation Period"
+                                >
+                                  <CalendarClock className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewDetails(agent)}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAgent(agent)}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="Edit Agent"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleHideAgent(agent.id.toString())}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="Hide Agent"
+                                >
+                                  <EyeOff className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+      </Tabs>
 
       {/* Agent Details Modal */}
       <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
@@ -643,19 +863,19 @@ export function AgentsPage() {
                   <div className="flex gap-2 flex-wrap">
                     <Badge
                       className={
-                        selectedAgent.status === 'active' && !isTemporarilyDeactivated(selectedAgent)
+                        selectedAgent.isactive === true && !isTemporarilyDeactivated(selectedAgent)
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                           : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                       }
                     >
-                      {selectedAgent.status === 'active' && !isTemporarilyDeactivated(selectedAgent) ? 'Active' : 'Inactive'}
+                      {selectedAgent.isactive === true && !isTemporarilyDeactivated(selectedAgent) ? 'Active' : 'Inactive'}
                     </Badge>
                     <Badge variant="secondary">
-                      {selectedAgent.activeShipments} Active Orders
+                      {selectedAgent.numberofOrder} Active Orders
                     </Badge>
-                    {selectedAgent.todayShipments && selectedAgent.todayShipments > 0 && (
+                    {selectedAgent.numberofOrder && selectedAgent.numberofOrder > 0 && (
                       <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        {selectedAgent.todayShipments} Today
+                        {selectedAgent.numberofOrder} Today
                       </Badge>
                     )}
                   </div>
@@ -670,35 +890,35 @@ export function AgentsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Phone</p>
-                  <p className="font-medium">{selectedAgent.phone}</p>
+                  <p className="font-medium">{selectedAgent.phoneNumber}</p>
                 </div>
-                {selectedAgent.branch && (
+                {selectedAgent.branshName && (
                   <div>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Branch</p>
-                    <p className="font-medium">{selectedAgent.branch}</p>
+                    <p className="font-medium">{selectedAgent.branshName}</p>
                   </div>
                 )}
-                {selectedAgent.zone && (
+                {/* {selectedAgent.branshName && (
                   <div>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Zone</p>
-                    <p className="font-medium">{selectedAgent.zone}</p>
+                    <p className="font-medium">{selectedAgent.branshName}</p>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Performance Stats */}
               <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <div className="text-center">
-                  <p className="text-2xl mb-1">{selectedAgent.activeShipments}</p>
+                  <p className="text-2xl mb-1">{selectedAgent.numberofOrder}</p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Active</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl mb-1">{selectedAgent.completedShipments}</p>
+                  <p className="text-2xl mb-1">{selectedAgent.numberofOrder}</p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Completed</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl mb-1">{selectedAgent.rating}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Rating</p>
+                  <p className="text-2xl mb-1">{selectedAgent.profit}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Profit</p>
                 </div>
               </div>
 
@@ -707,21 +927,21 @@ export function AgentsPage() {
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Joined Date</p>
                   <p className="font-medium">
-                    {new Date(selectedAgent.joinedDate).toLocaleDateString()}
+                    {selectedAgent?.date?.toString() || 'N/A'}
                   </p>
                 </div>
-                {selectedAgent.lastAssignmentDate && (
+                {/* {selectedAgent.date && (
                   <div>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Last Assignment</p>
                     <p className="font-medium">
-                      {new Date(selectedAgent.lastAssignmentDate).toLocaleDateString()}
+                      {new Date(selectedAgent.date).toLocaleDateString()}
                     </p>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Deactivation Period Info */}
-              {(isTemporarilyDeactivated(selectedAgent) || (selectedAgent.deactivationFrom && selectedAgent.deactivationTo && isScheduledForFuture(selectedAgent))) && (
+              {(isTemporarilyDeactivated(selectedAgent) || (selectedAgent.isLock && isScheduledForFuture(selectedAgent))) && (
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
                     <CalendarClock className="w-5 h-5" />
@@ -733,17 +953,17 @@ export function AgentsPage() {
                         Temporarily Deactivated
                       </p>
                       <p className="text-sm text-amber-700 dark:text-amber-400">
-                        This agent is deactivated until <span className="font-semibold">{selectedAgent.deactivationTo && formatDate(selectedAgent.deactivationTo)}</span>. They cannot log in or perform any actions during this period.
+                        This agent is deactivated until <span className="font-semibold">{selectedAgent.isLock && formatDate(new Date().toDateString())}</span>. They cannot log in or perform any actions during this period.
                       </p>
                     </div>
                   )}
-                  {selectedAgent.deactivationFrom && selectedAgent.deactivationTo && !isTemporarilyDeactivated(selectedAgent) && isScheduledForFuture(selectedAgent) && (
+                  {selectedAgent.isLock && !isTemporarilyDeactivated(selectedAgent) && isScheduledForFuture(selectedAgent) && (
                     <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                       <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
                         Scheduled Deactivation
                       </p>
                       <p className="text-sm text-blue-700 dark:text-blue-400">
-                        This agent will be deactivated from <span className="font-semibold">{formatDate(selectedAgent.deactivationFrom)}</span> to <span className="font-semibold">{formatDate(selectedAgent.deactivationTo)}</span>.
+                        This agent will be deactivated from <span className="font-semibold">{formatDate(new Date().toDateString())}</span> to <span className="font-semibold">{formatDate(new Date().toDateString())}</span>.
                       </p>
                     </div>
                   )}
@@ -781,13 +1001,12 @@ export function AgentsPage() {
       <DeactivationPeriodModal
         open={deactivationModalOpen}
         onOpenChange={setDeactivationModalOpen}
-        itemId={selectedAgent?.id || ''}
-        itemName={selectedAgent?.name || ''}
-        itemType="Agent"
         agentId={selectedAgent?.id || ''}
         agentName={selectedAgent?.name || ''}
-        currentFromDate={selectedAgent?.deactivationFrom}
-        currentToDate={selectedAgent?.deactivationTo}
+        itemType="Agent"
+
+        currentFromDate={Date.now}
+        // currentToDate={selectedAgent?.deactivationTo}
         onSuccess={handleDeactivationPeriodSuccess}
       />
 
@@ -830,7 +1049,7 @@ export function AgentsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRestoreAgent(agent.id)}
+                      onClick={() => handleRestoreAgent(agent.id.toString())}
                       className="gap-2"
                     >
                       <Eye className="w-4 h-4" />
