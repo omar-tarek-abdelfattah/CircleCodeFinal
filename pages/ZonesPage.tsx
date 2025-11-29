@@ -4,6 +4,7 @@ import { Zone, ZoneResponseDetails } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Switch } from '../components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -105,9 +106,15 @@ export function ZonesPage() {
     .reduce((sum, zone) => sum + zone.orders, 0);
 
   // Get visible and hidden zones
+  const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+
   const visibleZones = useMemo(() => {
-    return zones.filter(zone => !hiddenZoneIds.has(zone.id));
-  }, [zones, hiddenZoneIds]);
+    let filtered = zones.filter(zone => !hiddenZoneIds.has(zone.id));
+    if (showInactiveOnly) {
+      filtered = filtered.filter(zone => zone.status === 'inactive');
+    }
+    return filtered;
+  }, [zones, hiddenZoneIds, showInactiveOnly]);
 
   const hiddenZones = useMemo(() => {
     return zones.filter(zone => hiddenZoneIds.has(zone.id));
@@ -464,17 +471,32 @@ export function ZonesPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Zone List</CardTitle>
-                {hiddenZones.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setHiddenZonesDialogOpen(true)}
-                    className="gap-2"
-                  >
-                    <EyeOff className="w-4 h-4" />
-                    Hidden ({hiddenZones.length})
-                  </Button>
-                )}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="inactive-zone-filter"
+                      checked={showInactiveOnly}
+                      onCheckedChange={setShowInactiveOnly}
+                    />
+                    <label
+                      htmlFor="inactive-zone-filter"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Show Inactive Only
+                    </label>
+                  </div>
+                  {hiddenZones.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setHiddenZonesDialogOpen(true)}
+                      className="gap-2"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                      Hidden ({hiddenZones.length})
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>

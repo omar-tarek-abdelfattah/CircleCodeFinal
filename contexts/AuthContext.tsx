@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
+import {
   loginApi,
   emailExistApi,
   agentRegisterApi,
@@ -90,7 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 🔹 Logout
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
     setUser(null);
   };
 

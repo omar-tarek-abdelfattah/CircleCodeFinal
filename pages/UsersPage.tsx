@@ -67,8 +67,8 @@ export default function UsersPage() {
     setLoading(true);
     try {
       // TODO: Connect to backend API
-      console.log()
       const response = await usersAPI.getAll();
+      console.log(response)
       setUsers(response);
 
       // Simulate API call
@@ -106,6 +106,8 @@ export default function UsersPage() {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -614,11 +616,17 @@ export default function UsersPage() {
                           <TableCell>{user.email}</TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
-                              {user.branshName?.map((branch, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {branch}
+                              {user.email === 'SuperAdminUser@gmail.com' ? (
+                                <Badge variant="secondary" className="text-xs">
+                                  all branches
                                 </Badge>
-                              )) || <span className="text-slate-400">-</span>}
+                              ) : (
+                                user.branshName?.map((branch, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs">
+                                    {branch}
+                                  </Badge>
+                                )) || <span className="text-slate-400">-</span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>{user.address || <span className="text-slate-400">-</span>}</TableCell>

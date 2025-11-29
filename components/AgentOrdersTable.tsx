@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Package, Eye, RefreshCw, ArrowRight } from 'lucide-react';
-import { Shipment } from '../types';
+import { AgiOrderResponse, OrderResponse, Shipment } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -16,9 +16,9 @@ import {
 import { ChangeOrderStatusModal } from './ChangeOrderStatusModal';
 
 interface AgentOrdersTableProps {
-  shipments: Shipment[];
+  shipments: AgiOrderResponse[];
   maxItems?: number;
-  onViewDetails?: (shipment: Shipment) => void;
+  onViewDetails?: (shipment: AgiOrderResponse) => void;
   onViewAll?: () => void;
   onStatusChanged?: () => void;
 }
@@ -30,12 +30,12 @@ export function AgentOrdersTable({
   onViewAll,
   onStatusChanged,
 }: AgentOrdersTableProps) {
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<AgiOrderResponse | null>(null);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
   const displayShipments = shipments.slice(0, maxItems);
 
-  const handleChangeStatus = (shipment: Shipment) => {
+  const handleChangeStatus = (shipment: AgiOrderResponse) => {
     setSelectedShipment(shipment);
     setStatusModalOpen(true);
   };
@@ -120,21 +120,20 @@ export function AgentOrdersTable({
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
                       <TableCell className="font-mono text-sm">
-                        {shipment.trackingNumber}
+                        {shipment.id}
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p>{shipment.recipient.name}</p>
-                          <p className="text-xs text-slate-500">{shipment.recipient.phone}</p>
+                          <p>{shipment.clientName}</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(shipment.status)}>
-                          {formatStatus(shipment.status)}
+                        <Badge className={getStatusColor(shipment.statusOrder as unknown as string)}>
+                          {formatStatus(shipment.statusOrder as unknown as string)}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-mono">
-                        ${shipment.price.toFixed(2)}
+                        ${shipment.totalPrice?.toFixed(2) || 0}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -169,7 +168,7 @@ export function AgentOrdersTable({
       <ChangeOrderStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
-        shipment={selectedShipment}
+        shipments={selectedShipment as unknown as OrderResponse[]}
         onSuccess={handleStatusChangeSuccess}
       />
     </>

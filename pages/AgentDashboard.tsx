@@ -1,50 +1,61 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Clock, DollarSign, MapPin, ArrowRight } from 'lucide-react';
+import { Package, CheckCircle, Clock, DollarSign, } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
-import { RecentActivity } from '../components/RecentActivity';
+
 import { AgentOrdersTable } from '../components/AgentOrdersTable';
 import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Shipment } from '../types';
-import { Activity } from '../lib/mockData';
+
+
+import { AgiOrderResponse, AgiOrderSummary, AgiOrderSummaryToday, ShipmentStatusString } from '../types';
+import { shipmentsAPI } from '@/services/api';
 
 interface AgentDashboardProps {
   onNavigate?: (page: string) => void;
 }
 
 export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<AgiOrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  
+  const [assignedShipments, setAssignedShipments] = useState<AgiOrderResponse[]>([]);
+  const [summaryToday, setSummaryToday] = useState<AgiOrderSummaryToday | null>(null);
+  const [summary, setSummary] = useState<AgiOrderSummary | null>(null);
+
 
   // Empty data - to be replaced with API calls
-  const assignedShipments: Shipment[] = [];
-  const activities: Activity[] = [];
-  const activeShipments: Shipment[] = [];
-  const completedToday = 0;
-  const todayEarnings = 0;
 
-  const handleViewDetails = (shipment: Shipment) => {
+  const handleViewDetails = (shipment: AgiOrderResponse) => {
     setSelectedShipment(shipment);
     setDetailsModalOpen(true);
   };
 
+  const fetchSummary = async () => {
+    const summary = await shipmentsAPI.getSummary();
+    setSummary(summary);
+  };
+
+  const fetchSummaryToday = async () => {
+    const summaryToday = await shipmentsAPI.getSummaryToday();
+    setSummaryToday(summaryToday);
+  };
+
+
+  const fetchShipments = async () => {
+    const shipments = await shipmentsAPI.getAllAssignedShipments();
+    setAssignedShipments(shipments);
+  };
+  useEffect(() => {
+    const init = () => {
+      fetchSummary();
+      fetchSummaryToday();
+      fetchShipments();
+    }
+    init();
+  }, []);
+
   const handleStatusChanged = () => {
     // TODO: Refresh shipments list from API
     console.log('Status changed, refreshing list...');
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      picked_up: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-      in_transit: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-      delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    };
-    return colors[status] || colors.pending;
   };
 
   return (
@@ -59,7 +70,7 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
         <div className="relative z-10">
           <h1 className="text-3xl mb-2">Ready for deliveries! 🚚</h1>
           <p className="text-green-100">
-            You have {activeShipments.length} active shipments to deliver today.
+            You have {assignedShipments.length} active shipments to deliver today.
           </p>
         </div>
       </motion.div>
@@ -68,21 +79,21 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Active Shipments"
-          value={activeShipments.length}
+          value={assignedShipments.length}
           icon={Package}
           delay={0.1}
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
           title="In Pickup Stage"
-          value={0}
+          value={assignedShipments.filter(s => s.statusOrder === ShipmentStatusString.InPickupStage).length}
           icon={Clock}
           delay={0.2}
           gradient="from-orange-500 to-orange-600"
         />
         <StatCard
           title="Completed Today"
-          value={completedToday}
+          value={summaryToday?.totalOrder as number}
           icon={CheckCircle}
           trend={{ value: 20, positive: true }}
           delay={0.3}
@@ -90,23 +101,13 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
         />
         <StatCard
           title="Today's Earnings"
-          value={`$${todayEarnings.toFixed(2)}`}
+          value={`EGP${summaryToday?.totalOrder}`}
           icon={DollarSign}
           trend={{ value: 18, positive: true }}
           delay={0.4}
           gradient="from-yellow-500 to-yellow-600"
         />
       </div>
-
-      {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <RecentActivity activities={activities} />
-      </motion.div>
-
       {/* Active Deliveries */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

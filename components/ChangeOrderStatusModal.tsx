@@ -159,16 +159,16 @@ export function ChangeOrderStatusModal({
                       <SelectItem
                         key={status.value}
                         value={status.value}
-                        // disabled={status.value === shipments[0]?.statusOrder}
+                      // disabled={status.value === shipments[0]?.statusOrder}
                       >
                         {status.label}
-                       'former statuses'
+                        'former statuses'
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Current status: {formatStatus(shipments[0].statusOrder)}
+                  Current status: {formatStatus(shipments[0]?.statusOrder as unknown as ShipmentStatus || ShipmentStatus.New)}
                 </p>
               </div>
             </div>

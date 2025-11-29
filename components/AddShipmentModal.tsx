@@ -183,7 +183,10 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
   };
 
   const calculateGrandTotal = () => {
-    return calculateProductsTotal()
+    const productsTotal = calculateProductsTotal();
+    const selectedRegion = selectedRegions.find(r => r.name === formData.regionName);
+    const deliveryFee = selectedRegion ? selectedRegion.price : 0;
+    return productsTotal + deliveryFee;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -277,12 +280,8 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       // const trackingNumber = `CCT${Date.now()}`;
       // const orderId = `order-${Date.now()}`;
 
-      // Get seller name
-      // const selectedSellerData = mockSellers.find(s => s.id === formData.selectedSeller);
-      // const sellerName = selectedSellerData?.name || user?.name || 'Unknown Seller';
 
-      // Notify admins about new order creation
-      // await notifyOrderCreated(,);
+
 
       toast.success('Shipment created successfully');
 
@@ -514,7 +513,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
             </div>
 
             {/* Seller Section */}
-            {role === UserRole.Admin || role === UserRole.SuperAdmin && (
+            {(role === UserRole.Admin || role === UserRole.SuperAdmin) && (
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
@@ -658,6 +657,16 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   <span className="text-slate-600 dark:text-slate-400">Products Total:</span>
                   <span className="font-mono text-slate-900 dark:text-slate-100">
                     ${calculateProductsTotal().toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
+                  <span className="font-mono text-slate-900 dark:text-slate-100">
+                    {(() => {
+                      const selectedRegion = selectedRegions.find(r => r.name === formData.regionName);
+                      return selectedRegion ? `$${selectedRegion.price.toFixed(2)}` : '$0.00';
+                    })()}
                   </span>
                 </div>
 

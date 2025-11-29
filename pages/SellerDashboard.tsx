@@ -1,92 +1,61 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion'; 
-import { Package, TrendingUp, Clock, DollarSign, ArrowRight, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Package, TrendingUp, Clock, DollarSign } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
-import { RecentActivity } from '../components/RecentActivity';
 import { NewShipmentsTable } from '../components/NewShipmentsTable';
 import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
 import { AddShipmentModal } from '../components/AddShipmentModal';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Shipment } from '../types'; 
-import { Activity } from '../lib/mockData';
-import { shipmentsAPI, log, sellersAPI } from '../services/api'; 
 
-// يجب استبدال هذا الـ ID بالـ ID الفعلي للبائع الذي تم تسجيل دخوله
-const MOCK_SELLER_ID = 'seller_123'; 
+import { AgiOrderSummary, OrderResponse, ShipmentStatusString } from '../types';
+
+import { shipmentsAPI } from '../services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SellerDashboardProps {
   onNavigate?: (page: string) => void;
-  sellerId?: string; // يجب تمرير هذا الـ ID من الـ Auth Context
 }
 
-export function SellerDashboard({ onNavigate, sellerId }: SellerDashboardProps) {
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
+  const { user } = useAuth();
+  const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
-  
-  // حالات تخزين البيانات
-  const [shipments, setShipments] = useState<any[]>([]);
-  const [logData, setLogData] = useState<Activity[]>([]);
-  const [sellerName, setSellerName] = useState('Seller'); 
 
-  // حالات الإحصائيات
-  const [completedShipments, setCompletedShipments] = useState(0);
-  const [inPickupCount, setInPickupCount] = useState(0);
+  const [shipments, setShipments] = useState<OrderResponse[]>([]);
+
   const [totalCollection, setTotalCollection] = useState(0);
-  const [totalShipments, setTotalShipments] = useState(0);
-  
-  const currentSellerId = sellerId || MOCK_SELLER_ID; 
+
+  const [summary, setSummary] = useState<AgiOrderSummary>({});
+
+
+  const fetchSummary = async () => {
+    const summary = await shipmentsAPI.getSummary();
+    setSummary(summary);
+  };
+
+
+  const fetchShipments = async () => {
+    const shipments = await shipmentsAPI.getAll();
+    setShipments(shipments);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // جلب الشحنات والتصفية محليًا
-        const [allShipmentsData, allLogsData, sellerData] = await Promise.all([
-             shipmentsAPI.getAll(),
-             log.getAll(),
-             sellersAPI.getById(currentSellerId), // نفترض وجود getById للبائع
-        ]);
-
-        // 1. تصفية شحنات البائع
-        const sellerShipments = allShipmentsData.filter(
-          (s: any) => s.sellerId === currentSellerId 
-        );
-        
-        // 2. تصفية سجل النشاطات للبائع
-        const sellerLogs = allLogsData.filter(
-            (activity: any) => activity.sellerId === currentSellerId 
-        );
-        
-        setSellerName(sellerData?.name || 'Seller');
-        setShipments(sellerShipments);
-        setLogData(sellerLogs);
-        setTotalShipments(sellerShipments.length);
-
-        // حساب الإحصائيات
-        const completed = sellerShipments.filter((s: any) => s.statusOrder === 'Delivered').length;
-        const inPickup = sellerShipments.filter((s: any) => s.statusOrder === 'DeliveredToAgent').length; 
-        const collection = sellerShipments
-          .filter((s: any) => s.statusOrder === 'Delivered')
-          .reduce((sum: number, s: any) => sum + (s.totalPrice || 0), 0);
-
-        setCompletedShipments(completed);
-        setInPickupCount(inPickup);
-        setTotalCollection(collection);
+        fetchSummary();
+        fetchShipments();
+        setTotalCollection(shipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered).reduce((total, shipment) => total + shipment.totalPrice, 0));
 
       } catch (error) {
         console.error("Failed to fetch seller dashboard data:", error);
-        // التعامل مع حالات الـ API غير المتوفرة (مثل 404 أو الدالة غير الموجودة)
       }
     };
 
     fetchData();
-  }, [currentSellerId]); 
+  }, []);
 
-  const handleViewDetails = (shipment: Shipment) => {
-    // التأكد من أن الشحنة تحتوي على ID قبل الفتح (لإصلاح خطأ 'Invalid ID undefined')
-    // نفترض أن الـ ID موجود إما في خاصية 'id' أو 'ID'
-    if (shipment && (shipment.id || shipment.ID)) { 
+  const handleViewDetails = (shipment: OrderResponse) => {
+    if (shipment && (shipment.id)) {
       setSelectedShipment(shipment);
       setDetailsModalOpen(true);
     } else {
@@ -114,7 +83,7 @@ export function SellerDashboard({ onNavigate, sellerId }: SellerDashboardProps) 
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10">
-          <h1 className="text-3xl mb-2">Welcome back, {sellerName}! 👋</h1>
+          <h1 className="text-3xl mb-2">Welcome back, {user?.name}! 👋</h1>
           <p className="text-blue-100">
             Monitor and manage your shipments effortlessly.
           </p>
@@ -127,19 +96,19 @@ export function SellerDashboard({ onNavigate, sellerId }: SellerDashboardProps) 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Shipments"
-          value={totalShipments}
+          value={summary?.totalOrder as number}
           icon={Package}
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
           title="In Pickup Stage"
-          value={inPickupCount}
+          value={summary?.totalPindingOrder as number}
           icon={Clock}
           gradient="from-orange-500 to-orange-600"
         />
         <StatCard
           title="Completed"
-          value={completedShipments}
+          value={summary?.totalDeliveredOrder as number}
           icon={TrendingUp}
           gradient="from-green-500 to-green-600"
         />
@@ -154,23 +123,13 @@ export function SellerDashboard({ onNavigate, sellerId }: SellerDashboardProps) 
       {/* --- */}
 
       {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card className="p-4 shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
-          <RecentActivity activities={logData} />
-        </Card>
-      </motion.div>
 
       {/* --- */}
 
       {/* New Shipments Table */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }} 
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
         <NewShipmentsTable
@@ -212,17 +171,17 @@ export function SellerDashboard({ onNavigate, sellerId }: SellerDashboardProps) 
       {/* --- */}
 
       {/* Shipment Details Modal */}
-      <ShipmentDetailsModal 
-        shipment={selectedShipment} 
-        isOpen={detailsModalOpen} 
-        onClose={() => setDetailsModalOpen(false)} 
+      <ShipmentDetailsModal
+        shipment={selectedShipment}
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
       />
 
       {/* Add Shipment Modal */}
-      <AddShipmentModal 
-        isOpen={addShipmentModalOpen} 
-        onClose={() => setAddShipmentModalOpen(false)} 
-        onSuccess={handleShipmentCreated} 
+      <AddShipmentModal
+        isOpen={addShipmentModalOpen}
+        onClose={() => setAddShipmentModalOpen(false)}
+        onSuccess={handleShipmentCreated}
       />
     </div>
   );

@@ -130,6 +130,7 @@ export interface OrderResponseDetails {
   userCreateName?: string | null;
   regionName?: string | null;
   price: number;
+  zoneId: number;
 }
 
 export interface OrderUpdate {
@@ -553,4 +554,74 @@ export interface LogResponse {
   action?: string | null;
   actionTIme: string;
   userName?: string | null;
+}
+
+
+// agent interface
+
+export interface AgiItemRespone {
+  id?: string;
+  name?: string | null;
+  price?: number;
+  quantity?: number;
+  description?: string | null;
+}
+
+export interface AgiOrderResponse {
+  id?: string;
+  clientName?: string | null;
+  statusOrder?: ShipmentStatusString;
+  sellerName?: string | null;
+  totalPrice?: number;
+}
+
+export interface AgiOrderResponseDetails {
+  id?: string;
+  clientName?: string | null;
+  phone1?: string | null;
+  phone2?: string | null;
+  dateCreated?: string;
+  delivered_Agent_date?: string | null;
+  inWarehouseDate?: string | null;
+  inPickupStage?: string | null;
+  apartmentNumber?: number;
+  delivered_date?: string | null;
+  address?: string | null;
+  country?: string | null;
+  bulidingNumber?: number;
+  notes?: string | null;
+  statusOrder?: string | null;
+  items?: ItemRespone[] | null;
+  sellerName?: string | null;
+  agentName?: string | null;
+  userCreateName?: string | null;
+  regionName?: string | null;
+  price?: number;
+}
+
+export interface AgiOrderSummary {
+  totalOrder?: number;
+  totalPindingOrder?: number;
+  totalDeliveredOrder?: number;
+}
+
+export interface AgiOrderSummaryToday {
+  totalOrder?: number;
+  totalPindingOrder?: number;
+}
+
+export interface AgiOrderUpdate {
+  id: string;
+  statusOrder: AgiStatusOrderAgent;
+  cancelledNotes?: string | null;
+}
+
+export type AgiStatusOrderAgent = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export type TypeOrderSearch = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export interface AgiWalletResult {
+  assigned?: number;
+  outstanding?: number;
+  collected?: number;
 }

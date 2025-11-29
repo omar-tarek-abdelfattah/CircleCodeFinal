@@ -99,6 +99,8 @@ export function SellersPage() {
   const loadActiveSellersCount = async () => {
     try {
       const response = await sellersAPI.getActiveCount();
+      console.log(response);
+      
       setActiveSellersCount(response);
     } catch (error) {
       console.error('Failed to load active sellers count:', error);
@@ -125,6 +127,8 @@ export function SellersPage() {
   useEffect(() => {
     if (activeTab === 'locked') {
       loadLockedSellers();
+    } else if (activeTab === 'all') {
+      loadSellers();
     }
   }, [activeTab]);
 
@@ -768,7 +772,7 @@ export function SellersPage() {
               <div className="space-y-3">
                 <h3 className="font-semibold flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" />
-                  Performance Stats
+                  Performance Stats 
                 </h3>
                 <div className="grid grid-cols-2 gap-4 pl-6">
                   <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">

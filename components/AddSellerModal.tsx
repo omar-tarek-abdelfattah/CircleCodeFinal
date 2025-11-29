@@ -59,7 +59,14 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
 
     // Validation
     if (!formData.name.trim()) {
-      toast.error('Please enter seller name');
+      toast.error('Please enter username');
+      return;
+    }
+
+    // Username validation (alphanumeric only)
+    const usernameRegex = /^[a-zA-Z0-9]+$/;
+    if (!usernameRegex.test(formData.name)) {
+      toast.error('Username must contain only letters and numbers');
       return;
     }
     if (!formData.email.trim()) {
@@ -140,7 +147,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Full Name <span className="text-red-500">*</span>
+                Username <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"

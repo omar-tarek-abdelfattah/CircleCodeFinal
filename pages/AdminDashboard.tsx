@@ -12,12 +12,15 @@ import { OrderResponse, SellerResponse, ShipmentStatusString } from '../types';
 import { Activity } from '../lib/mockData';
 import { sellersAPI, agentsAPI, shipmentsAPI, log, branchesAPI } from '../services/api';
 import { Button } from '@/components/ui/button';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 
 interface AdminDashboardProps {
   onNavigate?: (page: string) => void;
 }
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+
+  const { role } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
@@ -133,10 +136,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       </div>
 
       {/* Recent Activity */}
-      <Card className="p-4 shadow-md">
-        <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
-        <RecentActivity activities={logData} />
-      </Card>
+      {role === UserRole.SuperAdmin && (
+        <Card className="p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
+          <RecentActivity activities={logData} />
+        </Card>
+      )}
 
       {/* New Shipments Table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>

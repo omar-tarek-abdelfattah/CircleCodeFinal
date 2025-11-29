@@ -118,14 +118,10 @@ export function EditShipmentModal({
       setAgents(response)
       const targetName = details?.agentName || shipmentDetails.agentName
       const defaultAgent = response.find((agent) => agent.name === targetName)
-      if (defaultAgent) {
-        setFormData((prev) => ({
-          ...prev,
-          agentId: parseInt(defaultAgent.id.toString()),
-        }))
-      }
+      return defaultAgent
     } catch (error) {
       console.log(error)
+      return undefined
     }
     finally {
       setLoading(false)
@@ -138,34 +134,27 @@ export function EditShipmentModal({
       const result = await shipmentsAPI.getAllZonesForSeller()
       setSellerZones(result);
       setZones(result.map(z => ({ id: z.id, name: z.name, noOrders: 0, isActive: true })));
+      return result;
     } catch (error) {
       console.error('Error fetching zones:', error);
+      return [];
     }
     finally {
       setLoading(false)
     }
   }
 
-
-
   const populateSellers = async (details?: Partial<OrderResponseDetails>) => {
     setLoading(true)
     try {
       const response = await sellersAPI.getAll()
-      // console.log("sellers", response);
-
       setSellers(response)
       const targetName = details?.sellerName || shipmentDetails.sellerName
       const defaultSeller = response.find((seller) => seller.name === targetName)
-      console.log("defaultSeller", defaultSeller);
-      if (defaultSeller) {
-        setFormData((prev) => ({
-          ...prev,
-          sellerId: defaultSeller.id,
-        }))
-      }
+      return defaultSeller
     } catch (error) {
       console.log(error)
+      return undefined
     }
     finally {
       setLoading(false)
@@ -203,23 +192,48 @@ export function EditShipmentModal({
     const init = async () => {
       setLoading(true)
       if (shipment && isOpen) {
+        let currentSellerZones: ZonesForSellerResponse[] = [];
+
         if (role === UserRole.Seller) {
-          await populateZonesForSeller()
+          currentSellerZones = await populateZonesForSeller()
         }
+
         const details = await populateModalDetails()
         console.log(details);
 
         if (details) {
+          const defaultSeller = await populateSellers(details)
+          const defaultAgent = await populateAgents(details)
+
+          // Handle Zones and Regions BEFORE setting form data
+          if (role === UserRole.Seller) {
+            if (details.zoneId) {
+              const selectedZone = currentSellerZones.find(z => Number(z.id) === details.zoneId);
+              if (selectedZone) {
+                const regions: ZoneRegion[] = selectedZone.regions.map(r => ({
+                  name: r.name,
+                  price: r.price
+                }));
+                setRegions(regions);
+              }
+            }
+          } else {
+            await populateZones()
+            if (details.zoneId) {
+              await populateRegions(details.zoneId)
+            }
+          }
+
           setFormData({
             id: details.id as string || 'UNKNOWN',
-            sellerId: 0,
-            zoneId: 0,
-            agentId: 0,
+            sellerId: defaultSeller?.id || 0,
+            zoneId: details.zoneId || 0,
+            agentId: defaultAgent?.id ? parseInt(defaultAgent.id.toString()) : 0,
             clientName: details.clientName || '',
             phone2: details.phone2 || '',
             address: details.address || '',
             notes: details.notes || '',
-            regionName: '',
+            regionName: details.regionName || '',
             phone1: details.phone1 || '',
             apartmentNumber: details.apartmentNumber || 0,
             bulidingNumber: details.bulidingNumber || 0,
@@ -232,10 +246,6 @@ export function EditShipmentModal({
           setProducts(details.items?.map((item) => {
             return { id: item.id, name: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
           }) as ProductItem[]);
-
-          populateZones()
-          populateSellers(details)
-          populateAgents(details)
         }
       }
       setLoading(false)
@@ -276,31 +286,65 @@ export function EditShipmentModal({
     );
   };
 
-  const handleRefresh = () => {
-    populateModalDetails()
-    populateZones()
-    populateSellers()
-    populateAgents()
-    setFormData({
-      id: shipmentDetails.id as string || 'UNKNOWN',
-      sellerId: 0,
-      zoneId: 0,
-      clientName: shipmentDetails.clientName || '',
-      agentId: 0,
-      phone2: shipmentDetails.phone2 || '',
-      address: shipmentDetails.address || '',
-      notes: shipmentDetails.notes || '',
-      regionName: '',
-      phone1: shipmentDetails.phone1 || '',
-      apartmentNumber: shipmentDetails.apartmentNumber || 0,
-      bulidingNumber: shipmentDetails.bulidingNumber || 0,
-      statusOrder: parseInt(ShipmentStatus[shipmentDetails.statusOrder as keyof typeof ShipmentStatus]) as StatusOrderDto,
-      items: shipmentDetails.items || [],
-      cancellednotes: shipmentDetails.notes || '',
-    });
-    setProducts(shipmentDetails.items?.map((item) => {
-      return { id: item.id, name: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
-    }) as ProductItem[]);
+  const handleRefresh = async () => {
+    setLoading(true)
+    try {
+      let currentSellerZones: ZonesForSellerResponse[] = [];
+      if (role === UserRole.Seller) {
+        currentSellerZones = await populateZonesForSeller()
+      }
+
+      const details = await populateModalDetails()
+
+      const defaultSeller = await populateSellers(details || undefined)
+      const defaultAgent = await populateAgents(details || undefined)
+
+      if (details) {
+        // Handle Zones and Regions
+        if (role === UserRole.Seller) {
+          if (details.zoneId) {
+            const selectedZone = currentSellerZones.find(z => Number(z.id) === details.zoneId);
+            if (selectedZone) {
+              const regions: ZoneRegion[] = selectedZone.regions.map(r => ({
+                name: r.name,
+                price: r.price
+              }));
+              setRegions(regions);
+            }
+          }
+        } else {
+          await populateZones()
+          if (details.zoneId) {
+            await populateRegions(details.zoneId)
+          }
+        }
+
+        setFormData({
+          id: details.id as string || 'UNKNOWN',
+          sellerId: defaultSeller?.id || 0,
+          zoneId: details.zoneId || 0,
+          clientName: details.clientName || '',
+          agentId: defaultAgent?.id ? parseInt(defaultAgent.id.toString()) : 0,
+          phone2: details.phone2 || '',
+          address: details.address || '',
+          notes: details.notes || '',
+          regionName: details.regionName || '',
+          phone1: details.phone1 || '',
+          apartmentNumber: details.apartmentNumber || 0,
+          bulidingNumber: details.bulidingNumber || 0,
+          statusOrder: parseInt(ShipmentStatus[details.statusOrder as keyof typeof ShipmentStatus]) as StatusOrderDto,
+          items: details.items || [],
+          cancellednotes: details.notes || '',
+        });
+        setProducts(details.items?.map((item) => {
+          return { id: item.id, name: item.name, price: item.price, quantity: item.quantity, description: item.description || '' }
+        }) as ProductItem[]);
+      }
+    } catch (error) {
+      console.error("Error refreshing data:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const calculateProductsTotal = () => {
@@ -310,7 +354,10 @@ export function EditShipmentModal({
   };
 
   const calculateGrandTotal = () => {
-    return calculateProductsTotal()
+    const productsTotal = calculateProductsTotal();
+    const selectedRegion = regions.find(r => r.name === formData.regionName);
+    const deliveryFee = selectedRegion ? selectedRegion.price : 0;
+    return productsTotal + deliveryFee;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -362,7 +409,7 @@ export function EditShipmentModal({
     }
 
     if (userRole === UserRole.Admin || userRole === UserRole.SuperAdmin) {
-      if (!formData.agentId) {
+      if ([1, 3, 11].includes(Number(formData.statusOrder)) && !formData.agentId) {
         toast.error('Please select an agent');
         return;
       }
@@ -459,7 +506,7 @@ export function EditShipmentModal({
                 You cannot edit orders that have been processed by admin or agent.
               </span>
             ) : (
-              'Update the shipment details below.'
+              'Update the shipment details below. if some data is missing, please press on refresh button to update it. 🛡'
             )}
           </DialogDescription>
         </DialogHeader>
@@ -707,7 +754,7 @@ export function EditShipmentModal({
                     <Select
                       value={formData.agentId?.toString()}
                       onValueChange={(value) => handleChange('agentId', value)}
-                      disabled={loading || !canEdit}
+                      disabled={loading || !canEdit || ![1, 3, 11].includes(Number(formData.statusOrder))}
                     >
                       <SelectTrigger id="agent">
                         <SelectValue placeholder="Select Agent" />
@@ -739,7 +786,7 @@ export function EditShipmentModal({
                   <Select
                     value={formData.statusOrder?.toString()}
                     onValueChange={(value) => handleChange('statusOrder', value)}
-                    disabled={loading || !canEdit}
+                    disabled={loading || !canEdit || role === UserRole.Seller}
                   >
                     <SelectTrigger id="status">
                       <SelectValue placeholder="Select Status" />
@@ -888,34 +935,30 @@ export function EditShipmentModal({
                   </Button>
                 </div>
 
-                {/* Totals */}
                 <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600 dark:text-slate-400">Products Total:</span>
                     <span className="font-mono text-slate-900 dark:text-slate-100">
-                      ${calculateProductsTotal()?.toFixed(2)}
+                      ${calculateProductsTotal().toFixed(2)}
                     </span>
                   </div>
-                  {/* <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={10}
-                    onChange={(e) =>
-                      handleChange('deliveryFee', parseFloat(e.target.value) || 0)
-                    }
-                    disabled={loading || !canEdit}
-                    className="w-24 h-8 text-right"
-                  />
-                </div> */}
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
+                    <span className="font-mono text-slate-900 dark:text-slate-100">
+                      {(() => {
+                        const selectedRegion = regions.find(r => r.name === formData.regionName);
+                        return selectedRegion ? `$${selectedRegion.price.toFixed(2)}` : '$0.00';
+                      })()}
+                    </span>
+                  </div>
+
                   <div className="flex justify-between text-base pt-2 border-t border-slate-200 dark:border-slate-800">
                     <span className="font-semibold text-slate-900 dark:text-slate-100">
                       Grand Total:
                     </span>
                     <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                      ${calculateGrandTotal()?.toFixed(2)}
+                      ${calculateGrandTotal().toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -948,6 +991,4 @@ export function EditShipmentModal({
       </DialogContent>
     </Dialog>
   );
-
 }
-

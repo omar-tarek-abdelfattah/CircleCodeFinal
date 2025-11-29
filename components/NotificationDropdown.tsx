@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Check, CheckCheck, Trash2, Package, AlertCircle } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
@@ -41,6 +42,7 @@ const getNotificationIcon = (type: string) => {
 };
 
 export function NotificationDropdown() {
+  const { role } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -114,20 +116,22 @@ export function NotificationDropdown() {
                 </Badge>
               )}
             </button>
-            <button
-              className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'inactive'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
-              onClick={() => setActiveTab('inactive')}
-            >
-              Inactive Users
-              {(inactiveAgents.length + inactiveSellers.length) > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
-                  {inactiveAgents.length + inactiveSellers.length}
-                </Badge>
-              )}
-            </button>
+            {role === UserRole.SuperAdmin && (
+              <button
+                className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'inactive'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
+                onClick={() => setActiveTab('inactive')}
+              >
+                Inactive Users
+                {(inactiveAgents.length + inactiveSellers.length) > 0 && (
+                  <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                    {inactiveAgents.length + inactiveSellers.length}
+                  </Badge>
+                )}
+              </button>
+            )}
           </div>
 
           {activeTab === 'notifications' && notifications.length > 0 && (
@@ -153,8 +157,9 @@ export function NotificationDropdown() {
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
-          )}
-        </div>
+          )
+          }
+        </div >
 
         <ScrollArea className="h-[400px]">
           {activeTab === 'notifications' ? (
@@ -292,22 +297,24 @@ export function NotificationDropdown() {
           )}
         </ScrollArea>
 
-        {activeTab === 'notifications' && notifications.length > 0 && (
-          <>
-            <Separator />
-            <div className="p-3 text-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-sm"
-                onClick={() => setOpen(false)}
-              >
-                View all notifications
-              </Button>
-            </div>
-          </>
-        )}
-      </PopoverContent>
-    </Popover>
+        {
+          activeTab === 'notifications' && notifications.length > 0 && (
+            <>
+              <Separator />
+              <div className="p-3 text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-sm"
+                  onClick={() => setOpen(false)}
+                >
+                  View all notifications
+                </Button>
+              </div>
+            </>
+          )
+        }
+      </PopoverContent >
+    </Popover >
   );
 }

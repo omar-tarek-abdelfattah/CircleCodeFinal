@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff } from 'lucide-react';
-import { Agent, OrderResponse, ShipmentStatus, ShipmentStatusString } from '../types';
+import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText } from 'lucide-react';
+import { AgentResponse, OrderResponse, ShipmentStatus, ShipmentStatusString } from '../types';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { agentsAPI, shipmentsAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -30,7 +30,7 @@ interface ShipmentsPageProps {
   onNavigateToBulkBillOfLading?: (shipments: OrderResponse[]) => void;
 }
 
-export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPageProps) {
+export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOfLading }: ShipmentsPageProps) {
   const { role } = useAuth();
   const [shipments, setShipments] = useState<OrderResponse[]>([]);
   // const [shipmentsDetails, setShipmentsDetails] = useState<OrderResponse>({} as OrderResponse);
@@ -133,7 +133,8 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
     const matchesSearch =
       searchQuery === '' ||
       recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sellerName.toLowerCase().includes(searchQuery.toLowerCase());
+      sellerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.id.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter.length === 0 || statusFilter.includes(status);
@@ -168,12 +169,12 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
     setDetailsModalOpen(true);
   };
 
-  // const handleViewBillOfLading = async (shipment: OrderResponse) => {
-  //   if (onNavigateToBillOfLading) {
-  //     const selectedShipmentDetails = setShipmentsDetails(shipment)
-  //     onNavigateToBillOfLading(selectedShipmentDetails as unknown as OrderResponse);
-  //   }
-  // };
+  const handleViewBillOfLading = async (shipment: OrderResponse) => {
+    if (onNavigateToBillOfLading) {
+      const selectedShipmentDetails = shipment
+      onNavigateToBillOfLading(selectedShipmentDetails as unknown as OrderResponse);
+    }
+  };
 
   const handleEditShipment = (shipment: OrderResponse) => {
     // Check if seller can edit this order
@@ -406,13 +407,19 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
       return;
     }
 
+    // Validate agent selection for specific statuses
+    if ([ShipmentStatusString.InPickupStage, ShipmentStatusString.DeliveredToAgent, ShipmentStatusString.Returned].includes(bulkStatus) && !selectedAgentId) {
+      toast.error('Please select an agent for this status');
+      return;
+    }
+
     try {
       console.log(bulkStatus);
 
       // TODO: Connect to backend API
       await shipmentsAPI.bulkUpdateStatus({
         orderIdS: Array.from(selectedOrderIds),
-        statusOrder: selectedAgentId ? ShipmentStatus.InPickupStage : bulkStatus as unknown as ShipmentStatus,
+        statusOrder: bulkStatus as unknown as ShipmentStatus,
         agentId: selectedAgentId ? parseInt(selectedAgentId) : undefined,
         // cancellednotes: bulkCancelledNotes,
       });
@@ -421,7 +428,13 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
       setShipments(prev =>
         prev.map(s =>
           selectedOrderIds.has(s.id)
-            ? { ...s, status: bulkStatus, updatedAt: new Date().toISOString() }
+            ? {
+              ...s,
+              status: bulkStatus,
+              updatedAt: new Date().toISOString(),
+              // Optimistically update assigned agent if selected
+              ...(selectedAgentId ? { assignedAgent: { id: selectedAgentId, name: agents.find(a => a.id.toString() === selectedAgentId)?.name || 'Agent', phone: 'N/A' } } : {})
+            }
             : s
         )
       );
@@ -429,6 +442,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
       toast.success(`Successfully updated status for ${selectedOrderIds.size} orders`);
       setChangeStatusDialogOpen(false);
       setSelectedOrderIds(new Set());
+      setSelectedAgentId(''); // Reset selection
     } catch (error) {
       toast.error('Failed to update status');
     }
@@ -450,7 +464,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
       // TODO: Connect to backend API
       await shipmentsAPI.bulkUpdateStatus({
         orderIdS: Array.from(selectedOrderIds),
-        statusOrder: bulkStatus as unknown as ShipmentStatus,
+        statusOrder: ShipmentStatus.DeliveredToAgent,
         agentId: selectedAgentId ? parseInt(selectedAgentId) : undefined,
         // cancellednotes: bulkCancelledNotes,
       });
@@ -487,7 +501,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
   };
 
   // TODO: Load agents from backend API
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<AgentResponse[]>([]);
 
   useEffect(() => {
     loadAgents();
@@ -733,7 +747,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* {role !== UserRole.agent && (
+                  {role !== UserRole.agent && (
                     <>
                       <Button
                         variant="default"
@@ -754,7 +768,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                         Export Selected
                       </Button>
                     </>
-                  )} */}
+                  )}
                   {role !== UserRole.Seller && (
                     <Button
                       variant="default"
@@ -958,15 +972,15 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
-                              {/* <Button
+                              <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleViewBillOfLading(shipmentsDetails)}
+                                onClick={() => handleViewBillOfLading(selectedShipment as OrderResponse)}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="View Bill of Lading"
                               >
                                 <FileText className="w-4 h-4" />
-                              </Button> */}
+                              </Button>
                               {
                                 (
                                   (isRoleAdminOrSuperAdmin && shipment.statusOrder !== ShipmentStatusString.Delivered) ||
@@ -1326,7 +1340,13 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Select New Status</Label>
-              <Select value={bulkStatus} onValueChange={(value) => { setBulkStatus(value as ShipmentStatusString) }}>
+              <Select value={bulkStatus} onValueChange={(value) => {
+                setBulkStatus(value as ShipmentStatusString);
+                // Reset agent selection when status changes
+                if (![ShipmentStatusString.InPickupStage, ShipmentStatusString.DeliveredToAgent, ShipmentStatusString.Returned].includes(value as ShipmentStatusString)) {
+                  setSelectedAgentId('');
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -1343,9 +1363,42 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
               </Select>
             </div>
 
+            {/* Agent Selection for specific statuses */}
+            {(bulkStatus === ShipmentStatusString.InPickupStage ||
+              bulkStatus === ShipmentStatusString.DeliveredToAgent ||
+              bulkStatus === ShipmentStatusString.Returned) && (
+                <div className="space-y-2">
+                  <Label>Assign Agent</Label>
+                  <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose an agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-slate-500">
+                          No agents available. Connect to backend to load agents.
+                        </div>
+                      ) : (
+                        agents.map(agent => (
+                          <SelectItem key={agent.id} value={agent.id.toString()}>
+                            <div className="flex flex-col">
+                              <span>{agent.name}</span>
+                              <span className="text-xs text-slate-500">{agent.phoneNumber}</span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-slate-700 dark:text-slate-300">
                 <strong>{selectedOrderIds.size}</strong> {selectedOrderIds.size === 1 ? 'order' : 'orders'} will be updated to: <strong>{getStatusLabel(bulkStatus)}</strong>
+                {selectedAgentId && (
+                  <> and assigned to <strong>{agents.find(a => a.id.toString() === selectedAgentId)?.name}</strong></>
+                )}
               </p>
             </div>
           </div>
@@ -1391,10 +1444,10 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
                     </div>
                   ) : (
                     agents.map(agent => (
-                      <SelectItem key={agent.id} value={agent.id}>
+                      <SelectItem key={agent.id} value={agent.id.toString()}>
                         <div className="flex flex-col">
                           <span>{agent.name}</span>
-                          <span className="text-xs text-slate-500">{agent.phone}</span>
+                          <span className="text-xs text-slate-500">{agent.phoneNumber}</span>
                         </div>
                       </SelectItem>
                     ))
@@ -1406,7 +1459,7 @@ export function ShipmentsPage({ onNavigateToBulkBillOfLading }: ShipmentsPagePro
             {selectedAgentId && (
               <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                 <p className="text-sm text-slate-700 dark:text-slate-300">
-                  <strong>{selectedOrderIds.size}</strong> {selectedOrderIds.size === 1 ? 'order' : 'orders'} will be assigned to: <strong>{agents.find(a => a.id === selectedAgentId)?.name || 'Selected Agent'}</strong>
+                  <strong>{selectedOrderIds.size}</strong> {selectedOrderIds.size === 1 ? 'order' : 'orders'} will be assigned to: <strong>{agents.find(a => a.id.toString() === selectedAgentId)?.name || 'Selected Agent'}</strong>
                 </p>
               </div>
             )}

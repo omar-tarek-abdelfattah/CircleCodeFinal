@@ -34,6 +34,9 @@ import {
   AgentResponse,
   AgentUpdateRequest,
   AdminResponse,
+  AgiOrderResponse,
+  AgiOrderSummary,
+  AgiOrderSummaryToday,
 } from "../types";
 import { Activity } from "../lib/mockData";
 
@@ -233,6 +236,12 @@ export const shipmentsAPI = {
   getAll: async (dateFrom?: string, dateTo?: string): Promise<OrderResponse[]> => {
     return apiCall<OrderResponse[]>(`/Order?dateFirst=${dateFrom}&dateLast=${dateTo}`);
   },
+
+  getAllAssignedShipments: async (): Promise<AgiOrderResponse[]> => {
+    return apiCall<AgiOrderResponse[]>("/Order/");
+  },
+
+  // ✅ Get all zones for seller
   getAllZonesForSeller: async (): Promise<ZonesForSellerResponse[]> => {
     return apiCall<ZonesForSellerResponse[]>("/Order/Zones");
   },
@@ -357,24 +366,11 @@ export const shipmentsAPI = {
   },
 
   // ✅ Stats
-  getStats: async (filters?: {
-    dateFrom?: string;
-    dateTo?: string;
-    sellerId?: string;
-    agentId?: string;
-  }) => {
-    const query = new URLSearchParams(
-      Object.entries(filters || {}).filter(([_, v]) => v !== undefined) as [
-        string,
-        string
-      ][]
-    );
-    return apiCall<{
-      total: number;
-      inProgress: number;
-      completed: number;
-      revenue: number;
-    }>(`/Order/stats?${query.toString()}`);
+  getSummary: async () => {
+    return apiCall<AgiOrderSummary>(`/Order/OrderSummary`);
+  },
+  getSummaryToday: async () => {
+    return apiCall<AgiOrderSummaryToday>(`/Order/OrderSummaryToday`);
   },
 };
 
@@ -740,7 +736,7 @@ export const usersAPI = {
   // DELETE /api/users/:id - Delete user
   lockout: async (id: number, toLock: boolean, dateTime: string): Promise<boolean> => {
     // TODO: Replace with actual API call to .NET backend
-    return apiCall<boolean>(`/Admin/lockout/${id}?date=${dateTime}&toLock=${toLock}`, {
+    return apiCall<boolean>(`/Admin/lockout/${id}?dateTime=${dateTime}&toLock=${toLock}`, {
       method: 'PUT',
     });
   },

@@ -42,8 +42,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { branchesAPI } from '@/services/api';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 
 export function BranchesPage() {
+  const { role } = useAuth();
   const [branches, setBranches] = useState<BranchData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -121,10 +123,17 @@ export function BranchesPage() {
   // Calculate statistics
 
 
+  const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+
   // Filter branches based on search and hidden status
   const filteredBranches = useMemo(() => {
     // First filter out hidden branches
-    const visibleBranches = branches.filter(branch => !hiddenBranchIds.has(branch.id.toString()));
+    let visibleBranches = branches.filter(branch => !hiddenBranchIds.has(branch.id.toString()));
+
+    // Filter by inactive status if enabled
+    if (showInactiveOnly) {
+      visibleBranches = visibleBranches.filter(branch => !branch.isActive);
+    }
 
     if (!searchQuery.trim()) return visibleBranches;
 
@@ -137,7 +146,7 @@ export function BranchesPage() {
         branch.managerName?.toLowerCase().includes(query) ||
         branch.id?.toString().toLowerCase().includes(query)
     );
-  }, [branches, searchQuery, hiddenBranchIds]);
+  }, [branches, searchQuery, hiddenBranchIds, showInactiveOnly]);
 
   // Get hidden branches
   const hiddenBranches = useMemo(() => {
@@ -320,10 +329,12 @@ export function BranchesPage() {
               Hidden ({hiddenBranches.length})
             </Button>
           )}
-          <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Branch
-          </Button>
+          {role === UserRole.SuperAdmin && (
+            <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Branch
+            </Button>
+          )}
         </div>
       </div>
 
@@ -350,18 +361,33 @@ export function BranchesPage() {
 
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="Search branches..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-10"
-            />
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="Search branches..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="inactive-filter"
+                checked={showInactiveOnly}
+                onCheckedChange={setShowInactiveOnly}
+              />
+              <label
+                htmlFor="inactive-filter"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Show Inactive Only
+              </label>
+            </div>
           </div>
 
           {/* Table */}
@@ -439,15 +465,17 @@ export function BranchesPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(branch)}
-                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                            title="Edit Branch"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                          {role === UserRole.SuperAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(branch)}
+                              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                              title="Edit Branch"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"

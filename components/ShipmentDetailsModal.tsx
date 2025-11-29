@@ -26,7 +26,7 @@ import { shipmentsAPI } from "@/services/api";
 import { useEffect, useState } from "react";
 
 interface ShipmentDetailsModalProps {
-  shipment: OrderResponse | null;
+  shipment: Partial<OrderResponse> | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdateStatus?: (id: string, status: string) => void;
@@ -83,14 +83,38 @@ export function ShipmentDetailsModal({
 
   const canUpdateStatus = role === UserRole.agent || UserRole.Admin;
 
-  const statusFlow = ["pending", "picked_up", "in_transit", "delivered"];
+  const getStatusFlow = (currentStatus: ShipmentStatusString | undefined) => {
+    const baseFlow = [
+      ShipmentStatusString.New,
+      ShipmentStatusString.InPickupStage,
+      ShipmentStatusString.InWarehouse,
+      ShipmentStatusString.DeliveredToAgent,
+    ];
+
+    if (!currentStatus) return [...baseFlow, ShipmentStatusString.Delivered];
+
+    // Happy path statuses
+    if (baseFlow.includes(currentStatus) || currentStatus === ShipmentStatusString.Delivered) {
+      return [...baseFlow, ShipmentStatusString.Delivered];
+    }
+
+    // Alternative terminal statuses
+    return [...baseFlow, currentStatus];
+  };
+
+  const statusFlow = getStatusFlow(shipmentDetails?.statusOrder?.toString() as ShipmentStatusString);
   const currentStatusIndex = statusFlow.indexOf(
     shipmentDetails?.statusOrder?.toString() as ShipmentStatusString
   );
 
+  const displayValue = (value: any) => {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    return value;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-[70vw] w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl">
@@ -120,7 +144,7 @@ export function ShipmentDetailsModal({
                   shipmentDetails.statusOrder?.toString() as ShipmentStatus
                 )} text-base px-4 py-2`}
               >
-                {shipmentDetails.statusOrder?.toString().replace("_", " ").toUpperCase()}
+                {shipmentDetails.statusOrder?.toString().replace("_", " ").toUpperCase() || 'N/A'}
               </Badge>
             </div>
           </motion.div>
@@ -159,197 +183,237 @@ export function ShipmentDetailsModal({
 
           <Separator />
 
-          {/* Sender & Recipient Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Sender */}
+          {/* Main Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Seller Information */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-3"
+              className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-4"
             >
-              <h3 className="flex items-center gap-2 text-sm">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
                 <User className="w-4 h-4" />
                 Seller Information
               </h3>
-              <div className="space-y-2 text-sm">
-                <p>{shipmentDetails?.sellerName}</p>
-                {/* <div className="flex items-start gap-2 text-slate-600 dark:text-slate-400">
-                  <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>{shipmentDetails?.sellerPhone}</span>
-                </div> */}
-                <div className="flex items-start gap-2 text-slate-600 dark:text-slate-400">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>{shipmentDetails.sellerName}</span>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-xs text-slate-500 block">Name</span>
+                  <p>{displayValue(shipmentDetails.sellerName)}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 block">Created By</span>
+                  <p>{displayValue(shipmentDetails.userCreateName)}</p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Recipient */}
+            {/* Client Information */}
+            <motion.div
+              initial={{ opacity: 0, x: 0 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-4"
+            >
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <User className="w-4 h-4" />
+                Client Information
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-xs text-slate-500 block">Name</span>
+                  <p>{displayValue(shipmentDetails.clientName)}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Phone 1</span>
+                    <p>{displayValue(shipmentDetails.phone1)}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Phone 2</span>
+                    <p>{displayValue(shipmentDetails.phone2)}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Address Information */}
             <motion.div
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-3"
+              transition={{ delay: 0.4 }}
+              className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-4"
             >
-              <h3 className="flex items-center gap-2 text-sm">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
                 <MapPin className="w-4 h-4" />
-                Client Information
+                Delivery Address
               </h3>
-              <div className="space-y-2 text-sm">
-                <p>{shipmentDetails.clientName}</p>
-                <div className="flex items-start gap-2 text-slate-600 dark:text-slate-400">
-                  <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>{shipmentDetails.phone1}</span>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-xs text-slate-500 block">Address</span>
+                  <p>{displayValue(shipmentDetails.address)}</p>
                 </div>
-                <div className="flex items-start gap-2 text-slate-600 dark:text-slate-400">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>{shipmentDetails.address}</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Building No.</span>
+                    <p>{displayValue(shipmentDetails.bulidingNumber)}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Apartment No.</span>
+                    <p>{displayValue(shipmentDetails.apartmentNumber)}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Region</span>
+                    <p>{displayValue(shipmentDetails.regionName)}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Country</span>
+                    <p>{displayValue(shipmentDetails.country)}</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Shipment Details */}
+          {/* Detailed Stats Grid */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            transition={{ delay: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
           >
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
                 <span className="text-xs">Price</span>
               </div>
-              <p className="font-mono">${shipmentDetails.price?.toFixed(2) || NaN}</p>
+              <p className="font-mono font-semibold">${shipmentDetails.price?.toFixed(2) || 'N/A'}</p>
             </div>
 
-
-
-
-
-            {shipmentDetails.agentName && (
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                  <Truck className="w-4 h-4" />
-                  <span className="text-xs">Agent</span>
-                </div>
-                <p className="text-sm">{shipmentDetails.agentName}</p>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                <Truck className="w-4 h-4" />
+                <span className="text-xs">Agent</span>
               </div>
-            )}
-            {shipmentDetails.regionName && (
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                  <MapPinned className="w-4 h-4" />
-                  <span className="text-xs">Region</span>
-                </div>
-                <p className="text-sm">{shipmentDetails.regionName} </p>
+              <p className="text-sm font-medium truncate" title={shipmentDetails.agentName || ''}>{displayValue(shipmentDetails.agentName)}</p>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                <MapPinned className="w-4 h-4" />
+                <span className="text-xs">Zone ID</span>
               </div>
-            )}
-            {shipmentDetails.inPickupStage && (
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                  <MapPinned className="w-4 h-4" />
-                  <span className="text-xs">Pickup Stage</span>
-                </div>
-                <p className="text-sm">{shipmentDetails.inPickupStage ? "Yes" : "No"} </p>
+              <p className="text-sm font-medium">{displayValue(shipmentDetails.zoneId)}</p>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                <MapPinned className="w-4 h-4" />
+                <span className="text-xs">In Pickup</span>
               </div>
-            )}
+              <p className="text-sm font-medium">{shipmentDetails.inPickupStage ? "Yes" : "No"}</p>
+            </div>
           </motion.div>
 
-          {/* Additional Info */}
-          {shipmentDetails.notes && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="p-4 rounded-lg border border-slate-200 dark:border-slate-800"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4" />
-                <h3 className="text-sm">Description</h3>
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {shipmentDetails.notes}
-              </p>
-            </motion.div>
-          )}
-
-          {/* Dates */}
+          {/* Dates Grid */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm"
           >
-            <div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                <Calendar className="w-4 h-4" />
+            <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-500 mb-1">
+                <Calendar className="w-3 h-3" />
                 <span className="text-xs">Created</span>
               </div>
-              <p>{formatDate(shipmentDetails.dateCreated)}</p>
+              <p className="font-medium">{formatDate(shipmentDetails.dateCreated)}</p>
             </div>
-            <div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                <Calendar className="w-4 h-4" />
-                <span className="text-xs">Last Updated</span>
+            <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-500 mb-1">
+                <Calendar className="w-3 h-3" />
+                <span className="text-xs">In Warehouse</span>
               </div>
-              <p>{formatDate(shipmentDetails.delivered_Agent_date ||
-                shipmentDetails.inWarehouseDate ||
-                shipmentDetails.delivered_Agent_date ||
-                shipmentDetails.dateCreated)}</p>
+              <p className="font-medium">{shipmentDetails.inWarehouseDate ? formatDate(shipmentDetails.inWarehouseDate) : 'N/A'}</p>
             </div>
-            {shipmentDetails.delivered_date && (
-              <div>
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-xs">Delivered Date</span>
-                </div>
-                <p>{formatDate(shipmentDetails.delivered_date)}</p>
+            <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-500 mb-1">
+                <Calendar className="w-3 h-3" />
+                <span className="text-xs">Delivered to Agent</span>
               </div>
-            )}
-            {shipmentDetails.inWarehouseDate && (
-              <div>
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-xs">In Warehouse Date</span>
-                </div>
-                <p>{formatDate(shipmentDetails.inWarehouseDate)}</p>
+              <p className="font-medium">{shipmentDetails.delivered_Agent_date ? formatDate(shipmentDetails.delivered_Agent_date) : 'N/A'}</p>
+            </div>
+            <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-500 mb-1">
+                <Calendar className="w-3 h-3" />
+                <span className="text-xs">Delivered</span>
               </div>
-            )}
-            {shipmentDetails.delivered_Agent_date && (
-              <div>
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-xs">Delivered Agent Date</span>
-                </div>
-                <p>{formatDate(shipmentDetails.delivered_Agent_date)}</p>
-              </div>
-            )}
+              <p className="font-medium">{shipmentDetails.delivered_date ? formatDate(shipmentDetails.delivered_date) : 'N/A'}</p>
+            </div>
           </motion.div>
+
+          {/* Notes */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-4 h-4" />
+              <h3 className="text-sm font-semibold">Notes</h3>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+              {displayValue(shipmentDetails.notes)}
+            </p>
+          </motion.div>
+
+          {/* Items */}
+          {shipmentDetails.items && shipmentDetails.items.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="space-y-3"
+            >
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                Items
+              </h3>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 dark:bg-slate-800">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Item</th>
+                      <th className="px-4 py-2 text-right">Quantity</th>
+                      <th className="px-4 py-2 text-right">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {shipmentDetails.items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-2">{item.name}</td>
+                        <td className="px-4 py-2 text-right">{item.quantity}</td>
+                        <td className="px-4 py-2 text-right">${item.price}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          )}
 
           {/* Actions */}
           {canUpdateStatus && shipment?.statusOrder !== ShipmentStatusString.Delivered && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
+              transition={{ delay: 0.9 }}
               className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-800"
             >
-              {/* {currentStatusIndex < statusFlow.length - 1 && (
-                <Button
-                  onClick={() =>
-                    onUpdateStatus?.(
-                      shipment.id,
-                      statusFlow[currentStatusIndex + 1] as string
-                    )
-                  }
-                  className="bg-gradient-to-r from-blue-500 to-purple-600"
-                >
-                  Mark as {statusFlow[currentStatusIndex + 1]?.replace("_", " ")}
-                </Button>
-              )} */}
+              {/* Action buttons can be added here */}
             </motion.div>
           )}
         </div>

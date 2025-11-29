@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -18,6 +18,12 @@ import { Calendar as CalendarComponent } from '../components/ui/calendar';
 import { Separator } from '../components/ui/separator';
 import { Badge } from '../components/ui/badge';
 import * as XLSX from 'xlsx';
+import { UserRole } from '../contexts/AuthContext';
+import { motion } from 'motion/react';
+import { Building2, Users } from 'lucide-react';
+import { CardHeader, CardTitle } from '../components/ui/card';
+import { agentsAPI, branchesAPI, shipmentsAPI } from '../services/api';
+import { OrderResponse, ShipmentStatusString } from '../types';
 
 // TODO: Connect to backend API to fetch reports data
 // All mock data has been removed - ready for backend integration
@@ -40,6 +46,31 @@ export default function ReportsPage() {
   const [revenueData, setRevenueData] = useState<Array<{ month: string; revenue: number; cost: number; profit: number }>>([]);
   const [performanceData, setPerformanceData] = useState<Array<{ name: string; shipments: number; delivered: number; rating: number; revenue: number }>>([]);
   const [deliveryTimeData, setDeliveryTimeData] = useState<Array<{ range: string; count: number; percentage: number }>>([]);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [shipments, setShipments] = useState<OrderResponse[]>([]);
+
+  // Fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const shipmentsData = await shipmentsAPI.getAll();
+        setShipments(shipmentsData);
+
+        if (role === UserRole.SuperAdmin) {
+          const [agentsData, branchesData] = await Promise.all([
+            agentsAPI.getAll(),
+            branchesAPI.getAll(),
+          ]);
+          setAgents(agentsData.filter((a: any) => a.isctive || a.isactive === true));
+          setBranches(branchesData.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reports data:', error);
+      }
+    };
+    fetchData();
+  }, [role]);
 
   // TODO: Load data from backend API
   // useEffect(() => {
@@ -156,10 +187,12 @@ export default function ReportsPage() {
   };
 
   // Summary statistics
-  const totalShipments = shipmentTrend.reduce((sum, item) => sum + item.shipments, 0);
-  const totalDelivered = shipmentTrend.reduce((sum, item) => sum + item.delivered, 0);
-  const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalProfit = revenueData.reduce((sum, item) => sum + item.profit, 0);
+  const totalShipments = shipments.length;
+  const totalDelivered = (shipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered).length / shipments.length) * 100;
+  const totalRevenue = shipments
+    .filter(s => s.statusOrder === ShipmentStatusString.Delivered || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees)
+    .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+  const totalProfit = totalRevenue; // As requested, profit is same as revenue
   const deliveryRate = totalShipments > 0 ? ((totalDelivered / totalShipments) * 100).toFixed(1) : '0';
 
   return (
@@ -382,9 +415,7 @@ export default function ReportsPage() {
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                 <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <Badge variant="outline" className="text-green-600 border-green-600">
-                +12.5%
-              </Badge>
+
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 mt-4">
               Total Shipments
@@ -402,14 +433,12 @@ export default function ReportsPage() {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <Badge variant="outline" className="text-blue-600 border-blue-600">
-                {deliveryRate}%
-              </Badge>
+
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 mt-4">
               Delivery Rate
             </p>
-            <h2 className="text-slate-900 dark:text-slate-100">{totalDelivered.toLocaleString()}</h2>
+            <h2 className="text-slate-900 dark:text-slate-100">{totalDelivered.toLocaleString()}%</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Successfully delivered
             </p>
@@ -460,6 +489,95 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {role === UserRole.SuperAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Performing Agents */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Top Performing Agents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {agents.length === 0 ? (
+                  <p className="text-center text-slate-500 dark:text-slate-400 py-8">No agents data available</p>
+                ) : (
+                  <div className="space-y-3">
+                    {agents
+                      .sort((a, b) => (b.numberofOrder || 0) - (a.numberofOrder || 0))
+                      .slice(0, 5)
+                      .map((agent, index) => (
+                        <motion.div
+                          key={agent.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.7 + index * 0.1 }}
+                          className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p>{agent.name}</p>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">{agent.branshName}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p>{agent.numberofOrder || 0} Orders</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Top Performing Branches */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
+                  Branch Performance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {branches.length === 0 ? (
+                  <p className="text-center text-slate-500 dark:text-slate-400 py-8">No branches data available</p>
+                ) : (
+                  <div className="space-y-3">
+                    {branches
+                      .sort((a, b) => (b.ordersNumber || 0) - (a.ordersNumber || 0))
+                      .slice(0, 5)
+                      .map((branch, index) => (
+                        <motion.div
+                          key={branch.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.8 + index * 0.1 }}
+                          className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                        >
+                          <div>
+                            <p>{branch.name}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">{branch.address}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="secondary">{branch.ordersNumber || 0} Orders</Badge>
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      )}
 
     </div>
   );

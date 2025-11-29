@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -61,10 +62,15 @@ export function DeactivationPeriodModal({
   const [toDate, setToDate] = useState<Date | undefined>(
     currentToDate ? new Date(currentToDate) : undefined
   );
+  const [selectedTime, setSelectedTime] = useState(
+    currentToDate ? format(new Date(currentToDate), 'HH:mm') : '00:00'
+  );
 
   useEffect(() => {
     if (open) {
-      setToDate(currentToDate ? new Date(currentToDate) : undefined);
+      const date = currentToDate ? new Date(currentToDate) : undefined;
+      setToDate(date);
+      setSelectedTime(date ? format(date, 'HH:mm') : '00:00');
     }
   }, [open, currentToDate]);
 
@@ -76,9 +82,15 @@ export function DeactivationPeriodModal({
       toast.error('Please select an end date');
       return;
     }
-    // Ensure toDate is in the future
-    if (toDate < new Date()) {
-      toast.error('End date must be in the future');
+
+    // Combine date and time
+    const finalDate = new Date(toDate);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    finalDate.setHours(hours || 0, minutes || 0, 0, 0);
+
+    // Ensure finalDate is in the future
+    if (finalDate < new Date()) {
+      toast.error('End date and time must be in the future');
       return;
     }
 
@@ -86,29 +98,29 @@ export function DeactivationPeriodModal({
 
     try {
       if (adminId) {
-        await usersAPI.lockout(Number(adminId), true, toDate.toISOString())
+        await usersAPI.lockout(Number(adminId), true, finalDate.toISOString())
         toast.success('Lockout period set successfully');
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess(null, toDate.toISOString());
+          onSuccess(null, finalDate.toISOString());
         }
       }
 
       if (agentId) {
-        await agentsAPI.agentLockout(agentId.toString(), toDate.toISOString(), true)
+        await agentsAPI.agentLockout(agentId.toString(), finalDate.toISOString(), true)
         toast.success('Lockout period set successfully');
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess(null, toDate.toISOString());
+          onSuccess(null, finalDate.toISOString());
         }
       }
 
       if (sellerId) {
-        await sellersAPI.sellersLockout(sellerId.toString(), toDate.toISOString(), true)
+        await sellersAPI.sellersLockout(sellerId.toString(), finalDate.toISOString(), true)
         toast.success('Lockout period set successfully');
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess(null, toDate.toISOString());
+          onSuccess(null, finalDate.toISOString());
         }
       }
     } catch (error) {
@@ -159,34 +171,45 @@ export function DeactivationPeriodModal({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             {/* To Date */}
-            <div className="space-y-2">
-              <Label>To Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !toDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {toDate ? format(toDate, 'PPP') : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={toDate}
-                    onSelect={setToDate}
-                    initialFocus
-                    disabled={(date) => {
-                      const today = new Date(new Date().setHours(0, 0, 0, 0));
-                      return date < today;
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
+            {/* To Date and Time */}
+            <div className="flex gap-4">
+              <div className="flex-1 space-y-2">
+                <Label>To Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !toDate && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {toDate ? format(toDate, 'PPP') : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={toDate}
+                      onSelect={setToDate}
+                      initialFocus
+                      disabled={(date) => {
+                        const today = new Date(new Date().setHours(0, 0, 0, 0));
+                        return date < today;
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="w-32 space-y-2">
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Info Alert */}
@@ -194,7 +217,9 @@ export function DeactivationPeriodModal({
               <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
                 <p className="text-sm text-blue-800 dark:text-blue-300">
                   The {entityType.toLowerCase()} will be unable to log in until{' '}
-                  <span className="font-semibold">{format(toDate, 'PPP')}</span>.
+                  <span className="font-semibold">
+                    {format(toDate, 'PPP')} at {selectedTime}
+                  </span>.
                 </p>
               </div>
             )}

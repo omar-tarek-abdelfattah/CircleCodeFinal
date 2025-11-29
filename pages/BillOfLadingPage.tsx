@@ -19,11 +19,11 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Card, CardContent } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
-import { OrderResponseDetails, Shipment } from '../types';
+import { OrderResponse } from '../types';
 import { getStatusLabel, getStatusColor } from '../lib/statusUtils';
 
 interface BillOfLadingPageProps {
-  shipment: OrderResponseDetails | null;
+  shipment: OrderResponse | null;
   onBack: () => void;
 }
 
@@ -64,7 +64,7 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
     });
   };
 
-  const totalAmount = shipment.price + shipment.commission;
+  const totalAmount = shipment.totalPrice + shipment.commission;
 
   return (
     <div className="w-full">
