@@ -46,7 +46,13 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
       setIsDownloading(true);
       toast.info('Generating PDF...');
 
-      const { default: jsPDF } = await import('jspdf');
+      const jsPDFModule = await import('jspdf');
+      // @ts-ignore - Handle different module formats for compatibility
+      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF || jsPDFModule;
+
+      if (typeof jsPDF !== 'function') {
+        throw new Error('jsPDF constructor not found in module');
+      }
       const { default: html2canvas } = await import('html2canvas');
 
       const input = printRef.current;

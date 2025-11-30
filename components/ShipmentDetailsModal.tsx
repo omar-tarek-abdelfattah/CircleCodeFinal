@@ -11,7 +11,7 @@ import {
   FileText,
   MapPinned,
 } from "lucide-react";
-import { OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString } from "../types";
+import { OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString, ZoneResponseDetails } from "../types";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { useAuth, UserRole } from "../contexts/AuthContext";
-import { shipmentsAPI } from "@/services/api";
+import { shipmentsAPI, zonesAPI } from "@/services/api";
 import { useEffect, useState } from "react";
 
 interface ShipmentDetailsModalProps {
@@ -42,9 +42,13 @@ export function ShipmentDetailsModal({
 
 
   const [shipmentDetails, setShipmentDetails] = useState<OrderResponseDetails>({} as OrderResponseDetails);
+  const [zoneDetails, setZoneDetails] = useState<ZoneResponseDetails>({} as ZoneResponseDetails);
   const populateShipmentDetails = async (id: string) => {
     try {
       const response = await shipmentsAPI.getById(id)
+      const zoneResponse = await zonesAPI.getById(response.zoneId as number)
+      console.log(zoneResponse)
+      setZoneDetails(zoneResponse as ZoneResponseDetails)
       setShipmentDetails(response as OrderResponseDetails)
     } catch (error) {
       console.error("Error fetching shipment details:", error);
@@ -287,9 +291,23 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
-                <span className="text-xs">Price</span>
+                <span className="text-xs">Delivery Fee</span>
               </div>
-              <p className="font-mono font-semibold">${shipmentDetails.price?.toFixed(2) || 'N/A'}</p>
+              <p className="font-mono font-semibold">{0 || 'N/A'}<span className="text-xs">EGP</span></p>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-xs">Order Fee</span>
+              </div>
+              <p className="font-mono font-semibold">{(shipmentDetails.price - 0) || 'N/A'}<span className="text-xs">EGP</span></p>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-xs">Total Price</span>
+              </div>
+              <p className="font-mono font-semibold">{shipmentDetails.price || 'N/A'}<span className="text-xs">EGP</span></p>
             </div>
 
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
