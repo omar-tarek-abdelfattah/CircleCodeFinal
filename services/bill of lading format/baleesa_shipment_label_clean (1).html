@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>بليصة شحن - نموذج منسّق</title>
+  <style>
+    @page {
+      size: A5 landscape;
+      margin: 10mm;
+    }
+    body {
+      font-family: 'Noto Naskh Arabic', Tahoma, Arial, sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+    }
+    .page {
+      width: 793px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .header h2 {
+      color: #0b5ed7;
+      margin: 0;
+      font-size: 20px;
+      text-align: right;
+    }
+    .order-info {
+      text-align: left;
+      font-size: 14px;
+    }
+    .section {
+      margin-bottom: 14px;
+      border: 1px solid #eee;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+    .section h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: #333;
+    }
+    p { margin: 3px 0; font-size: 14px; }
+    p b { font-weight: bold; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 13px;
+    }
+    th {
+      background: #f3f3f3;
+    }
+    .totals {
+      text-align: left;
+      margin-top: 10px;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    .flex-container {
+      display: flex;
+      gap: 15px;
+    }
+    .flex-container .section {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <h2>بوليصة شحن - Circle Code</h2>
+      <div class="order-info">
+        <p><b>رقم الطلب:</b> 12345</p>
+        <p><b>تاريخ الإنشاء:</b> 27-11-2025 20:44</p>
+      </div>
+    </div>
+
+    <div class="flex-container">
+      <div class="section">
+        <h3>بيانات العميل</h3>
+        <p><b>الاسم:</b> <span id="clientName">أحمد محمد</span></p>
+        <p><b>العنوان:</b> <span id="address">شارع التحرير - مبنى 12 - شقة 3</span></p>
+        <p><b>المدينة/المنطقة:</b> <span id="regionName">القاهرة</span></p>
+        <p><b>الدولة:</b> <span id="country">مصر</span></p>
+        <p><b>ملاحظات:</b> <span id="notes">يفتح من 9 صباحًا</span></p>
+      </div>
+
+      <div class="section">
+        <h3>بيانات البائع (الراسل)</h3>
+        <p><b>البائع:</b> <span id="sellerName">متجر المثال</span></p>
+        <p><b>هاتف:</b> <span id="phone1">01012345678</span></p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>تفاصيل التوصيل</h3>
+      <p><b>اسم المندوب:</b> <span id="agentName">محمود السيد</span></p>
+      <p><b>رقم المندوب:</b> <span id="agentPhone">01098765432</span></p>
+      <p><b>في مرحلة الاستلام:</b> <span id="inPickupStage">27-11-2025 22:44</span></p>
+      <p><b>حالة الطلب:</b> <span id="statusOrder">قيد التوصيل</span></p>
+    </div>
+
+    <div class="section">
+      <h3>المنتجات</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>الوصف</th>
+            <th>الكمية</th>
+            <th>السعر</th>
+            <th>الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody id="itemsTbody">
+          <tr>
+            <td>سلك شحن</td>
+            <td>كابل USB‑C 1 متر</td>
+            <td>2</td>
+            <td>120</td>
+            <td>240</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <p>إجمالي المنتجات: <span id="price">240</span> ج.م</p>
+        <p>سعر الشحن: <span id="shippingPrice">50</span> ج.م</p>
+        <p>الإجمالي الكلي: <span id="totalPrice">290</span> ج.م</p>
+      </div>
+
+    </div>
+
+  </div>
+</body>
+</html>

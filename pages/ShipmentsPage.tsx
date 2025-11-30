@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText } from 'lucide-react';
-import { AgentResponse, OrderResponse, ShipmentStatus, ShipmentStatusString } from '../types';
+import { AgentResponse, OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString } from '../types';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { agentsAPI, shipmentsAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -26,7 +26,7 @@ import { importShipmentsFromExcel, downloadTemplate, } from '../lib/excelUtils';
 
 
 interface ShipmentsPageProps {
-  onNavigateToBillOfLading?: (shipment: OrderResponse) => void;
+  onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
   onNavigateToBulkBillOfLading?: (shipments: OrderResponse[]) => void;
 }
 
@@ -171,8 +171,13 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
   const handleViewBillOfLading = async (shipment: OrderResponse) => {
     if (onNavigateToBillOfLading) {
-      const selectedShipmentDetails = shipment
-      onNavigateToBillOfLading(selectedShipmentDetails as unknown as OrderResponse);
+      try {
+        const details = await shipmentsAPI.getById(shipment.id);
+        onNavigateToBillOfLading(details as unknown as OrderResponseDetails);
+      } catch (error) {
+        console.error('Failed to load shipment details:', error);
+        toast.error('Failed to load shipment details');
+      }
     }
   };
 
@@ -975,7 +980,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleViewBillOfLading(selectedShipment as OrderResponse)}
+                                onClick={() => handleViewBillOfLading(shipment)}
                                 className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="View Bill of Lading"
                               >

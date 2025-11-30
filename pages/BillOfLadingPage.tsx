@@ -1,34 +1,22 @@
-import React, { useRef } from 'react';
-import { motion } from 'motion/react';
+import { useRef, useState } from 'react';
 import {
-  FileText,
   Printer,
   Download,
-  Package,
-  MapPin,
-  User,
-  Phone,
-  Building2,
-  Truck,
-  DollarSign,
-  Calendar,
-  Hash,
   ArrowLeft,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Card, CardContent } from '../components/ui/card';
-import { Separator } from '../components/ui/separator';
-import { OrderResponse } from '../types';
-import { getStatusLabel, getStatusColor } from '../lib/statusUtils';
+import { OrderResponseDetails } from '../types';
 
 interface BillOfLadingPageProps {
-  shipment: OrderResponse | null;
+  shipment: OrderResponseDetails | null;
   onBack: () => void;
 }
 
 export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   if (!shipment) {
     return (
@@ -48,28 +36,89 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
     window.print();
   };
 
-  const handleDownload = () => {
-    // TODO: Generate PDF
-    console.log('Download PDF');
+  const handleDownload = async () => {
+    if (!printRef.current) {
+      console.error('Printable content reference is not available.');
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      toast.info('Generating PDF...');
+
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+
+      const input = printRef.current;
+      const canvas = await html2canvas(input, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: input.scrollWidth,
+        windowHeight: input.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Remove all external stylesheets to prevent oklch parsing errors
+          const links = clonedDoc.getElementsByTagName('link');
+          Array.from(links).forEach(link => link.remove());
+
+          // Remove all style tags except our custom one (identified by a unique comment or class content)
+          const styles = clonedDoc.getElementsByTagName('style');
+          Array.from(styles).forEach(style => {
+            if (!style.innerHTML.includes('.invoice-container')) {
+              style.remove();
+            }
+          });
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`bill_of_lading_${shipment?.id || 'document'}.pdf`);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('ar-EG', {
       year: 'numeric',
-      month: 'long',
+      month: 'numeric',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
   };
 
-  const totalAmount = shipment.totalPrice + shipment.commission;
+  const itemsTotal = shipment.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+  const grandTotal = shipment.price;
+  const calculatedShipping = grandTotal > itemsTotal ? grandTotal - itemsTotal : 0;
+
 
   return (
-    <div className="w-full">
-      {/* Header with Actions */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 print:hidden sticky top-0 z-10">
+    <div className="w-full bg-gray-100 min-h-screen pb-10">
+      {/* Header with Actions - Hidden in Print */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 print:hidden sticky top-0 z-10 mb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -81,10 +130,7 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
-              <div className="flex items-center gap-2">
-                <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                <h1 className="text-2xl">Bill of Lading</h1>
-              </div>
+              <h1 className="text-xl font-semibold">Bill of Lading Preview</h1>
             </div>
             <div className="flex gap-2">
               <Button
@@ -100,319 +146,247 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleDownload}
+                disabled={isDownloading}
                 className="gap-2"
               >
-                <Download className="w-4 h-4" />
-                Download PDF
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {isDownloading ? 'Generating...' : 'Download PDF'}
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-8">
-        <div ref={printRef} className="space-y-6 bg-white dark:bg-slate-900 print:bg-white">
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center border-b-4 border-blue-600 pb-6 print:border-black"
-          >
-            <h1 className="text-5xl mb-2 text-blue-600 dark:text-blue-400 print:text-black">
-              BILL OF LADING
-            </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 print:text-black">
-              Shipment Receipt & Delivery Document
-            </p>
-          </motion.div>
+      {/* Printable Content */}
+      <div className="flex justify-center print:block print:m-0">
+        <div
+          ref={printRef}
+          className="invoice-container"
+          dir="rtl"
+        >
+          <style>
+            {`
+              @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap');
+              
+              .invoice-container {
+                background-color: #ffffff;
+                padding: 20px;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                width: 100%;
+                max-width: 210mm;
+                font-family: 'Noto Naskh Arabic', Tahoma, Arial, sans-serif;
+                color: #000000;
+                text-align: right;
+                box-sizing: border-box;
+              }
 
-          {/* Tracking & Status Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border-2 border-slate-200 dark:border-slate-700 print:border-black">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 print:text-black">
-                      <Hash className="w-5 h-5" />
-                      <span className="text-sm uppercase tracking-wide">Tracking Number</span>
-                    </div>
-                    <p className="text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 print:text-black">
-                      {shipment.trackingNumber}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 print:text-black">
-                      <Calendar className="w-5 h-5" />
-                      <span className="text-sm uppercase tracking-wide">Created Date</span>
-                    </div>
-                    <p className="text-xl">
-                      {formatDate(shipment.createdAt)}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 print:text-black">
-                      <Package className="w-5 h-5" />
-                      <span className="text-sm uppercase tracking-wide">Status</span>
-                    </div>
-                    <Badge className={`${getStatusColor(shipment.status)} text-lg px-4 py-2 print:bg-gray-200 print:text-black`}>
-                      {getStatusLabel(shipment.status)}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              .invoice-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+              }
 
-          {/* Sender & Recipient Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            {/* Sender Information */}
-            <Card className="border-2 border-green-200 dark:border-green-700 print:border-black">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4 text-green-600 dark:text-green-400 print:text-black">
-                  <Building2 className="w-6 h-6" />
-                  <h2 className="text-2xl">SENDER (MERCHANT)</h2>
-                </div>
-                <Separator className="mb-4 print:border-black" />
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                      Name
-                    </p>
-                    <p className="text-2xl mt-1">{shipment.sender.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                      Phone
-                    </p>
-                    <p className="text-xl mt-1 flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      {shipment.sender.phone}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                      Address
-                    </p>
-                    <p className="text-lg mt-1 flex items-start gap-2">
-                      <MapPin className="w-5 h-5 mt-1 flex-shrink-0" />
-                      <span>{shipment.sender.address}</span>
-                    </p>
-                  </div>
-                  {shipment.branch && (
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                        Branch / Store
-                      </p>
-                      <p className="text-xl mt-1">{shipment.branch}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              .invoice-title {
+                color: #0b5ed7;
+                margin: 0;
+                font-size: 18px;
+                font-weight: bold;
+              }
 
-            {/* Recipient Information */}
-            <Card className="border-2 border-purple-200 dark:border-purple-700 print:border-black">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4 text-purple-600 dark:text-purple-400 print:text-black">
-                  <User className="w-6 h-6" />
-                  <h2 className="text-2xl">RECIPIENT (CUSTOMER)</h2>
-                </div>
-                <Separator className="mb-4 print:border-black" />
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                      Name
-                    </p>
-                    <p className="text-2xl mt-1">{shipment.recipient.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                      Phone
-                    </p>
-                    <p className="text-xl mt-1 flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      {shipment.recipient.phone}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                      Delivery Address
-                    </p>
-                    <p className="text-lg mt-1 flex items-start gap-2">
-                      <MapPin className="w-5 h-5 mt-1 flex-shrink-0" />
-                      <span>{shipment.recipient.address}</span>
-                    </p>
-                  </div>
-                  {shipment.zone && (
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                        Zone
-                      </p>
-                      <p className="text-xl mt-1">{shipment.zone}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              .invoice-meta {
+                text-align: left;
+                font-size: 14px;
+                color: #000000;
+              }
+              
+              .invoice-meta p {
+                margin: 0;
+                margin-bottom: 2px;
+              }
 
-          {/* Delivery Agent Section */}
-          {shipment.assignedAgent && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="border-2 border-orange-200 dark:border-orange-700 print:border-black">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4 text-orange-600 dark:text-orange-400 print:text-black">
-                    <Truck className="w-6 h-6" />
-                    <h2 className="text-2xl">DELIVERY AGENT</h2>
-                  </div>
-                  <Separator className="mb-4 print:border-black" />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                        Agent Name
-                      </p>
-                      <p className="text-2xl mt-1">{shipment.assignedAgent.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                        Phone
-                      </p>
-                      <p className="text-xl mt-1 flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        {shipment.assignedAgent.phone}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                        Agent ID
-                      </p>
-                      <p className="text-xl mt-1 font-mono">{shipment.assignedAgent.id}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+              .invoice-row {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 10px;
+              }
 
-          {/* Financial Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="border-2 border-blue-200 dark:border-blue-700 print:border-black bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 print:bg-white">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4 text-blue-600 dark:text-blue-400 print:text-black">
-                  <DollarSign className="w-6 h-6" />
-                  <h2 className="text-2xl">FINANCIAL DETAILS</h2>
-                </div>
-                <Separator className="mb-6 print:border-black" />
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 print:bg-white print:border-black">
-                    <span className="text-xl text-slate-600 dark:text-slate-400 print:text-black">
-                      Product Cost
-                    </span>
-                    <span className="text-3xl font-mono font-semibold">
-                      ${shipment.price.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 print:bg-white print:border-black">
-                    <span className="text-xl text-slate-600 dark:text-slate-400 print:text-black">
-                      Delivery Fee
-                    </span>
-                    <span className="text-3xl font-mono font-semibold">
-                      ${shipment.commission.toFixed(2)}
-                    </span>
-                  </div>
-                  <Separator className="print:border-black" />
-                  <div className="flex justify-between items-center p-6 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-lg print:bg-gray-300">
-                    <span className="text-2xl text-white print:text-black">
-                      TOTAL AMOUNT
-                    </span>
-                    <span className="text-4xl font-mono font-bold text-white print:text-black">
-                      ${totalAmount.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              .invoice-col {
+                flex: 1;
+                border: 1px solid #e5e7eb;
+                padding: 8px;
+                border-radius: 4px;
+                background-color: #f9fafb;
+              }
 
-          {/* Additional Information */}
-          {shipment.notes && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Card className="border-2 border-slate-200 dark:border-slate-700 print:border-black">
-                <CardContent className="p-6">
-                  <h2 className="text-2xl mb-4">NOTES & INSTRUCTIONS</h2>
-                  <Separator className="mb-4 print:border-black" />
-                  <p className="text-lg text-slate-700 dark:text-slate-300 print:text-black whitespace-pre-wrap">
-                    {shipment.notes}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+              .invoice-section-title {
+                margin: 0;
+                margin-bottom: 4px;
+                font-size: 14px;
+                font-weight: bold;
+                color: #1f2937;
+              }
 
-          {/* Footer / Signatures Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 print:pt-16"
-          >
-            <div className="space-y-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                Sender Signature
-              </p>
-              <div className="border-b-2 border-slate-300 dark:border-slate-700 h-20 print:border-black"></div>
-              <p className="text-xs text-slate-500 dark:text-slate-500 print:text-black">
-                Date: _______________
-              </p>
+              .invoice-text {
+                margin: 2px 0;
+                font-size: 14px;
+                color: #000000;
+              }
+
+              .invoice-section {
+                border: 1px solid #e5e7eb;
+                padding: 8px;
+                border-radius: 4px;
+                background-color: #f9fafb;
+                margin-bottom: 10px;
+              }
+
+              .invoice-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 4px;
+              }
+
+              .invoice-th {
+                border: 1px solid #d1d5db;
+                padding: 4px;
+                font-size: 12px;
+                background-color: #f3f4f6;
+                color: #000000;
+                font-weight: bold;
+              }
+
+              .invoice-td {
+                border: 1px solid #d1d5db;
+                padding: 4px;
+                font-size: 12px;
+                color: #000000;
+              }
+
+              .invoice-totals {
+                text-align: left;
+                margin-top: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                color: #000000;
+              }
+              
+              .invoice-totals p {
+                margin: 2px 0;
+              }
+
+              @media print {
+                @page {
+                  size: auto;
+                  margin: 5mm;
+                }
+                body {
+                  background: white;
+                  margin: 0;
+                  padding: 0;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                .invoice-container {
+                  width: 100% !important;
+                  max-width: none !important;
+                  border: none !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
+                  box-shadow: none !important;
+                }
+                .invoice-col, .invoice-section {
+                  break-inside: avoid;
+                }
+                tr, td, th {
+                  break-inside: avoid;
+                }
+              }
+            `}
+          </style>
+
+          {/* Header */}
+          <div className="invoice-header">
+            <h2 className="invoice-title">بوليصة شحن - Circle Code</h2>
+            <div className="invoice-meta">
+              <p><b>رقم الطلب:</b> {shipment.id}</p>
+              <p><b>تاريخ الإنشاء:</b> {formatDate(shipment.dateCreated)}</p>
             </div>
-            <div className="space-y-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wide print:text-black">
-                Recipient Signature
-              </p>
-              <div className="border-b-2 border-slate-300 dark:border-slate-700 h-20 print:border-black"></div>
-              <p className="text-xs text-slate-500 dark:text-slate-500 print:text-black">
-                Date: _______________
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Document Footer */}
-          <div className="text-center pt-8 border-t-2 border-slate-200 dark:border-slate-800 print:border-black">
-            <p className="text-sm text-slate-500 dark:text-slate-500 print:text-black">
-              This document serves as proof of shipment and delivery agreement.
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-600 mt-2 print:text-black">
-              Generated on {new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
           </div>
+
+          {/* Client & Seller Info */}
+          <div className="invoice-row">
+            {/* Client Info */}
+            <div className="invoice-col">
+              <h3 className="invoice-section-title">بيانات العميل</h3>
+              <p className="invoice-text"><b>الاسم:</b> <span>{shipment.clientName || 'N/A'}</span></p>
+              <p className="invoice-text"><b>العنوان:</b> <span>{shipment.address || 'N/A'}</span></p>
+              <p className="invoice-text"><b>المدينة/المنطقة:</b> <span>{shipment.regionName || 'N/A'}</span></p>
+              <p className="invoice-text"><b>الدولة:</b> <span>{'مصر'}</span></p>
+              <p className="invoice-text"><b>ملاحظات:</b> <span>{shipment.notes || 'لا يوجد'}</span></p>
+            </div>
+
+            {/* Seller Info */}
+            <div className="invoice-col">
+              <h3 className="invoice-section-title">بيانات البائع (الراسل)</h3>
+              <p className="invoice-text"><b>البائع:</b> <span>{shipment.sellerName || 'N/A'}</span></p>
+              <p className="invoice-text"><b>هاتف:</b> <span>{shipment.phone1 || 'N/A'}</span></p>
+            </div>
+          </div>
+
+          {/* Delivery Details */}
+          <div className="invoice-section">
+            <h3 className="invoice-section-title">تفاصيل التوصيل</h3>
+            <p className="invoice-text"><b>اسم المندوب:</b> <span>{shipment.agentName || 'غير معين'}</span></p>
+            <p className="invoice-text"><b>رقم المندوب:</b> <span>N/A</span></p>
+            <p className="invoice-text"><b>في مرحلة الاستلام:</b> <span>{shipment.inPickupStage ? formatDate(shipment.inPickupStage) : 'N/A'}</span></p>
+            <p className="invoice-text"><b>حالة الطلب:</b> <span>{shipment.statusOrder?.replace(/_/g, ' ') || 'N/A'}</span></p>
+          </div>
+
+          {/* Products Table */}
+          <div className="invoice-section">
+            <h3 className="invoice-section-title">المنتجات</h3>
+            <table className="invoice-table">
+              <thead>
+                <tr>
+                  <th className="invoice-th" style={{ textAlign: 'right' }}>الاسم</th>
+                  <th className="invoice-th" style={{ textAlign: 'right' }}>الوصف</th>
+                  <th className="invoice-th" style={{ textAlign: 'center' }}>الكمية</th>
+                  <th className="invoice-th" style={{ textAlign: 'center' }}>السعر</th>
+                  <th className="invoice-th" style={{ textAlign: 'center' }}>الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shipment.items && shipment.items.length > 0 ? (
+                  shipment.items.map((item, index) => (
+                    <tr key={index}>
+                      <td className="invoice-td" style={{ textAlign: 'right' }}>{item.name}</td>
+                      <td className="invoice-td" style={{ textAlign: 'right' }}>{item.description || '-'}</td>
+                      <td className="invoice-td" style={{ textAlign: 'center' }}>{item.quantity}</td>
+                      <td className="invoice-td" style={{ textAlign: 'center' }}>{item.price}</td>
+                      <td className="invoice-td" style={{ textAlign: 'center' }}>{item.price * item.quantity}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="invoice-td" style={{ textAlign: 'center' }}>لا توجد منتجات</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            <div className="invoice-totals">
+              <p>إجمالي المنتجات: <span>{itemsTotal}</span> ج.م</p>
+              <p>سعر الشحن: <span>{calculatedShipping}</span> ج.م</p>
+              <p>الإجمالي الكلي: <span>{grandTotal}</span> ج.م</p>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
