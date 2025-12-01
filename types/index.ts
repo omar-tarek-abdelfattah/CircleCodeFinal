@@ -105,7 +105,16 @@ export interface OrderResponse {
   regionName?: string | null;
   agentName?: string | null;
   dateCreated: string;
-
+  deliveryCost: number;
+  productPrice: number;
+}
+export interface OrderResponseAgent {
+  id: string;
+  clientName?: string | null;
+  statusOrder?: ShipmentStatusString;
+  sellerName?: string | null;
+  totalPrice: number;
+  dateCreated: string;
 }
 
 export interface OrderResponseDetails {

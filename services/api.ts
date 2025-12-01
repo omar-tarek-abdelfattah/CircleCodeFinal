@@ -415,6 +415,7 @@ export const agentsAPI = {
       method: 'GET',
     });
   },
+
   getActiveCount: async (): Promise<number> => {
     // TODO: Replace with actual API call to .NET backend
     return apiCall<number>('/Agent/true', {
@@ -429,11 +430,15 @@ export const agentsAPI = {
     });
   },
   activate: async (_id: string): Promise<Boolean> => {
-    return apiCall<Boolean>(`/Agent/Activation?id=${parseInt(_id)}`, {
+    return apiCall<Boolean>(`/Agent/LockoutEnd?id=${parseInt(_id)}&ToLock=false`, {
       method: 'GET',
     });
   },
-
+  deactivate: async (_id: string): Promise<Boolean> => {
+    return apiCall<Boolean>(`/Agent/Activation?id=${parseInt(_id)}&ToLock=true&dateTime=${new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString()}`, {
+      method: 'GET',
+    });
+  },
   // GET /api/agents/:id - Get agent by ID
   getById: async (id: string): Promise<Agent> => {
     // TODO: Replace with actual API call to .NET backend

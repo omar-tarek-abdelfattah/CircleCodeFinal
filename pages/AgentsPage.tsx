@@ -64,6 +64,7 @@ export function AgentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [lockedAgents, setLockedAgents] = useState<AgentResponse[]>([]);
+  const [inactiveAgents, setInactiveAgents] = useState<AgentResponse[]>([]);
   const [activeTab, setActiveTab] = useState("all");
 
   const loadLockedAgents = async () => {
@@ -73,6 +74,16 @@ export function AgentsPage() {
     } catch (error) {
       console.error('Failed to load locked agents:', error);
       toast.error('Failed to load locked agents');
+    }
+  };
+
+  const loadInactiveAgents = async () => {
+    try {
+      const response = await agentsAPI.getAllInactive();
+      setInactiveAgents(response);
+    } catch (error) {
+      console.error('Failed to load inactive agents:', error);
+      toast.error('Failed to load inactive agents');
     }
   };
 
@@ -102,7 +113,8 @@ export function AgentsPage() {
       const data = await shipmentsAPI.getAll();
       console.log(data)
       const onDutyAgents = data.filter(shipment => shipment.statusOrder === ShipmentStatusString.DeliveredToAgent
-        || shipment.statusOrder === ShipmentStatusString.Returned).length;
+        || shipment.statusOrder === ShipmentStatusString.Returned
+        || shipment.statusOrder === ShipmentStatusString.InPickupStage).length;
       setOnDutyAgentsCount(onDutyAgents);
     } catch (error) {
       console.error("Failed to fetch on duty agents count:", error);
@@ -110,15 +122,21 @@ export function AgentsPage() {
     }
   };
 
+  const fetchAgentsAndCounts = async () => {
+    await fetchAgents();
+    await fetchActiveAgentsCount();
+    await fetchOnDutyAgentsCount();
+  };
+
   useEffect(() => {
-    fetchAgents();
-    fetchActiveAgentsCount();
-    fetchOnDutyAgentsCount();
+    fetchAgentsAndCounts();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'locked') {
       loadLockedAgents();
+    } else if (activeTab === 'inActive') {
+      loadInactiveAgents();
     } else if (activeTab === 'all') {
       fetchAgents();
     }
@@ -203,14 +221,16 @@ export function AgentsPage() {
       // User wants to deactivate/lock
       const agent = agents.find(a => a.id.toString() === agentId);
       if (agent) {
-        handleSetDeactivationPeriod(agent);
+        await agentsAPI.deactivate(agentId);
+        fetchAgentsAndCounts();
+
       }
     } else {
       // User wants to activate (unlock)
       try {
         await agentsAPI.activate(agentId);
+        fetchAgentsAndCounts();
 
-        // Update local state
         setAgents(prev =>
           prev.map(a =>
             a.id.toString() === agentId ? { ...a, isactive: true, isLock: false } : a
@@ -244,10 +264,6 @@ export function AgentsPage() {
           : a
       )
     );
-
-    // Add to locked agents list if not already there (optional, but good for consistency)
-    // We might need to fetch the full agent details or just push the modified selectedAgent
-    // For now, let's just update the main list. If the user switches to the locked tab, it will refetch.
   };
 
   const isTemporarilyDeactivated = (agent: AgentResponse): boolean => {
@@ -388,7 +404,7 @@ export function AgentsPage() {
                     On Duty
                   </p>
                   <p className="text-3xl mb-1">{onDutyAgentsCount}</p>
-                  <p className="text-sm text-slate-500">Currently working agents</p>
+                  <p className="text-sm text-slate-500">Currently assigned shipments</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -457,6 +473,7 @@ export function AgentsPage() {
           <TabsList>
             <TabsTrigger value="all">All Agents</TabsTrigger>
             <TabsTrigger value="locked">Locked Agents</TabsTrigger>
+            <TabsTrigger value="inActive">Inactive Agents</TabsTrigger>
           </TabsList>
         </div>
 
@@ -776,14 +793,14 @@ export function AgentsPage() {
                                     className="data-[state=checked]:bg-green-500"
                                   />
                                   <span className="text-sm font-semibold text-red-600 dark:text-red-400">
-                                    Locked
+                                    Inactive
                                   </span>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-1">
-                                <Button
+                                {/* <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleSetDeactivationPeriod(agent)}
@@ -791,7 +808,155 @@ export function AgentsPage() {
                                   title="Set Deactivation Period"
                                 >
                                   <CalendarClock className="w-4 h-4" />
+                                </Button> */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewDetails(agent)}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
                                 </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAgent(agent)}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="Edit Agent"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleHideAgent(agent.id.toString())}
+                                  className="gap-2 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  title="Hide Agent"
+                                >
+                                  <EyeOff className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+        <TabsContent value="inActive" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="border-slate-200 dark:border-slate-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Inactive Agents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>AGENT</TableHead>
+                        <TableHead>BRANCH</TableHead>
+                        <TableHead>CONTACT</TableHead>
+                        <TableHead>EMAIL</TableHead>
+                        <TableHead>ACTIVE ORDERS</TableHead>
+                        <TableHead>TODAY'S ORDERS</TableHead>
+                        <TableHead>STATUS</TableHead>
+                        <TableHead className="text-right">ACTIONS</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inactiveAgents.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-12">
+                            <div className="flex flex-col items-center gap-2 text-slate-500">
+                              <Users className="w-12 h-12 opacity-20" />
+                              <p>No inactive agents found</p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        inactiveAgents.map((agent, index) => (
+                          <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className={`${getAvatarColor(index)} text-white`}>
+                                  <AvatarFallback className="bg-transparent">
+                                    {getInitials(agent.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{agent.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-slate-700 dark:text-slate-300">
+                                {agent.branshName || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-slate-400" />
+                                <span className="text-sm">{agent.phoneNumber}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                {agent.email}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                {agent.numberofOrder}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="secondary"
+                                className={
+                                  agent.numberofOrder && agent.numberofOrder > 0
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
+                                }
+                              >
+                                {agent.numberofOrder || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-3">
+                                  <Switch
+                                    checked={false}
+                                    onCheckedChange={() => handleToggleStatus(agent.id.toString(), 'inactive')}
+                                    className="data-[state=checked]:bg-green-500"
+                                  />
+                                  <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                                    Inactive
+                                  </span>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {/* <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSetDeactivationPeriod(agent)}
+                                  className="gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  title="Set Deactivation Period"
+                                >
+                                  <CalendarClock className="w-4 h-4" />
+                                </Button> */}
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -953,7 +1118,8 @@ export function AgentsPage() {
                         Temporarily Deactivated
                       </p>
                       <p className="text-sm text-amber-700 dark:text-amber-400">
-                        This agent is deactivated until <span className="font-semibold">{selectedAgent.isLock && formatDate(new Date().toDateString())}</span>. They cannot log in or perform any actions during this period.
+                        This agent is deactivated until <span className="font-semibold">{selectedAgent.isLock && formatDate(new Date(new Date().setMonth(new Date().getMonth() + 6)).toDateString())}</span>.
+                        They cannot log in or perform any actions during this period.
                       </p>
                     </div>
                   )}

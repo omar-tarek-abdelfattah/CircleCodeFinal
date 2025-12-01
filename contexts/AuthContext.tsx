@@ -71,21 +71,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 🔹 Login
   const login = async (email: string, password: string) => {
-    const { token, role } = await loginApi(email, password);
+    try {
+      const { token, role } = await loginApi(email, password);
 
-    if (token) {
-      setRecievedToken(token);
-      localStorage.setItem('token', token);
+      if (token) {
+        setRecievedToken(token);
+        localStorage.setItem('token', token);
+      }
+
+      if (role) {
+        setRecievedRole(role as UserRole);
+        localStorage.setItem('role', role);
+      }
+
+      const loggedUser: User = { name: email, email, role: role as UserRole };
+      setUser(loggedUser);
+      localStorage.setItem('user', JSON.stringify(loggedUser));
+    } catch (error: any) {
+      if (error.message && error.message.includes("invalid Credentials")) {
+        throw new Error("Invalid email or password");
+      }
+      if (error.message && error.message.toLowerCase().includes("confirm")) {
+        throw new Error("Please confirm your email address.");
+      }
+      throw error;
     }
-
-    if (role) {
-      setRecievedRole(role as UserRole);
-      localStorage.setItem('role', role);
-    }
-
-    const loggedUser: User = { name: email, email, role: role as UserRole };
-    setUser(loggedUser);
-    localStorage.setItem('user', JSON.stringify(loggedUser));
   };
 
   // 🔹 Logout

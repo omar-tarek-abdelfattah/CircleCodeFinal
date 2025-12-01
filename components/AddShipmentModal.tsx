@@ -448,7 +448,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                       <SelectValue placeholder="Select Zone" />
                     </SelectTrigger>
                     <SelectContent>
-                      {zones.map((zone) => (
+                      {zones.filter(z => z.isActive).map((zone) => (
                         <SelectItem onSelect={() => { }} key={zone.id} value={zone.id.toString()}>
                           {zone.name}
                         </SelectItem>
@@ -533,7 +533,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                       <SelectValue placeholder="Select Seller" />
                     </SelectTrigger>
                     <SelectContent>
-                      {sellers.map((seller) => (
+                      {sellers.filter(s => s).map((seller) => (
                         <SelectItem key={seller.id} value={seller.id.toString()}>
                           {seller.name}
                         </SelectItem>

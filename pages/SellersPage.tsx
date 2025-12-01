@@ -100,7 +100,7 @@ export function SellersPage() {
     try {
       const response = await sellersAPI.getActiveCount();
       console.log(response);
-      
+
       setActiveSellersCount(response);
     } catch (error) {
       console.error('Failed to load active sellers count:', error);
@@ -297,7 +297,7 @@ export function SellersPage() {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -316,10 +316,23 @@ export function SellersPage() {
         >
           <StatCard
             title="Active Sellers"
-            value={activeSellersCount.toString()}
+            value={sellers.filter(s => s.isActive).length.toString()}
             icon={UserCheck}
 
           />
+
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <StatCard
+            title="Confirmed Sellers"
+            value={activeSellersCount}
+            icon={UserCheck}
+          />
+
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -377,6 +390,7 @@ export function SellersPage() {
                     <CardTitle>Sellers</CardTitle>
                     <CardDescription>
                       {filteredSellers.length} {filteredSellers.length === 1 ? 'seller' : 'sellers'} found
+                      <br /><span>shipments, profit, delivery cost and activity are for today</span>
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -409,7 +423,10 @@ export function SellersPage() {
                         <TableRow>
                           <TableHead>NAME</TableHead>
                           <TableHead>STORE NAME</TableHead>
-                          <TableHead>TOTAL SHIPMENTS</TableHead>
+                          <TableHead>ADDRESS</TableHead>
+                          <TableHead>SHIPMENTS</TableHead>
+                          <TableHead>PROFIT</TableHead>
+                          <TableHead>DELIVERY COST</TableHead>
                           <TableHead>Activity</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">ACTIONS</TableHead>
@@ -463,12 +480,31 @@ export function SellersPage() {
                                 )}
                               </TableCell>
                               <TableCell>
+                                {seller.address ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>{seller.address}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
                                 <Badge
                                   variant={seller.numberofOrder > 0 ? "default" : "secondary"}
                                   className={seller.numberofOrder > 0 ? "bg-green-500" : ""}
                                 >
                                   {seller.numberofOrder}
                                 </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium text-green-600 dark:text-green-400">
+                                  {formatCurrency(seller.profit)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium">
+                                  {formatCurrency(seller.deliveryCost)}
+                                </span>
                               </TableCell>
                               <TableCell>
                                 <div className="space-y-1.5">
@@ -582,7 +618,10 @@ export function SellersPage() {
                         <TableRow>
                           <TableHead>NAME</TableHead>
                           <TableHead>STORE NAME</TableHead>
+                          <TableHead>ADDRESS</TableHead>
                           <TableHead>TOTAL SHIPMENTS</TableHead>
+                          <TableHead>PROFIT</TableHead>
+                          <TableHead>DELIVERY COST</TableHead>
                           <TableHead>Activity</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">ACTIONS</TableHead>
@@ -625,12 +664,31 @@ export function SellersPage() {
                                 )}
                               </TableCell>
                               <TableCell>
+                                {seller.address ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>{seller.address}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
                                 <Badge
                                   variant={seller.numberofOrder > 0 ? "default" : "secondary"}
                                   className={seller.numberofOrder > 0 ? "bg-green-500" : ""}
                                 >
                                   {seller.numberofOrder}
                                 </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium text-green-600 dark:text-green-400">
+                                  {formatCurrency(seller.profit)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium">
+                                  {formatCurrency(seller.deliveryCost)}
+                                </span>
                               </TableCell>
                               <TableCell>
                                 <div className="space-y-1.5">
@@ -772,7 +830,7 @@ export function SellersPage() {
               <div className="space-y-3">
                 <h3 className="font-semibold flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" />
-                  Performance Stats 
+                  Performance Stats
                 </h3>
                 <div className="grid grid-cols-2 gap-4 pl-6">
                   <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">

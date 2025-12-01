@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { Shipment, ShipmentStatus } from '../types';
+import { OrderResponse, OrderResponseDetails, Shipment, ShipmentStatus, ShipmentStatusString } from '../types';
 import { getStatusLabel } from './statusUtils';
 
 // Excel column headers (template structure)
@@ -25,30 +25,21 @@ export const EXCEL_HEADERS = [
 ];
 
 // Export shipments to Excel
-export const exportShipmentsToExcel = (shipments: Shipment[], filename: string = 'shipments') => {
+export const exportShipmentsToExcel = (shipments: OrderResponseDetails[], filename: string = 'shipments') => {
   try {
     // Convert shipments to Excel format
     const data = shipments.map(shipment => ({
-      'Tracking Number': shipment.trackingNumber,
-      'Sender Name': shipment.sender.name,
-      'Sender Phone': shipment.sender.phone,
-      'Sender Address': shipment.sender.address,
-      'Recipient Name': shipment.recipient.name,
-      'Recipient Phone': shipment.recipient.phone,
-      'Recipient Address': shipment.recipient.address,
-      'Status': getStatusLabel(shipment.status),
-      'Branch': shipment.branch || '',
-      'Zone': shipment.zone || '',
+      'Tracking Number': shipment.id,
+      'Sender Name': shipment.sellerName,
+      'Recipient Name': shipment.clientName,
+      'Recipient Phone': shipment.phone1,
+      'Recipient Phone2': shipment.phone2,
+      'Recipient Address': shipment.address,
+      'Status': getStatusLabel(shipment.statusOrder as ShipmentStatusString),
       'Price': shipment.price,
-      'Delivery Charges': shipment.commission,
-      'Weight (kg)': shipment.weight || '',
-      'Description': shipment.description || '',
-      'Created Date': new Date(shipment.createdAt).toLocaleDateString('en-US'),
-      'Estimated Delivery': shipment.estimatedDelivery 
-        ? new Date(shipment.estimatedDelivery).toLocaleDateString('en-US') 
-        : '',
-      'Agent Name': shipment.assignedAgent?.name || 'Unassigned',
-      'Notes': '',
+      'Description': shipment.notes || '',
+      'Created Date': new Date(shipment.dateCreated).toLocaleDateString('en-US'),
+      'Agent Name': shipment.agentName || 'Unassigned',
     }));
 
     // Create worksheet
@@ -58,22 +49,61 @@ export const exportShipmentsToExcel = (shipments: Shipment[], filename: string =
     const columnWidths = [
       { wch: 18 }, // Tracking Number
       { wch: 20 }, // Sender Name
-      { wch: 15 }, // Sender Phone
-      { wch: 35 }, // Sender Address
       { wch: 20 }, // Recipient Name
       { wch: 15 }, // Recipient Phone
       { wch: 35 }, // Recipient Address
       { wch: 25 }, // Status
-      { wch: 20 }, // Branch
-      { wch: 15 }, // Zone
       { wch: 10 }, // Price
-      { wch: 15 }, // Delivery Charges
-      { wch: 12 }, // Weight
       { wch: 25 }, // Description
       { wch: 15 }, // Created Date
-      { wch: 15 }, // Estimated Delivery
       { wch: 20 }, // Agent Name
-      { wch: 30 }, // Notes
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Shipments');
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fullFilename = `${filename}_${timestamp}.xlsx`;
+
+    // Download file
+    XLSX.writeFile(workbook, fullFilename);
+
+    return { success: true, count: shipments.length };
+  } catch (error) {
+    console.error('Export error:', error);
+    return { success: false, error: 'Failed to export Excel file' };
+  }
+};
+
+// Export table data (OrderResponse[]) to Excel
+export const exportTableDataToExcel = (shipments: OrderResponse[], filename: string = 'shipments_table') => {
+  try {
+    // Convert shipments to Excel format
+    const data = shipments.map(shipment => ({
+      'Tracking ID': shipment.id,
+      'Customer': shipment.clientName || '',
+      'Merchant': shipment.sellerName || '',
+      'Agent': shipment.agentName || 'Unassigned',
+      'Product Cost': shipment.totalPrice || 0,
+      'Status': shipment.statusOrder ? getStatusLabel(shipment.statusOrder as ShipmentStatusString) : '',
+      'Created Date': new Date(shipment.dateCreated).toLocaleDateString('en-US'),
+    }));
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 20 }, // Tracking ID
+      { wch: 20 }, // Customer
+      { wch: 20 }, // Merchant
+      { wch: 20 }, // Agent
+      { wch: 15 }, // Product Cost
+      { wch: 25 }, // Status
+      { wch: 15 }, // Created Date
     ];
     worksheet['!cols'] = columnWidths;
 
@@ -103,27 +133,19 @@ export const downloadTemplate = () => {
       {
         'Tracking Number': 'CCT1234567890',
         'Sender Name': 'Example Store',
-        'Sender Phone': '+1 234 567 8901',
-        'Sender Address': '123 Main St, City, State ZIP',
         'Recipient Name': 'John Doe',
         'Recipient Phone': '+1 234 567 8910',
         'Recipient Address': '456 Oak Ave, City, State ZIP',
         'Status': 'New',
-        'Branch': 'Main Branch',
-        'Zone': 'Zone A',
         'Price': 45.00,
-        'Delivery Charges': 5.00,
-        'Weight (kg)': 2.5,
         'Description': 'Package description',
         'Created Date': new Date().toLocaleDateString('en-US'),
-        'Estimated Delivery': '',
         'Agent Name': '',
-        'Notes': '',
       },
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(templateData);
-    
+
     // Set column widths
     const columnWidths = [
       { wch: 18 }, { wch: 20 }, { wch: 15 }, { wch: 35 },
@@ -149,21 +171,21 @@ export const downloadTemplate = () => {
 // Convert status label back to status code
 const parseStatusFromLabel = (label: string): ShipmentStatus => {
   const statusMap: Record<string, ShipmentStatus> = {
-    'new': 'new',
-    'in pickup stage': 'in_pickup_stage',
-    'in warehouse': 'in_warehouse',
-    'delivered to agent': 'delivered_to_agent',
-    'delivered': 'delivered',
-    'postponed': 'postponed',
-    'customer unreachable': 'customer_unreachable',
-    'rejected no shipping fees': 'rejected_no_shipping_fees',
-    'rejected with shipping fees': 'rejected_with_shipping_fees',
-    'canceled by merchant': 'canceled_by_merchant',
-    'partially delivered': 'partially_delivered',
-    'rejected by us': 'rejected_by_us',
-    'returned': 'returned',
+    'New': 'New',
+    'In Pickup Stage': 'in_pickup_stage',
+    'In Warehouse': 'in_warehouse',
+    'Delivered To Agent': 'delivered_to_agent',
+    'Delivered': 'delivered',
+    'Postponed': 'postponed',
+    'Customer Unreachable': 'customer_unreachable',
+    'Rejected No Shipping Fees': 'rejected_no_shipping_fees',
+    'Rejected With Shipping Fees': 'rejected_with_shipping_fees',
+    'Canceled By Merchant': 'canceled_by_merchant',
+    'Partially Delivered': 'partially_delivered',
+    'Rejected By Us': 'rejected_by_us',
+    'Returned': 'returned',
   };
-  
+
   const normalized = label.toLowerCase().trim();
   return statusMap[normalized] || 'new';
 };
@@ -181,7 +203,7 @@ export const importShipmentsFromExcel = async (file: File): Promise<{
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-excel',
     ];
-    
+
     if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/i)) {
       return { success: false, error: 'Invalid file type. Please upload .xlsx or .xls file' };
     }
@@ -192,7 +214,7 @@ export const importShipmentsFromExcel = async (file: File): Promise<{
 
     // Get first sheet
     const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const worksheet = workbook.Sheets[sheetName || 'Sheet1'];
 
     // Convert to JSON
     const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
@@ -247,8 +269,8 @@ export const importShipmentsFromExcel = async (file: File): Promise<{
             description: row['Description']?.toString().trim() || undefined,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            estimatedDelivery: row['Estimated Delivery'] 
-              ? new Date(row['Estimated Delivery']).toISOString() 
+            estimatedDelivery: row['Estimated Delivery']
+              ? new Date(row['Estimated Delivery']).toISOString()
               : undefined,
           };
         } catch (error) {

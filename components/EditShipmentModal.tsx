@@ -539,7 +539,7 @@ export function EditShipmentModal({
                       id="customerName"
                       placeholder="John Doe"
                       value={formData.clientName}
-                      onChange={(e) => handleChange('customerName', e.target.value)}
+                      onChange={(e) => handleChange('clientName', e.target.value)}
                       disabled={loading || !canEdit}
                     />
                   </div>
@@ -553,7 +553,7 @@ export function EditShipmentModal({
                       type="tel"
                       placeholder="+1234567890"
                       value={formData.phone1}
-                      onChange={(e) => handleChange('phone', e.target.value)}
+                      onChange={(e) => handleChange('phone1', e.target.value)}
                       disabled={loading || !canEdit}
                     />
                   </div>
@@ -643,7 +643,7 @@ export function EditShipmentModal({
                         <SelectValue placeholder="Select Zone" />
                       </SelectTrigger>
                       <SelectContent>
-                        {zones.map((zone) => (
+                        {zones.filter(z => z.isActive).map((zone) => (
                           <SelectItem key={zone.id} value={zone.id.toString()}>
                             {zone.name}
                           </SelectItem>
@@ -726,7 +726,7 @@ export function EditShipmentModal({
                       <SelectValue placeholder="Select Seller" />
                     </SelectTrigger>
                     <SelectContent>
-                      {sellers.map((seller) => (
+                      {sellers.filter(s => s.isConfermid).map((seller) => (
                         <SelectItem key={seller.id} value={seller.id.toString()}>
                           {seller.name}
                         </SelectItem>
@@ -760,7 +760,7 @@ export function EditShipmentModal({
                         <SelectValue placeholder="Select Agent" />
                       </SelectTrigger>
                       <SelectContent>
-                        {agents.map((agent) => (
+                        {agents.filter(agent => agent.isactive).map((agent) => (
                           <SelectItem key={agent.id} value={agent.id.toString()}>
                             {agent.name}
                           </SelectItem>

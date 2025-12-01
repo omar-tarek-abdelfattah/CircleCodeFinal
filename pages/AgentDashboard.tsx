@@ -79,7 +79,8 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Active Shipments"
-          value={assignedShipments.length}
+          value={assignedShipments.filter(s => [ShipmentStatusString.Returned, ShipmentStatusString.InPickupStage, ShipmentStatusString.DeliveredToAgent]
+            .includes(s.statusOrder as ShipmentStatusString)).length}
           icon={Package}
           delay={0.1}
           gradient="from-blue-500 to-blue-600"

@@ -1,4 +1,4 @@
-import { useState, type ComponentType } from 'react';
+import { useState, useEffect, type ComponentType } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth, UserRole } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -34,13 +34,18 @@ const ShipmentsPageComponent = ShipmentsPage as unknown as ComponentType<Shipmen
 
 function AppContent() {
   const { user, role } = useAuth();
-  // console.log(user);
-  console.log("role:", role);
   const [currentPage, setCurrentPage] = useState('dashboard');
-  console.log("currentPage:", currentPage);
   const [previousPage, setPreviousPage] = useState('dashboard');
   const [selectedShipmentForBill, setSelectedShipmentForBill] = useState<OrderResponseDetails | null>(null);
   const [selectedShipmentsForBulkBill, setSelectedShipmentsForBulkBill] = useState<OrderResponseDetails[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (!token || !role) {
+      setCurrentPage('dashboard');
+    }
+  }, []);
 
   if (!user) {
     return <LoginPage />;
@@ -69,6 +74,8 @@ function AppContent() {
   };
 
   const renderPage = () => {
+
+
     // Bill of Lading Pages
     if (currentPage === 'bill-of-lading') {
       if (role === UserRole.Seller || role === UserRole.Admin || role === UserRole.SuperAdmin || role === UserRole.agent) {
@@ -107,6 +114,7 @@ function AppContent() {
     if (currentPage === 'branches' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <BranchesPage />;
     if (currentPage === 'zones' && (role === UserRole.Admin || role === UserRole.SuperAdmin)) return <ZonesPage />;
     if (currentPage === 'users' && (role === UserRole.SuperAdmin)) return <UsersPage />;
+    if (currentPage === 'users' && (role === UserRole.Admin)) return <AdminDashboard />;
 
     // Pages available to all roles
     if (currentPage === 'wallet') return <WalletPage />;
@@ -136,12 +144,12 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <NotificationProvider>
-            <Routes>
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/*" element={<AppContent />} />
-            </Routes>
-            <Toaster />
+          <Routes>
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/*" element={<AppContent />} />
+          </Routes>
+          <Toaster />
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

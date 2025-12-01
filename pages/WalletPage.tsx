@@ -506,7 +506,7 @@ const WalletPage: React.FC = () => {
                     {dateFilter ? 'Period Balance' : 'Current Balance'}
                   </p>
                   <h2 className="text-slate-900 dark:text-slate-100">
-                    {isLoading ? '...' : `$${filteredSummary?.balance.toLocaleString() || 0}`}
+                    {isLoading ? '...' : `$${((filteredSummary?.pendingAmount || 0) + (filteredSummary?.totalEarnings || 0)).toLocaleString()}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {dateFilter ? 'Net for period' : 'Available funds'}

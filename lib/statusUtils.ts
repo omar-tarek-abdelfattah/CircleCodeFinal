@@ -39,6 +39,14 @@ export const AGENT_STATUSES: ShipmentStatusString[] = [
   ShipmentStatusString.PartiallyDelivered,
   ShipmentStatusString.Returned,
 ];
+export const AGENT_CHANGEABLE_STATUSES: ShipmentStatusString[] = [
+  ShipmentStatusString.DeliveredToAgent,
+  ShipmentStatusString.Delivered,
+  ShipmentStatusString.Postponed,
+  ShipmentStatusString.CustomerUnreachable,
+  ShipmentStatusString.PartiallyDelivered,
+  ShipmentStatusString.Returned,
+];
 
 // Get status label (human-readable)
 export const getStatusLabel = (status: ShipmentStatusString): string => {
@@ -88,6 +96,19 @@ export const getAvailableStatuses = (role: UserRole): ShipmentStatusString[] => 
       return SELLER_STATUSES;
     case UserRole.agent:
       return AGENT_STATUSES;
+    default:
+      return ALL_STATUSES;
+  }
+};
+// Get available statuses based on user role
+export const getChangableStatuses = (role: UserRole): ShipmentStatusString[] => {
+  switch (role) {
+    case UserRole.Admin:
+      return ALL_STATUSES;
+    case UserRole.Seller:
+      return SELLER_STATUSES;
+    case UserRole.agent:
+      return AGENT_CHANGEABLE_STATUSES;
     default:
       return ALL_STATUSES;
   }

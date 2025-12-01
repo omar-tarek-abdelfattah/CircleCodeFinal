@@ -46,9 +46,12 @@ export function ShipmentDetailsModal({
   const populateShipmentDetails = async (id: string) => {
     try {
       const response = await shipmentsAPI.getById(id)
-      const zoneResponse = await zonesAPI.getById(response.zoneId as number)
-      console.log(zoneResponse)
-      setZoneDetails(zoneResponse as ZoneResponseDetails)
+      if (response.zoneId) {
+        const zoneResponse = await zonesAPI.getById(response.zoneId as number)
+        setZoneDetails(zoneResponse as ZoneResponseDetails)
+      };
+
+
       setShipmentDetails(response as OrderResponseDetails)
     } catch (error) {
       console.error("Error fetching shipment details:", error);
@@ -56,7 +59,11 @@ export function ShipmentDetailsModal({
     }
   };
 
-  useEffect(() => { populateShipmentDetails(shipment?.id as string) }, [isOpen, shipment?.id])
+  useEffect(() => {
+    console.log(shipment);
+
+    populateShipmentDetails(shipment?.id as string)
+  }, [isOpen, shipment?.id])
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -321,9 +328,9 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <MapPinned className="w-4 h-4" />
-                <span className="text-xs">Zone ID</span>
+                <span className="text-xs">Zone</span>
               </div>
-              <p className="text-sm font-medium">{displayValue(shipmentDetails.zoneId)}</p>
+              <p className="text-sm font-medium">{displayValue(zoneDetails.name)}</p>
             </div>
 
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">

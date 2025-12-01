@@ -8,7 +8,7 @@ import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
 import { AddShipmentModal } from '../components/AddShipmentModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { OrderResponse, SellerResponse, ShipmentStatusString } from '../types';
+import { AgiOrderSummaryToday, OrderResponse, SellerResponse, ShipmentStatusString } from '../types';
 import { Activity } from '../lib/mockData';
 import { sellersAPI, agentsAPI, shipmentsAPI, log, branchesAPI } from '../services/api';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [completedShipments, setCompletedShipments] = useState(0);
   const [inPickupCount, setInPickupCount] = useState(0);
   const [totalCollection, setTotalCollection] = useState(0);
+  const [orderSummaryToday, setOrderSummaryToday] = useState<AgiOrderSummaryToday>({} as AgiOrderSummaryToday);
 
 
   const loadShipments = async () => {
@@ -51,18 +52,19 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   useEffect(() => {
     const fetchData = async () => {
       // Fetch all data
-      const [sellersData, agentsData, agentsCount, shipmentsData, logsData, branchesData] = await Promise.all([
+      const [sellersData, agentsData, agentsCount, shipmentsData, logsData, branchesData, orderSummaryToday] = await Promise.all([
         sellersAPI.getAll(),
         agentsAPI.getAll(),
         agentsAPI.getActiveCount(),
         shipmentsAPI.getAll(),
         log.getAll(),
         branchesAPI.getAll(),
+        shipmentsAPI.getSummaryToday(),
       ]);
 
       // Filter active sellers & agents
-      setSellers(sellersData.filter((s: SellerResponse) => s.isActive || s.isActive === false));
-      setAgents(agentsData.filter((a: any) => a.isctive || a.isactive === true));
+      setSellers(sellersData);
+      setAgents(agentsData);
       setAgentsCount(agentsCount);
       setBranches(branchesData.data || []); // branches API returns an object with `data` array
       const reversedShipmentsData = shipmentsData.reverse().slice(0, 5);
@@ -70,6 +72,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       setShipmentsCount(shipmentsCountt);
       setShipments(reversedShipmentsData);
       setLogData(logsData);
+
 
       // Totals
 
@@ -87,15 +90,15 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           .filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees) // بس الشحنات اللي تم توصيلها
           .reduce((sum: number, s: OrderResponse) => sum + (s.totalPrice || 0), 0)
       );
-
+      setOrderSummaryToday(orderSummaryToday);
     };
 
     fetchData();
   }, []);
 
   // const totalShipments = shipments.length;
-  const activeAgents = agents.length;
   const totalSellers = sellers.length;
+  const activeSellers = sellers.filter((s: SellerResponse) => s.isActive).length;
 
   const handleViewDetails = (shipment: OrderResponse) => {
     setSelectedShipment(shipment);
@@ -127,12 +130,21 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Total Shipments" value={shipmentsCount} icon={Package} gradient="from-blue-500 to-blue-600" />
-        <StatCard title="Pending" value={inPickupCount} icon={Clock} gradient="from-orange-500 to-orange-600" />
-        <StatCard title="Completed" value={completedShipments} icon={TrendingUp} gradient="from-green-500 to-green-600" />
+        <StatCard title="Total Shipments*" value={shipmentsCount} icon={Package} gradient="from-blue-500 to-blue-600" />
+        <StatCard title="Shipments Today" value={orderSummaryToday?.totalOrder?.toString() || '0'} icon={Package} gradient="from-indigo-500 to-green-600" />
+        <StatCard title="Pending Shipments*" value={inPickupCount} icon={Clock} gradient="from-orange-500 to-orange-600" />
+        <StatCard title="Pending Today" value={orderSummaryToday?.totalPindingOrder?.toString() || '0'} icon={Clock} gradient="from-indigo-500 to-green-600" />
+        <StatCard title="Completed Shipments*" value={completedShipments} icon={TrendingUp} gradient="from-green-500 to-green-600" />
         <StatCard title="Collection Amount" value={`$${totalCollection.toFixed(0)}`} icon={DollarSign} gradient="from-purple-500 to-purple-600" />
+        <StatCard title="Our Revenue Today" value={`$${sellers.reduce((sum: number, s: SellerResponse) => sum + (s.deliveryCost || 0), 0).toFixed(0)}`} icon={DollarSign} gradient="from-purple-500 to-green-600" />
         <StatCard title="Active Agents" value={agentsCount} icon={Users} gradient="from-pink-500 to-pink-600" />
+        <StatCard title="Assigned Shipments" value={shipments.filter((s: OrderResponse) => (
+          s.statusOrder === ShipmentStatusString.InPickupStage
+          || s.statusOrder === ShipmentStatusString.DeliveredToAgent
+          || s.statusOrder === ShipmentStatusString.Returned
+        )).length} icon={Users} gradient="from-pink-500 to-pink-600" />
         <StatCard title="Total Sellers" value={totalSellers} icon={Users} gradient="from-indigo-500 to-indigo-600" />
+        <StatCard title="Active Sellers Today" value={activeSellers} icon={Users} gradient="from-indigo-500 to-green-600" />
       </div>
 
       {/* Recent Activity */}

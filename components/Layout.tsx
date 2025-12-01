@@ -79,7 +79,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
 
       {/* Top Navbar */}
-      <motion.header initial={{ y: -100 }} animate={{ y: 0 }} className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800">
+      <motion.header initial={{ y: -100 }} animate={{ y: 0 }} className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 print:hidden">
         <div className="flex items-center justify-between h-16 px-4 lg:px-6">
 
           <div className="flex items-center gap-4">
@@ -136,7 +136,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`fixed left-0 top-16 bottom-0 z-40 w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-800 ${mobileMenuOpen ? 'block' : 'hidden lg:block'}`}
+              className={`fixed left-0 top-16 bottom-0 z-40 w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-800 ${mobileMenuOpen ? 'block' : 'hidden lg:block'} print:hidden`}
             >
               <nav className="p-4 space-y-2">
                 {filteredNavItems.map((item, idx) => (
@@ -166,14 +166,14 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className={`pt-20 pb-16 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-4 lg:p-6 max-w-[1600px] mx-auto min-h-[calc(100vh-8rem)]">
+      <main className={`pt-20 pb-16 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'} print:p-0 print:m-0 print:w-full`}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-4 lg:p-6 max-w-[1600px] mx-auto min-h-[calc(100vh-8rem)] print:p-0 print:m-0 print:w-full print:max-w-none">
           {children}
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer className={`fixed bottom-0 left-0 right-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
+      <footer className={`fixed bottom-0 left-0 right-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'} print:hidden`}>
         <div className="px-4 lg:px-6 py-3">
           <p className="text-center text-sm text-slate-600 dark:text-slate-400">
             Design & Development by <span className="font-semibold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Circle Code</span> — All Rights Reserved © 2025

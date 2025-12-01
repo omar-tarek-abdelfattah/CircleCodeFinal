@@ -22,12 +22,12 @@ import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { StatCard } from '../components/StatCard';
 import { AGENT_STATUSES, SELLER_STATUSES, getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
-import { importShipmentsFromExcel, downloadTemplate, } from '../lib/excelUtils';
+import { importShipmentsFromExcel, downloadTemplate, exportShipmentsToExcel, exportTableDataToExcel } from '../lib/excelUtils';
 
 
 interface ShipmentsPageProps {
   onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
-  onNavigateToBulkBillOfLading?: (shipments: OrderResponse[]) => void;
+  onNavigateToBulkBillOfLading?: (shipments: OrderResponseDetails[]) => void;
 }
 
 export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOfLading }: ShipmentsPageProps) {
@@ -77,6 +77,27 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   // Hidden orders state
   const [hiddenOrderIds, setHiddenOrderIds] = useState<Set<string>>(new Set());
   const [hiddenOrdersDialogOpen, setHiddenOrdersDialogOpen] = useState(false);
+  const [isHiddenOrdersLoaded, setIsHiddenOrdersLoaded] = useState(false);
+
+  // Load hidden orders from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('hiddenOrderIds');
+    if (saved) {
+      try {
+        setHiddenOrderIds(new Set(JSON.parse(saved)));
+      } catch (e) {
+        console.error('Failed to parse hidden orders', e);
+      }
+    }
+    setIsHiddenOrdersLoaded(true);
+  }, []);
+
+  // Save hidden orders to localStorage
+  useEffect(() => {
+    if (isHiddenOrdersLoaded) {
+      localStorage.setItem('hiddenOrderIds', JSON.stringify(Array.from(hiddenOrderIds)));
+    }
+  }, [hiddenOrderIds, isHiddenOrdersLoaded]);
 
 
   const isRoleAdminOrSuperAdmin = role === UserRole.Admin || role === UserRole.SuperAdmin;
@@ -145,13 +166,34 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     const matchesStore =
       storeFilter === 'all' || s.sellerName === storeFilter;
 
-    return matchesSearch && matchesStatus && matchesSeller && matchesStore;
+    const matchesAgent =
+      agentSearch === '' ||
+      agentSearch === 'all' ||
+      (agentSearch === 'unassigned' ? !s.agentName : s.agentName === agentSearch);
+
+    const matchesDate = (() => {
+      if (!dateFrom && !dateTo) return true;
+      if (!s.dateCreated) return false;
+      const date = new Date(s.dateCreated);
+      const from = dateFrom ? new Date(dateFrom) : null;
+      const to = dateTo ? new Date(dateTo) : null;
+
+      if (from) from.setHours(0, 0, 0, 0);
+      if (to) to.setHours(23, 59, 59, 999);
+
+      if (from && to) return date >= from && date <= to;
+      if (from) return date >= from;
+      if (to) return date <= to;
+      return true;
+    })();
+
+    return matchesSearch && matchesStatus && matchesSeller && matchesStore && matchesAgent && matchesDate;
   });
 
 
   // Get unique sellers and stores for filter dropdowns (excluding hidden orders)
   const uniqueSellers = Array.from(new Set(visibleShipments.map(s => s.sellerName)));
-  const uniqueStores = Array.from(new Set(visibleShipments.map(s => s.sellerName).filter(Boolean)));
+  const uniqueAgents = Array.from(new Set(visibleShipments.map(s => s.agentName)));
 
   // Get hidden orders
   const hiddenOrders = shipments.filter(s => hiddenOrderIds.has(s.id));
@@ -164,6 +206,12 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   );
 
   const handleViewDetails = async (shipment: OrderResponse) => {
+    console.log(shipment);
+
+    if (!shipment.id) {
+      toast.error('Cannot view details: Invalid shipment ID');
+      return;
+    }
     // setShipmentsDetails(shipment)
     setSelectedShipment(shipment as unknown as OrderResponse);
     setDetailsModalOpen(true);
@@ -192,6 +240,37 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     setEditShipmentModalOpen(true);
   };
 
+
+
+  const handleExport = () => {
+    if (filteredShipments.length === 0) {
+      toast.error('No shipments to export');
+      return;
+    }
+
+    const result = exportTableDataToExcel(filteredShipments, 'shipments_export');
+    if (result.success) {
+      toast.success(`Exported ${result.count} shipments successfully`);
+    } else {
+      toast.error(result.error || 'Failed to export shipments');
+    }
+  };
+
+  const handleExportSelected = () => {
+    const selectedShipments = shipments.filter(s => selectedOrderIds.has(s.id));
+    if (selectedShipments.length === 0) {
+      toast.error('No shipments selected');
+      return;
+    }
+
+    const result = exportTableDataToExcel(selectedShipments, 'selected_shipments_export');
+    if (result.success) {
+      toast.success(`Exported ${result.count} shipments successfully`);
+    } else {
+      toast.error(result.error || 'Failed to export shipments');
+    }
+  };
+
   const handleUpdateStatus = async () => {
     try {
       // TODO: Connect to backend API
@@ -214,6 +293,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
   // const handleExport = () => {
   //   // Export only selected shipments if any are selected, otherwise export filtered shipments
+  //   let shipmentsToExport: OrderResponse[] = [];
 
   //   if (selectedOrderIds.size > 0) {
   //     // Export only selected shipments
@@ -328,13 +408,6 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   };
 
   const handleApplyFilters = async () => {
-
-    if (dateFrom && dateTo) {
-      const filteredResult = await shipmentsAPI.getAll(dateFrom.toISOString(), dateTo.toISOString());
-      setShipments(filteredResult);
-      visibleShipments = shipments.filter(s => !hiddenOrderIds.has(s.id));
-      return
-    }
     setFilterDialogOpen(false);
     toast.success('Filters applied successfully');
   };
@@ -401,7 +474,12 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   };
 
   // Calculate selected orders totals
-  // const selectedTotalProductCost = selectedShipment?.reduce((sum, s) => sum + s.totalPrice, 0);
+  const selectedTotalProductCost = shipments
+    .filter(s => selectedOrderIds.has(s.id))
+    .reduce((sum, s) => sum + (s.totalPrice || 0), 0);
+
+  const selectedTotalDeliveryCost = 0; // Assuming delivery cost is not available in OrderResponse or is 0 for now
+  const selectedTotalAmount = selectedTotalProductCost + selectedTotalDeliveryCost;
 
 
   // Bulk action handlers
@@ -494,14 +572,25 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     }
   };
 
-  const handleBulkPrint = () => {
+  const handleBulkPrint = async () => {
     if (selectedOrderIds.size === 0) {
       toast.error('Please select at least one order to print');
       return;
     }
 
     if (onNavigateToBulkBillOfLading) {
-      // onNavigateToBulkBillOfLading(selectedShipments);
+      try {
+        const toastId = toast.loading('Preparing Bill of Lading...');
+
+        const promises = Array.from(selectedOrderIds).map(id => shipmentsAPI.getById(id));
+        const details = await Promise.all(promises);
+
+        toast.dismiss(toastId);
+        onNavigateToBulkBillOfLading(details as unknown as OrderResponseDetails[]);
+      } catch (error) {
+        console.error('Failed to load shipment details:', error);
+        toast.error('Failed to load shipment details');
+      }
     }
   };
 
@@ -552,10 +641,6 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Export
           </Button>
           {role !== UserRole.agent && (
             <Button
@@ -727,7 +812,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <div>
                         <p className="text-xs text-slate-600 dark:text-slate-400">Product Cost</p>
                         <p className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                          {/* ${selectedTotalProductCost.toFixed(2)} */}
+                          ${selectedTotalProductCost.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -736,7 +821,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <div>
                         <p className="text-xs text-slate-600 dark:text-slate-400">Delivery Cost</p>
                         <p className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                          {/* ${selectedTotalDeliveryCost.toFixed(2)} */}
+                          ${selectedTotalDeliveryCost.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -745,7 +830,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <div>
                         <p className="text-xs text-slate-600 dark:text-slate-400">Total Amount</p>
                         <p className="font-mono font-semibold text-blue-600 dark:text-blue-400 text-lg">
-                          {/* ${selectedTotalAmount.toFixed(2)} */}
+                          ${selectedTotalAmount.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -766,7 +851,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <Button
                         variant="default"
                         size="sm"
-
+                        onClick={handleExportSelected}
                         className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-600"
                       >
                         <FileSpreadsheet className="w-4 h-4" />
@@ -833,7 +918,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                     {hiddenOrderIds.size} Hidden {hiddenOrderIds.size === 1 ? 'Order' : 'Orders'}
                   </Button>
                 )}
-                {/* {role !== UserRole.agent && (
+                {role !== UserRole.agent && (
                   <>
                     <Button
                       variant="outline"
@@ -846,10 +931,10 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                     <Button
                       variant="outline"
                       size="sm"
-
+                      onClick={handleExport}
                     >
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
-                      Export {selectedOrderIds.size > 0 ? `(${selectedOrderIds.size})` : ''}
+                      Export {filteredShipments.length > 0 ? `(${filteredShipments.length})` : ''}
                     </Button>
                     <Button
                       variant="outline"
@@ -862,7 +947,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       Print {selectedOrderIds.size > 0 ? `(${selectedOrderIds.size})` : ''}
                     </Button>
                   </>
-                )} */}
+                )}
                 {role !== UserRole.agent && (
                   <Button
                     size="sm"
@@ -892,11 +977,10 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       <TableHead>TRACKING ID</TableHead>
                       <TableHead>CUSTOMER</TableHead>
                       <TableHead>MERCHANT</TableHead>
-                      {/* <TableHead>AGENT</TableHead>
-                      <TableHead>DATE</TableHead>
-                      <TableHead>ZONE</TableHead> */}
+                      <TableHead>AGENT</TableHead>
+                      <TableHead>DATE CREATED</TableHead>
                       <TableHead className="bg-slate-50 dark:bg-slate-800/50">PRODUCT COST</TableHead>
-                      {/* <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead> */}
+                      <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead>
                       <TableHead className="bg-slate-100 dark:bg-slate-800">TOTAL AMOUNT</TableHead>
                       <TableHead>STATUS</TableHead>
                       <TableHead className="text-right">ACTIONS</TableHead>
@@ -939,17 +1023,22 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                           </TableCell>
                           <TableCell>{shipment.clientName}</TableCell>
                           <TableCell>{shipment.sellerName}</TableCell>
-                          {/* <TableCell>
+                          <TableCell>
                             {shipment.agentName || (
                               <span className="text-slate-400">Unassigned</span>
                             )}
-                          </TableCell> */}
-                          {/* <TableCell>{formatDate(shipment.dateCreated)}</TableCell> */}
-                          {/* <TableCell>{shipment.sellerName || '-'}</TableCell> */}
+                          </TableCell>
+                          <TableCell>{formatDate(shipment.dateCreated)}</TableCell>
                           <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/30">
                             <div className="flex items-center gap-1">
-                              <span className="text-slate-500rmaxt-xs">$</span>
-                              <span>{(shipment.totalPrice || 0).toFixed(2)}</span>
+                              <span className="text-slate-500 text-xs">$</span>
+                              <span>{(shipment.productPrice || 0).toFixed(2)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/30">
+                            <div className="flex items-center gap-1">
+                              <span className="text-slate-500 text-xs">$</span>
+                              <span>{(shipment.deliveryCost || 0).toFixed(2)}</span>
                             </div>
                           </TableCell>
 
@@ -988,7 +1077,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                               </Button>
                               {
                                 (
-                                  (isRoleAdminOrSuperAdmin && shipment.statusOrder !== ShipmentStatusString.Delivered) ||
+                                  (isRoleAdminOrSuperAdmin) ||
                                   (isRoleAgent && AGENT_STATUSES.includes(shipment.statusOrder as ShipmentStatusString)) ||
                                   (isRoleSeller && SELLER_STATUSES.includes(shipment.statusOrder as ShipmentStatusString))
                                 ) && (
@@ -1146,7 +1235,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Store / Branch</Label>
                 <Select value={storeFilter} onValueChange={setStoreFilter}>
                   <SelectTrigger>
@@ -1161,7 +1250,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
 
             {/* Status Filter */}
@@ -1222,11 +1311,19 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
               <div className="space-y-2">
                 <Label>Agent Name</Label>
-                <Input
-                  placeholder="Search by agent"
-                  value={agentSearch}
-                  onChange={(e) => setAgentSearch(e.target.value)}
-                />
+                <Select value={agentSearch} onValueChange={setAgentSearch}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Agents</SelectItem>
+                    {uniqueAgents.map(agent => (
+                      <SelectItem key={agent || 'unassigned'} value={agent || 'unassigned'}>
+                        {agent || 'Unassigned'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -1490,7 +1587,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
       {/* Hidden Orders Dialog */}
       <Dialog open={hiddenOrdersDialogOpen} onOpenChange={setHiddenOrdersDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <EyeOff className="w-5 h-5 text-orange-600" />
