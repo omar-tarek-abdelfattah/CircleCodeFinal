@@ -478,7 +478,9 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     .filter(s => selectedOrderIds.has(s.id))
     .reduce((sum, s) => sum + (s.totalPrice || 0), 0);
 
-  const selectedTotalDeliveryCost = 0; // Assuming delivery cost is not available in OrderResponse or is 0 for now
+  const selectedTotalDeliveryCost = shipments
+    .filter(s => selectedOrderIds.has(s.id))
+    .reduce((sum, s) => sum + (s.deliveryCost || 0), 0);
   const selectedTotalAmount = selectedTotalProductCost + selectedTotalDeliveryCost;
 
 
