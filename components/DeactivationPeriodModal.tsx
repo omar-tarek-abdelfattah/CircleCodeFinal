@@ -46,10 +46,8 @@ export function DeactivationPeriodModal({
   agentName,
   sellerId,
   sellerName,
-  itemId,
   itemName,
   itemType,
-  currentFromDate,
   currentToDate,
   onSuccess,
 }: DeactivationPeriodModalProps) {

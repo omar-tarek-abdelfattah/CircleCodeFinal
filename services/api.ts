@@ -37,18 +37,19 @@ import {
   AgiOrderResponse,
   AgiOrderSummary,
   AgiOrderSummaryToday,
+  confirmEmailResponse,
 } from "../types";
 import { Activity } from "../lib/mockData";
 
 // -------------------- Base URLs --------------------
 
-const AUTH_BASE_URL = "http://91.98.160.24:5001/api"
+const AUTH_BASE_URL = import.meta.env.VITE_API_AUTH_URL || "http://91.98.160.24:5001/api";
 
 const BASE_URLS = {
-  SuperAdmin: "http://91.98.160.24:5000/api",
-  Admin: "http://91.98.160.24:5000/api",
-  Seller: "http://91.98.160.24:8080/api",
-  Agent: "http://91.98.160.24:8081/api",
+  SuperAdmin: import.meta.env.VITE_API_ADMIN_URL || "http://91.98.160.24:5000/api",
+  Admin: import.meta.env.VITE_API_ADMIN_URL || "http://91.98.160.24:5000/api",
+  Seller: import.meta.env.VITE_API_SELLER_URL || "http://91.98.160.24:8080/api",
+  Agent: import.meta.env.VITE_API_AGENT_URL || "http://91.98.160.24:8081/api",
 };
 
 export enum apiMode {
@@ -235,6 +236,9 @@ export const shipmentsAPI = {
   // ✅ Get all orders
   getAll: async (dateFrom?: string, dateTo?: string): Promise<OrderResponse[]> => {
     return apiCall<OrderResponse[]>(`/Order?dateFirst=${dateFrom}&dateLast=${dateTo}`);
+  },
+  getAllbyDate: async (dateFrom?: string, dateTo?: string): Promise<OrderResponse[]> => {
+    return apiCall<OrderResponse[]>(`/Order/Date?dateFirst=${dateFrom}&dateLast=${dateTo}`);
   },
 
   getAllAssignedShipments: async (): Promise<AgiOrderResponse[]> => {
@@ -429,16 +433,23 @@ export const agentsAPI = {
       method: 'GET',
     });
   },
-  activate: async (_id: string): Promise<Boolean> => {
+  unlock: async (_id: string): Promise<Boolean> => {
     return apiCall<Boolean>(`/Agent/LockoutEnd?id=${parseInt(_id)}&ToLock=false`, {
       method: 'GET',
     });
   },
-  deactivate: async (_id: string): Promise<Boolean> => {
-    return apiCall<Boolean>(`/Agent/Activation?id=${parseInt(_id)}&ToLock=true&dateTime=${new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString()}`, {
+  activate: async (_id: string): Promise<Boolean> => {
+    return apiCall<Boolean>(`/Agent/Activation?id=${parseInt(_id)}`, {
       method: 'GET',
     });
   },
+  lock: async (_id: string): Promise<Boolean> => {
+    return apiCall<Boolean>(`/Agent/LockoutEnd?id=${parseInt(_id)}&ToLock=true&DateTime=${new Date().toISOString()}`, {
+      method: 'GET',
+    });
+  },
+
+
   // GET /api/agents/:id - Get agent by ID
   getById: async (id: string): Promise<Agent> => {
     // TODO: Replace with actual API call to .NET backend
@@ -516,8 +527,8 @@ export const sellersAPI = {
   },
 
   // GET /api/sellers - Get all inactive sellers
-  getAllInactive: async (): Promise<Seller[]> => {
-    return await apiCall<Seller[]>("/Seller/all?isActive=false");
+  getAllInactive: async (): Promise<SellerResponse[]> => {
+    return await apiCall<SellerResponse[]>("/Seller/all?isActive=false");
   },
 
   // GET /api/sellers/:id - Get seller by ID
@@ -529,7 +540,7 @@ export const sellersAPI = {
   // POST /api/sellers - Create new seller
   create: async (sellerData: Partial<Seller>): Promise<Seller> => {
     // TODO: Replace with actual API call to .NET backend
-    console.log(sellerData);
+    // console.log(sellerData);
     return await apiCall<Seller>("/Seller/add", {
       method: "POST",
       body: JSON.stringify(sellerData),
@@ -573,6 +584,17 @@ export const sellersAPI = {
     });
   },
 
+  lock: async (id: string): Promise<void> => {
+    return apiCall<void>(`/Seller/lockout?id=${Number(id)}&toLock=True&dateTime=${new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString()}`, {
+      method: 'POST',
+    });
+  },
+  unlock: async (id: string): Promise<void> => {
+    return apiCall<void>(`/Seller/lockout?id=${Number(id)}&toLock=False`, {
+      method: 'POST',
+    });
+  },
+
   // GET /api/Seller/lockout/all
   getLockedSellers: async (): Promise<SellerResponse[]> => {
     return await apiCall<SellerResponse[]>("/Seller/lockout/all");
@@ -590,19 +612,6 @@ export const sellersAPI = {
     return res.count;
   },
 
-  // DELETE /api/sellers/:id/deactivation-period - Clear deactivation period
-  clearDeactivationPeriod: async (id: string): Promise<Seller> => {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const { mockSellers } = await import("../lib/mockData");
-    const seller = mockSellers.find((s) => s.id === id);
-    if (!seller) throw new Error("Seller not found");
-
-    delete seller.deactivationFrom;
-    delete seller.deactivationTo;
-    return seller;
-  },
 };
 
 // Branches API
@@ -746,6 +755,18 @@ export const usersAPI = {
     });
   },
 
+  lock: async (id: number): Promise<boolean> => {
+    return apiCall<boolean>(`/Admin/lockout/${id}?toLock=true&dateTime=${new Date(new Date().setMonth(new Date().getMonth() + 7)).toISOString()}`, {
+      method: 'PUT',
+    });
+  },
+
+
+  unlock: async (id: number): Promise<boolean> => {
+    return apiCall<boolean>(`/Admin/lockout/${id}?toLock=false`, {
+      method: 'PUT',
+    });
+  },
   // PATCH /api/users/:id/status - Update user status
   updateStatus: async (
     id: string,
@@ -813,6 +834,13 @@ export const authAPI = {
     console.log("Backend API: Logout");
   },
 
+  confirmEmail: async ({ token, email }: { token: string; email: string }): Promise<void> => {
+    // TODO: Replace with actual API call to .NET backend
+    console.log("Backend API: Confirm email", token, email);
+    return apiCall<void>(`/Authentication/confirm-email?token=${token}&email=${email.trimEnd()}`, {
+      method: "GET",
+    });
+  },
   // POST /api/auth/refresh - Refresh token
   refreshToken: async (_refreshToken: string): Promise<{ token: string }> => {
     // TODO: Replace with actual API call to .NET backend
@@ -831,6 +859,11 @@ export const authAPI = {
     // TODO: Replace with actual API call to .NET backend
     console.log("Backend API: Reset password");
     throw new Error("Not implemented - connect to backend");
+  },
+  resendConfirmEmail: async (_email: string): Promise<confirmEmailResponse> => {
+    return apiCall<confirmEmailResponse>(`/Authentication/ReSent?email=${_email}`, {
+      method: "GET",
+    });
   },
 };
 

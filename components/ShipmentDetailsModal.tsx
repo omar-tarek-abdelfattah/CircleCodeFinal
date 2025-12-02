@@ -300,21 +300,21 @@ export function ShipmentDetailsModal({
                 <DollarSign className="w-4 h-4" />
                 <span className="text-xs">Delivery Fee</span>
               </div>
-              <p className="font-mono font-semibold">{0 || 'N/A'}<span className="text-xs">EGP</span></p>
+              <p className="font-mono font-semibold">{shipment?.deliveryCost || 'N/A'}<span className="text-xs">EGP</span></p>
             </div>
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
                 <span className="text-xs">Order Fee</span>
               </div>
-              <p className="font-mono font-semibold">{(shipmentDetails.price - 0) || 'N/A'}<span className="text-xs">EGP</span></p>
+              <p className="font-mono font-semibold">{shipment?.productPrice || 'N/A'}<span className="text-xs">EGP</span></p>
             </div>
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
                 <span className="text-xs">Total Price</span>
               </div>
-              <p className="font-mono font-semibold">{shipmentDetails.price || 'N/A'}<span className="text-xs">EGP</span></p>
+              <p className="font-mono font-semibold">{shipment?.totalPrice || 'N/A'}<span className="text-xs">EGP</span></p>
             </div>
 
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">

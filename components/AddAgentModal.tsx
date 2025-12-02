@@ -255,6 +255,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
               <Input
                 id="password"
                 placeholder="Abc.123!"
+                type='password'
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
                 disabled={loading}
@@ -266,6 +267,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
               </Label>
               <Input
                 id="confirmPassword"
+                type='password'
                 placeholder="Abc.123!"
                 value={formData.confirmPassword}
                 onChange={(e) => handleChange('confirmPassword', e.target.value)}

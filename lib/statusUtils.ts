@@ -28,6 +28,10 @@ export const SELLER_STATUSES: ShipmentStatusString[] = [
   ShipmentStatusString.PartiallyDelivered,
   ShipmentStatusString.Returned,
 ];
+export const SELLER_CHANGEABLE_STATUSES: ShipmentStatusString[] = [
+  ShipmentStatusString.New,
+  ShipmentStatusString.RejectedByUs,
+];
 
 // Limited statuses for agent role
 export const AGENT_STATUSES: ShipmentStatusString[] = [
@@ -98,6 +102,18 @@ export const getAvailableStatuses = (role: UserRole): ShipmentStatusString[] => 
       return AGENT_STATUSES;
     default:
       return ALL_STATUSES;
+  }
+};
+export const getAvailableChangeableStatuses = (role: UserRole): ShipmentStatusString[] => {
+  switch (role) {
+    case UserRole.Admin:
+      return ALL_STATUSES;
+    case UserRole.Seller:
+      return SELLER_CHANGEABLE_STATUSES;
+    case UserRole.agent:
+      return AGENT_CHANGEABLE_STATUSES;
+    default:
+      return AGENT_CHANGEABLE_STATUSES;
   }
 };
 // Get available statuses based on user role

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Filter, Download, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, Upload, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText } from 'lucide-react';
+import { Package, Search, Filter, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText } from 'lucide-react';
 import { AgentResponse, OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString } from '../types';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { agentsAPI, shipmentsAPI } from '../services/api';
@@ -21,8 +21,8 @@ import { EditShipmentModal } from '../components/EditShipmentModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { StatCard } from '../components/StatCard';
-import { AGENT_STATUSES, SELLER_STATUSES, getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus } from '../lib/statusUtils';
-import { importShipmentsFromExcel, downloadTemplate, exportShipmentsToExcel, exportTableDataToExcel } from '../lib/excelUtils';
+import { getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus, SELLER_CHANGEABLE_STATUSES, AGENT_CHANGEABLE_STATUSES } from '../lib/statusUtils';
+import { exportTableDataToExcel } from '../lib/excelUtils';
 
 
 interface ShipmentsPageProps {
@@ -40,9 +40,9 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
   const [editShipmentModalOpen, setEditShipmentModalOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importingFile, setImportingFile] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  // const [importDialogOpen, setImportDialogOpen] = useState(false);
+  // const [importingFile, setImportingFile] = useState(false);
+  // const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Bulk action dialogs
   const [changeStatusDialogOpen, setChangeStatusDialogOpen] = useState(false);
@@ -317,9 +317,9 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   //   }
   // }
 
-  const handleImport = () => {
-    setImportDialogOpen(true);
-  };
+  // const handleImport = () => {
+  //   setImportDialogOpen(true);
+  // };
 
   // Hide/Restore order handlers
   const handleHideOrder = (orderId: string) => {
@@ -351,48 +351,48 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     toast.success('All orders restored successfully');
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file) return;
 
-    setImportingFile(true);
+  //   setImportingFile(true);
 
-    try {
-      const result = await importShipmentsFromExcel(file);
+  //   try {
+  //     const result = await importShipmentsFromExcel(file);
 
-      if (result.success && result.shipments) {
-        // TODO: Send to backend API
-        // await shipmentsAPI.importBulk(result.shipments);
+  //     if (result.success && result.shipments) {
+  //       // TODO: Send to backend API
+  //       // await shipmentsAPI.importBulk(result.shipments);
 
-        // For now, add to existing shipments (frontend only)
-        // setShipments(prev => [...prev, ...result.shipments as Shipment[]]);
+  //       // For now, add to existing shipments (frontend only)
+  //       // setShipments(prev => [...prev, ...result.shipments as Shipment[]]);
 
-        toast.success(`Successfully imported ${result.count} orders`);
-        setImportDialogOpen(false);
+  //       toast.success(`Successfully imported ${result.count} orders`);
+  //       setImportDialogOpen(false);
 
-        // Reset file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      } else {
-        toast.error(result.error || 'Failed to import shipments');
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      toast.error('Failed to import Excel file');
-    } finally {
-      setImportingFile(false);
-    }
-  };
+  //       // Reset file input
+  //       if (fileInputRef.current) {
+  //         fileInputRef.current.value = '';
+  //       }
+  //     } else {
+  //       toast.error(result.error || 'Failed to import shipments');
+  //     }
+  //   } catch (error) {
+  //     console.error('Import error:', error);
+  //     toast.error('Failed to import Excel file');
+  //   } finally {
+  //     setImportingFile(false);
+  //   }
+  // };
 
-  const handleDownloadTemplate = () => {
-    const result = downloadTemplate();
-    if (result.success) {
-      toast.success('Template downloaded successfully');
-    } else {
-      toast.error(result.error || 'Failed to download template');
-    }
-  };
+  // const handleDownloadTemplate = () => {
+  //   const result = downloadTemplate();
+  //   if (result.success) {
+  //     toast.success('Template downloaded successfully');
+  //   } else {
+  //     toast.error(result.error || 'Failed to download template');
+  //   }
+  // };
 
   const handleResetFilters = async () => {
     setSearchQuery('');
@@ -920,14 +920,14 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                 )}
                 {role !== UserRole.agent && (
                   <>
-                    <Button
+                    {/* <Button
                       variant="outline"
                       size="sm"
                       onClick={handleImport}
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Import
-                    </Button>
+                    </Button> */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -1078,8 +1078,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                               {
                                 (
                                   (isRoleAdminOrSuperAdmin) ||
-                                  (isRoleAgent && AGENT_STATUSES.includes(shipment.statusOrder as ShipmentStatusString)) ||
-                                  (isRoleSeller && SELLER_STATUSES.includes(shipment.statusOrder as ShipmentStatusString))
+                                  (isRoleAgent && AGENT_CHANGEABLE_STATUSES.includes(shipment.statusOrder as ShipmentStatusString)) ||
+                                  (isRoleSeller && SELLER_CHANGEABLE_STATUSES.includes(shipment.statusOrder as ShipmentStatusString))
                                 ) && (
                                   <Button
                                     variant="ghost"
@@ -1351,7 +1351,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       />
 
       {/* Import Dialog */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+      {/* { <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1364,7 +1364,6 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {/* File Upload */}
             <div className="space-y-2">
               <Label>Upload Excel File</Label>
               <Card className="border-slate-200 dark:border-slate-800">
@@ -1395,7 +1394,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
               </Card>
             </div>
 
-            {/* Template Download */}
+            {/* Template Download 
             <div className="space-y-2">
               <Label>Download Template</Label>
               <Card className="border-slate-200 dark:border-slate-800">
@@ -1424,7 +1423,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>} */}
 
       {/* Change Status Dialog */}
       <Dialog open={changeStatusDialogOpen} onOpenChange={setChangeStatusDialogOpen}>
@@ -1466,9 +1465,10 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
             </div>
 
             {/* Agent Selection for specific statuses */}
-            {(bulkStatus === ShipmentStatusString.InPickupStage ||
-              bulkStatus === ShipmentStatusString.DeliveredToAgent ||
-              bulkStatus === ShipmentStatusString.Returned) && (
+            {(role === UserRole.SuperAdmin || role === UserRole.Admin) &&
+              (bulkStatus === ShipmentStatusString.InPickupStage ||
+                bulkStatus === ShipmentStatusString.DeliveredToAgent ||
+                bulkStatus === ShipmentStatusString.Returned) && (
                 <div className="space-y-2">
                   <Label>Assign Agent</Label>
                   <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>

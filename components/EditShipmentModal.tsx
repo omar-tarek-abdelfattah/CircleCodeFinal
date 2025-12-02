@@ -23,7 +23,7 @@ import { Edit, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { Agent, AgentResponse, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, SellerResponse, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '../types';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { agentsAPI, sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
-import { getAvailableStatuses, getStatusLabel } from '@/lib/statusUtils';
+import { getAvailableChangeableStatuses, getAvailableStatuses, getStatusLabel } from '@/lib/statusUtils';
 
 interface ProductItem {
   id: string;
@@ -89,7 +89,7 @@ export function EditShipmentModal({
     { id: '1', name: '', quantity: 1, price: 0, description: '' },
   ]);
 
-  const availableStatuses = userRole ? getAvailableStatuses(userRole) : [];
+  const availableStatuses = userRole ? getAvailableChangeableStatuses(userRole) : [];
 
   const populateModalDetails = async () => {
     setLoading(true)
@@ -600,7 +600,7 @@ export function EditShipmentModal({
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">
-                    Delivery Notes <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
+                    {role === UserRole.Seller ? "Cancelation Notes" : "Delivery Notes"} <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
                   </Label>
                   <Textarea
                     id="notes"
@@ -760,7 +760,7 @@ export function EditShipmentModal({
                         <SelectValue placeholder="Select Agent" />
                       </SelectTrigger>
                       <SelectContent>
-                        {agents.filter(agent => agent.isactive).map((agent) => (
+                        {agents.filter(agent => agent.isactive || !agent.isLock).map((agent) => (
                           <SelectItem key={agent.id} value={agent.id.toString()}>
                             {agent.name}
                           </SelectItem>
@@ -786,7 +786,7 @@ export function EditShipmentModal({
                   <Select
                     value={formData.statusOrder?.toString()}
                     onValueChange={(value) => handleChange('statusOrder', value)}
-                    disabled={loading || !canEdit || role === UserRole.Seller}
+                    disabled={loading || !canEdit}
                   >
                     <SelectTrigger id="status">
                       <SelectValue placeholder="Select Status" />

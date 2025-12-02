@@ -90,10 +90,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
     setLoading(true)
     try {
       const result = await zonesAPI.getById(id)
-
-      result.regions.map(region => {
-        setSelectedRegions(() => [region])
-      })
+      setSelectedRegions(result.regions)
     } catch (error) {
       console.error(error)
     }
@@ -533,7 +530,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                       <SelectValue placeholder="Select Seller" />
                     </SelectTrigger>
                     <SelectContent>
-                      {sellers.filter(s => s).map((seller) => (
+                      {sellers.filter(s => s.isConfermid).map((seller) => (
                         <SelectItem key={seller.id} value={seller.id.toString()}>
                           {seller.name}
                         </SelectItem>

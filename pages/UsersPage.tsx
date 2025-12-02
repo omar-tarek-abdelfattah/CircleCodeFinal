@@ -251,12 +251,26 @@ export default function UsersPage() {
   //   }
   // };
 
-  const handleStatusToggle = (userId: string) => {
+  const handleStatusToggle = async (userId: string) => {
     const user = users.find((u) => u.id.toString() === userId);
-    if (user) {
-      setUserForDeactivation(user);
-      setDeactivationModalOpen(true);
+    if (!(user?.isLock)) {
+      await usersAPI.lock(parseInt(userId));
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u.id.toString() === userId ? { ...u, isLock: !u.isLock } : u
+        )
+      );
+
+      toast.success(`User ${user?.isLock ? 'unlocked' : 'locked'} successfully`);
+    } else {
+      await usersAPI.unlock(parseInt(userId));
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u.id.toString() === userId ? { ...u, isLock: !u.isLock } : u
+        )
+      );
     }
+    toast.success('User status updated successfully');
   };
 
   const handleSetDeactivationPeriod = (user: AdminResponse) => {

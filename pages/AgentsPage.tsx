@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Users, UserCheck, TrendingUp, Search, Filter, Plus, Eye, Mail, Phone, Edit, EyeOff, CalendarClock } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Users, UserCheck, TrendingUp, Search, Filter, Plus, Eye, Phone, Edit, EyeOff, CalendarClock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
@@ -33,7 +33,7 @@ import { toast } from 'sonner';
 import { AddAgentModal } from '../components/AddAgentModal';
 import { EditAgentModal } from '../components/EditAgentModal';
 import { DeactivationPeriodModal } from '../components/DeactivationPeriodModal';
-import { Agent, AgentResponse, ShipmentStatusString } from '../types';
+import { AgentResponse, ShipmentStatusString } from '../types';
 import { agentsAPI, shipmentsAPI } from '../services/api';
 import { useEffect } from 'react';
 
@@ -217,18 +217,19 @@ export function AgentsPage() {
   };
 
   const handleToggleStatus = async (agentId: string, currentStatus: 'active' | 'inactive') => {
+
     if (currentStatus === 'active') {
       // User wants to deactivate/lock
       const agent = agents.find(a => a.id.toString() === agentId);
       if (agent) {
-        await agentsAPI.deactivate(agentId);
+        await agentsAPI.lock(agentId);
         fetchAgentsAndCounts();
 
       }
     } else {
       // User wants to activate (unlock)
       try {
-        await agentsAPI.activate(agentId);
+        await agentsAPI.unlock(agentId);
         fetchAgentsAndCounts();
 
         setAgents(prev =>
@@ -603,7 +604,7 @@ export function AgentsPage() {
                                       <span className="text-xs text-blue-900 dark:text-blue-200 font-semibold">Scheduled Deactivation</span>
                                     </div>
                                     <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-                                      From {formatDate(new Date().toString())} to {formatDate(new Date().toString())}.
+                                      From {formatDate(new Date().toString())} to somewhere around {formatDate(new Date(new Date().setMonth(new Date().getMonth() + 6)).toString())}.
                                     </p>
                                   </div>
                                 )}

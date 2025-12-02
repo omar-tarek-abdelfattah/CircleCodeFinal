@@ -490,6 +490,13 @@ export interface AgentResponse {
   date: string
 }
 
+export interface confirmEmailResponse {
+  to: string
+  subject: string
+  body: string
+  token: string
+}
+
 
 export interface SellerResponse {
   id: number;

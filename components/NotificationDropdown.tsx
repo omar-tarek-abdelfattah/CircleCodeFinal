@@ -53,7 +53,8 @@ export function NotificationDropdown() {
     inactiveSellers,
     refreshInactiveUsers,
     activateSeller,
-    activateAgent
+    activateAgent,
+    todayOrdersCount
   } = useNotifications();
   const [open, setOpen] = React.useState(false);
   const [activeTab, setActiveTab] = useState<'notifications' | 'inactive'>('notifications');
@@ -74,9 +75,9 @@ export function NotificationDropdown() {
     if (type === 'seller') {
       await activateSeller(id, vipStates[id] || false);
     } else {
-      const agent = inactiveAgents.find(a => a.id === id);
+      const agent = inactiveAgents.find(a => a.id.toString() === id);
       // Use branchId from agent or default to "1" if missing (should be present)
-      await activateAgent(id, agent?.branchId || "1");
+      await activateAgent(id, agent?.branshName || "1");
     }
   };
 
@@ -93,6 +94,13 @@ export function NotificationDropdown() {
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
           )}
+          {todayOrdersCount > 0 && (
+            <Badge
+              className="absolute -bottom-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-blue-500 hover:bg-blue-600"
+            >
+              {todayOrdersCount > 99 ? '99+' : todayOrdersCount}
+            </Badge>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -103,18 +111,25 @@ export function NotificationDropdown() {
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-4">
             <button
-              className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'notifications'
+              className={`text-sm font-semibold pb-1 border-b-2 transition-colors flex items-center ${activeTab === 'notifications'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               onClick={() => setActiveTab('notifications')}
             >
               Notifications
-              {unreadCount > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
-                  {unreadCount}
-                </Badge>
-              )}
+              <div className="flex gap-1 ml-2">
+                {unreadCount > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                    {unreadCount}
+                  </Badge>
+                )}
+                {todayOrdersCount > 0 && (
+                  <Badge className="h-5 px-1.5 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">
+                    {todayOrdersCount} today
+                  </Badge>
+                )}
+              </div>
             </button>
             {role === UserRole.SuperAdmin && (
               <button
@@ -139,12 +154,12 @@ export function NotificationDropdown() {
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={markAllAsRead}
-                  className="h-7 px-2 text-xs"
+                  className="h-7 w-7"
+                  title="Mark all read"
                 >
-                  <CheckCheck className="w-3.5 h-3.5 mr-1" />
-                  Mark all read
+                  <CheckCheck className="w-3.5 h-3.5" />
                 </Button>
               )}
               <Button
@@ -257,7 +272,7 @@ export function NotificationDropdown() {
                         <h4 className="text-sm font-medium">{agent.name}</h4>
                         <p className="text-xs text-slate-500">Agent - {agent.email}</p>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => handleActivate(agent.id, 'agent')}>
+                      <Button size="sm" variant="outline" onClick={() => handleActivate(agent.id.toString(), 'agent')}>
                         Activate
                       </Button>
                     </div>
@@ -272,7 +287,6 @@ export function NotificationDropdown() {
                     <div key={`seller-${seller.id}`} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between">
                       <div>
                         <h4 className="text-sm font-medium">{seller.name}</h4>
-                        <p className="text-xs text-slate-500">Seller - {seller.email}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5">
@@ -281,11 +295,11 @@ export function NotificationDropdown() {
                             id={`vip-${seller.id}`}
                             className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                             checked={vipStates[seller.id] || false}
-                            onChange={(e) => handleVipChange(seller.id, e.target.checked)}
+                            onChange={(e) => handleVipChange(seller.id.toString(), e.target.checked)}
                           />
                           <label htmlFor={`vip-${seller.id}`} className="text-xs text-slate-600 cursor-pointer select-none">VIP</label>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => handleActivate(seller.id, 'seller')}>
+                        <Button size="sm" variant="outline" onClick={() => handleActivate(seller.id.toString(), 'seller')}>
                           Activate
                         </Button>
                       </div>
@@ -302,14 +316,7 @@ export function NotificationDropdown() {
             <>
               <Separator />
               <div className="p-3 text-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-sm"
-                  onClick={() => setOpen(false)}
-                >
-                  View all notifications
-                </Button>
+
               </div>
             </>
           )

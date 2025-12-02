@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Notification, ShipmentStatus, Agent, Seller } from '../types';
+import { Notification, ShipmentStatus, Agent, Seller, AgentResponse, SellerResponse } from '../types';
 import { useAuth, UserRole } from './AuthContext';
 import { toast } from 'sonner';
-import { notificationsAPI, agentsAPI, sellersAPI } from '../services/api';
+import { notificationsAPI, agentsAPI, sellersAPI, shipmentsAPI } from '../services/api';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -23,11 +23,12 @@ interface NotificationContextType {
     changedById?: string,
     sellerId?: string
   ) => void;
-  inactiveAgents: Agent[];
-  inactiveSellers: Seller[];
+  inactiveAgents: AgentResponse[];
+  inactiveSellers: SellerResponse[];
   refreshInactiveUsers: () => Promise<void>;
   activateSeller: (id: string, vip: boolean) => Promise<void>;
   activateAgent: (id: string, branchId: string) => Promise<void>;
+  todayOrdersCount: number;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -35,8 +36,9 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
-  const [inactiveAgents, setInactiveAgents] = useState<Agent[]>([]);
-  const [inactiveSellers, setInactiveSellers] = useState<Seller[]>([]);
+  const [inactiveAgents, setInactiveAgents] = useState<AgentResponse[]>([]);
+  const [inactiveSellers, setInactiveSellers] = useState<SellerResponse[]>([]);
+  const [todayOrdersCount, setTodayOrdersCount] = useState(0);
   const { user, role } = useAuth();
 
   // Load notifications and new orders count on mount and user change
@@ -46,13 +48,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       if (role === UserRole.Admin || role === UserRole.SuperAdmin) {
         loadNewOrdersCount();
         loadInactiveUsers();
+        loadTodayOrdersCount();
       }
     }
   }, [user]);
 
-
-
-
+  // Update document title with today's orders count
+  useEffect(() => {
+    if (todayOrdersCount > 0) {
+      document.title = `(${todayOrdersCount}) Circle App`;
+    } else {
+      document.title = 'Circle App';
+    }
+  }, [todayOrdersCount]);
 
   // Load notifications from backend
   const loadNotifications = async () => {
@@ -88,6 +96,84 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       console.error('Failed to load inactive users:', error);
     }
   };
+
+  // Helper to get read notifications from local storage
+  const getReadNotifications = (): string[] => {
+    try {
+      const stored = localStorage.getItem('read_notifications');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Helper to save read notification to local storage
+  const saveReadNotification = (id: string) => {
+    const read = getReadNotifications();
+    if (!read.includes(id)) {
+      localStorage.setItem('read_notifications', JSON.stringify([...read, id]));
+    }
+  };
+
+  // Helper to save multiple read notifications to local storage
+  const saveReadNotifications = (ids: string[]) => {
+    const read = getReadNotifications();
+    const newIds = ids.filter(id => !read.includes(id));
+    if (newIds.length > 0) {
+      localStorage.setItem('read_notifications', JSON.stringify([...read, ...newIds]));
+    }
+  };
+
+  // Load today's orders count (admin only)
+  const loadTodayOrdersCount = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const orders = await shipmentsAPI.getAllbyDate(today, today);
+      const orderSummaryToday = await shipmentsAPI.getSummaryToday();
+
+      setTodayOrdersCount(orderSummaryToday.totalOrder as number);
+
+      const readIds = getReadNotifications();
+
+      const orderNotifications: Notification[] = orders.map(order => ({
+        id: `order-${order.id}`,
+        type: 'order_created',
+        title: 'New Order',
+        message: `Order created by ${order.clientName}`,
+        timestamp: order.dateCreated,
+        read: readIds.includes(`order-${order.id}`),
+        orderId: order.id.toString(),
+        orderNumber: order.id
+      }));
+
+      setNotifications(prev => {
+        const otherNotifications = prev.filter(n => !n.id.startsWith('order-'));
+        return [...orderNotifications, ...otherNotifications].sort((a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+      });
+
+    } catch (error) {
+      console.error('Failed to load today orders count:', error);
+    }
+  };
+
+  // short polling for updates every 10 minutes
+  useEffect(() => {
+    if (!user) return;
+
+    const pollData = () => {
+      loadNotifications();
+      if (role === UserRole.Admin || role === UserRole.SuperAdmin) {
+        loadNewOrdersCount();
+        loadInactiveUsers();
+        loadTodayOrdersCount();
+      }
+    };
+
+    const intervalId = setInterval(pollData, 10 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [user, role]);
 
   const addNotification = useCallback(
     (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
@@ -257,6 +343,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setNotifications((prev) =>
       prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
     );
+    saveReadNotification(id);
 
     // Backend API call
     try {
@@ -267,7 +354,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+    setNotifications((prev) => {
+      const updated = prev.map((notif) => ({ ...notif, read: true }));
+      saveReadNotifications(updated.map(n => n.id));
+      return updated;
+    });
 
     // Backend API call
     try {
@@ -332,6 +423,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     refreshInactiveUsers: loadInactiveUsers,
     activateSeller,
     activateAgent,
+    todayOrdersCount,
   };
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

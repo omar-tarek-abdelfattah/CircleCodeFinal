@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 import { Package, Mail, Lock, Loader2, Phone, Home } from "lucide-react";
 import { Button } from "./ui/button";
@@ -31,6 +31,12 @@ export function SignUpPage() {
     setLoading(true);
 
     try {
+      if (!/^[a-zA-Z0-9]+$/.test(userName)) {
+        setError("Username must contain only letters and numbers (no spaces).");
+        setLoading(false);
+        return;
+      }
+
       if (role === "Agent") {
         if (password !== passwordConfirmed) {
           setError("Passwords do not match!");
@@ -192,21 +198,6 @@ export function SignUpPage() {
                   />
                 </div>
               </div>
-              <div>
-                <Label>Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={passwordConfirmed}
-                    onChange={(e) => setPasswordConfirmed(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
               {(role === "Agent" || role === "Seller") && (
                 <div>
                   <Label>Confirm Password</Label>

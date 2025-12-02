@@ -200,31 +200,45 @@ export function SellersPage() {
   };
 
   const handleToggleConfirmation = async (sellerId: number, isConfirmed: boolean) => {
-    if (isConfirmed) {
-      // Unlocking (Locked -> Running)
-      try {
-        await sellersAPI.sellersLockout(sellerId.toString(), new Date().toISOString(), false);
+    // Optimistic update to show animation immediately
+    setSellers(prev =>
+      prev.map(s =>
+        s.id === sellerId ? { ...s, isConfermid: isConfirmed } : s
+      )
+    );
+    setLockedSellers(prev =>
+      prev.map(s =>
+        s.id === sellerId ? { ...s, isConfermid: isConfirmed } : s
+      )
+    );
 
-        // Update local state
-        setSellers(prev =>
-          prev.map(s =>
-            s.id === sellerId ? { ...s, isConfermid: true } : s
-          )
-        );
-        setLockedSellers(prev => prev.filter(s => s.id !== sellerId));
+    // Wait 1 second for animation
+    await new Promise(resolve => setTimeout(resolve, 700));
 
+    try {
+      if (isConfirmed) {
+        // Unlocking (Locked -> Running)
+        await sellersAPI.unlock(sellerId.toString());
         toast.success('Seller unlocked successfully');
-      } catch (error) {
-        console.error('Failed to unlock seller:', error);
-        toast.error('Failed to unlock seller');
+      } else {
+        // Locking (Running -> Locked)
+        await sellersAPI.lock(sellerId.toString());
+        toast.success('Seller locked successfully');
       }
-    } else {
-      // Locking (Running -> Locked)
-      // Open the deactivation modal instead of locking immediately
-      const seller = sellers.find(s => s.id === sellerId);
-      if (seller) {
-        handleSetDeactivationPeriod(seller);
-      }
+
+      // Refetch data to update lists
+      await Promise.all([
+        loadSellers(),
+        loadLockedSellers(),
+        loadActiveSellersCount()
+      ]);
+
+    } catch (error) {
+      console.error('Failed to update seller status:', error);
+      toast.error('Failed to update seller status');
+      // Revert/Refresh on error
+      loadSellers();
+      loadLockedSellers();
     }
   };
 
@@ -315,19 +329,6 @@ export function SellersPage() {
           transition={{ delay: 0.2 }}
         >
           <StatCard
-            title="Active Sellers"
-            value={sellers.filter(s => s.isActive).length.toString()}
-            icon={UserCheck}
-
-          />
-
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <StatCard
             title="Confirmed Sellers"
             value={activeSellersCount}
             icon={UserCheck}
@@ -337,10 +338,23 @@ export function SellersPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <StatCard
+            title="Today's Active Sellers"
+            value={sellers.filter(s => s.isActive).length.toString()}
+            icon={UserCheck}
+
+          />
+
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
           <StatCard
-            title="Total Revenue"
+            title="Today's Revenue"
             value={formatCurrency(totalRevenue)}
             icon={DollarSign}
           />
@@ -390,7 +404,7 @@ export function SellersPage() {
                     <CardTitle>Sellers</CardTitle>
                     <CardDescription>
                       {filteredSellers.length} {filteredSellers.length === 1 ? 'seller' : 'sellers'} found
-                      <br /><span>shipments, profit, delivery cost and activity are for today</span>
+                      <br /><span>shipments, profit, delivery cost and activity are for today *</span>
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -424,10 +438,10 @@ export function SellersPage() {
                           <TableHead>NAME</TableHead>
                           <TableHead>STORE NAME</TableHead>
                           <TableHead>ADDRESS</TableHead>
-                          <TableHead>SHIPMENTS</TableHead>
-                          <TableHead>PROFIT</TableHead>
-                          <TableHead>DELIVERY COST</TableHead>
-                          <TableHead>Activity</TableHead>
+                          <TableHead>SHIPMENTS*</TableHead>
+                          <TableHead>PROFIT*</TableHead>
+                          <TableHead>DELIVERY COST*</TableHead>
+                          <TableHead>Activity*</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">ACTIONS</TableHead>
                         </TableRow>
@@ -532,11 +546,11 @@ export function SellersPage() {
                                       onCheckedChange={(checked) => handleToggleConfirmation(seller.id, checked)}
                                       className="data-[state=checked]:bg-green-500"
                                     />
-                                    <span className={`text-sm font-semibold ${seller.isConfermid
+                                    <span className={`text-sm font-semibold ${seller.isActive
                                       ? 'text-green-600 dark:text-green-400'
                                       : 'text-red-600 dark:text-red-400'
                                       }`}>
-                                      {seller.isConfermid ? 'Running' : 'Locked'}
+                                      {seller.isActive ? 'Active' : 'Locked'}
                                     </span>
                                   </div>
                                 </div>

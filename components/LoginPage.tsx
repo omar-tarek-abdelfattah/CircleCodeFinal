@@ -8,10 +8,12 @@ import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Alert, AlertDescription } from './ui/alert';
 import { SignUpPage } from '../components/SignUpPage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { authAPI } from '@/services/api';
 
 export function LoginPage() {
 
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const { login, forgetPassword, saveNewPassword } = useAuth();
@@ -27,10 +29,27 @@ export function LoginPage() {
   const [forgetEmail, setForgetEmail] = useState('');
   const [forgetMessage, setForgetMessage] = useState('');
   const [forgetLoading, setForgetLoading] = useState(false);
-  const [forgetStep2, setForgetStep2] = useState(false);
-  const [resetToken, setResetToken] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [emailParams, setEmailParams] = useState('');
+  const [tokenParams, setTokenParams] = useState('');
+  // const [forgetStep2, setForgetStep2] = useState(false);
+  // const [resetToken, setResetToken] = useState('');
+  // const [newPassword, setNewPassword] = useState('');
+  // const [confirmPassword, setConfirmPassword] = useState('');
+
+  // 🔹 Confirmation state
+
+  // 🔹 Check for token and email in URL
+  React.useEffect(() => {
+    const init = async () => {
+      const token = searchParams.get('token');
+      const emailParam = searchParams.get('email');
+      if (token && emailParam) {
+        setEmailParams(emailParam.trimEnd());
+        setTokenParams(token.trimEnd());
+      }
+    };
+    init();
+  }, [searchParams]);
 
   // 🔹 Login handler
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,9 +58,16 @@ export function LoginPage() {
     setError('');
 
     try {
+      if (emailParams && tokenParams) {
+        await authAPI.confirmEmail({ token: tokenParams, email: emailParams.trimEnd() });
+      }
       await login(email, password);
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+      if (err.response?.status === 400 || err.status === 400) {
+        setError('Invalid email or password');
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -152,6 +178,29 @@ export function LoginPage() {
                 )}
               </Button>
 
+              {emailParams && tokenParams && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const response = await authAPI.resendConfirmEmail(emailParams);
+                      setTokenParams(response.token);
+                      setError('Confirmation email resent successfully. A new token has been applied.');
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to resend confirmation email.');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                >
+                  Resend Confirmation Email
+                </Button>
+              )}
+
               <Label
                 className="text-center text-sm text-slate-500 cursor-pointer hover:text-blue-500"
                 onClick={() => setShowForget(true)}
@@ -161,57 +210,57 @@ export function LoginPage() {
 
               {/* 🔹 Forget Password / Reset Password */}
               {/* 🔹 Forget Password / Send Reset Link only */}
-{showForget && (
-  <div className="mt-4 p-4 bg-gray-100 dark:bg-slate-800 rounded-lg space-y-2">
-    <Label>Email for password reset:</Label>
-    <Input
-      type="email"
-      placeholder="your.email@circlecode.com"
-      value={forgetEmail}
-      onChange={(e) => setForgetEmail(e.target.value)}
-      className="mt-1"
-    />
+              {showForget && (
+                <div className="mt-4 p-4 bg-gray-100 dark:bg-slate-800 rounded-lg space-y-2">
+                  <Label>Email for password reset:</Label>
+                  <Input
+                    type="email"
+                    placeholder="your.email@circlecode.com"
+                    value={forgetEmail}
+                    onChange={(e) => setForgetEmail(e.target.value)}
+                    className="mt-1"
+                  />
 
-    <Button
-      onClick={async () => {
-        if (!forgetEmail) {
-          setForgetMessage('Please enter your email.');
-          return;
-        }
-        setForgetLoading(true);
-        setForgetMessage('');
-        try {
-          const success = await forgetPassword(forgetEmail);
-          if (success) {
-            setForgetMessage('📩 A reset link has been sent to your email.');
-          } else {
-            setForgetMessage('❌ Failed to send reset link. Try again.');
-          }
-        } catch (err) {
-          setForgetMessage(err instanceof Error ? err.message : 'Failed to send request.');
-        } finally {
-          setForgetLoading(false);
-        }
-      }}
-      className="mt-2 w-full"
-      disabled={forgetLoading}
-    >
-      {forgetLoading ? 'Sending...' : 'Send Reset Link'}
-    </Button>
+                  <Button
+                    onClick={async () => {
+                      if (!forgetEmail) {
+                        setForgetMessage('Please enter your email.');
+                        return;
+                      }
+                      setForgetLoading(true);
+                      setForgetMessage('');
+                      try {
+                        const success = await forgetPassword(forgetEmail);
+                        if (success) {
+                          setForgetMessage('📩 A reset link has been sent to your email.');
+                        } else {
+                          setForgetMessage('❌ Failed to send reset link. Try again.');
+                        }
+                      } catch (err) {
+                        setForgetMessage(err instanceof Error ? err.message : 'Failed to send request.');
+                      } finally {
+                        setForgetLoading(false);
+                      }
+                    }}
+                    className="mt-2 w-full"
+                    disabled={forgetLoading}
+                  >
+                    {forgetLoading ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
 
-    {forgetMessage && (
-      <p className="text-sm mt-2 text-center text-blue-600 dark:text-blue-400">
-        {forgetMessage}
-      </p>
-    )}
+                  {forgetMessage && (
+                    <p className="text-sm mt-2 text-center text-blue-600 dark:text-blue-400">
+                      {forgetMessage}
+                    </p>
+                  )}
 
-    <p
-      className="text-center text-sm text-slate-600 dark:text-slate-400 cursor-pointer hover:text-blue-500"
-      onClick={() => setShowForget(false)}
-    >
-    </p>
-  </div>
-)}
+                  <p
+                    className="text-center text-sm text-slate-600 dark:text-slate-400 cursor-pointer hover:text-blue-500"
+                    onClick={() => setShowForget(false)}
+                  >
+                  </p>
+                </div>
+              )}
 
               <p className="text-blue-500 cursor-pointer" onClick={() => navigate('/signup')}>
                 Don't have an account? Sign Up
