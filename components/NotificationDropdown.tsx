@@ -17,7 +17,16 @@ import {
 // Format timestamp to relative time
 const formatRelativeTime = (timestamp: string) => {
   const now = new Date();
-  const date = new Date(timestamp);
+
+  // Check if timestamp has timezone info (Z or +HH:mm or -HH:mm)
+  // If not, assume it's from the server in UTC-8 (PST) which causes the 10h offset (UTC+2 vs UTC-8)
+  let dateStr = timestamp;
+  const hasTimezone = /Z|[+-]\d{2}:?\d{2}$/.test(timestamp);
+  if (!hasTimezone) {
+    dateStr += '-08:00';
+  }
+
+  const date = new Date(dateStr);
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return 'Just now';

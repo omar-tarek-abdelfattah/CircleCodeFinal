@@ -352,7 +352,7 @@ export const shipmentsAPI = {
   bulkAssign: async (ids: string[], agentId: string): Promise<void> => {
     return apiCall<void>("/Order/bulk-assign", {
       method: "PATCH",
-      body: JSON.stringify({ shipmentIds: ids, agentId }),
+      body: JSON.stringify({ shipmentIds: ids, agentId, statusOrder: parseInt(ShipmentStatus.DeliveredToAgent) }),
     });
   },
 
@@ -412,7 +412,7 @@ export const walletAPI = {
 
 // Agents API
 export const agentsAPI = {
-  // GET /api/agents - Get all agents
+  // GET /api/Agent - Get all agents
   getAll: async (): Promise<AgentResponse[]> => {
     // TODO: Replace with actual API call to .NET backend
     return apiCall<AgentResponse[]>('/Agent', {
@@ -427,7 +427,7 @@ export const agentsAPI = {
     });
   },
 
-  // GET /api/agents - Get all inactive agents
+  // GET /api/Agent - Get all inactive agents
   getAllInactive: async (): Promise<AgentResponse[]> => {
     return apiCall<AgentResponse[]>('/Agent?isActive=false', {
       method: 'GET',
@@ -444,13 +444,11 @@ export const agentsAPI = {
     });
   },
   lock: async (_id: string): Promise<Boolean> => {
-    return apiCall<Boolean>(`/Agent/LockoutEnd?id=${parseInt(_id)}&ToLock=true&DateTime=${new Date().toISOString()}`, {
+    return apiCall<Boolean>(`/Agent/LockoutEnd?id=${parseInt(_id)}&ToLock=true&DateTime=${new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString()}`, {
       method: 'GET',
     });
   },
-
-
-  // GET /api/agents/:id - Get agent by ID
+  // GET /api/Agent/:id - Get agent by ID
   getById: async (id: string): Promise<Agent> => {
     // TODO: Replace with actual API call to .NET backend
     return apiCall<Agent>(`/Agent/${id}`, { method: 'GET', });
@@ -837,9 +835,9 @@ export const authAPI = {
   confirmEmail: async ({ token, email }: { token: string; email: string }): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
     console.log("Backend API: Confirm email", token, email);
-    return apiCall<void>(`/Authentication/confirm-email?token=${token}&email=${email.trimEnd()}`, {
+    return apiCall<void>(`/Authentication/confirm-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`, {
       method: "GET",
-    });
+    }, "SuperAdmin", apiMode.auth);
   },
   // POST /api/auth/refresh - Refresh token
   refreshToken: async (_refreshToken: string): Promise<{ token: string }> => {
@@ -861,9 +859,9 @@ export const authAPI = {
     throw new Error("Not implemented - connect to backend");
   },
   resendConfirmEmail: async (_email: string): Promise<confirmEmailResponse> => {
-    return apiCall<confirmEmailResponse>(`/Authentication/ReSent?email=${_email}`, {
+    return apiCall<confirmEmailResponse>(`/Authentication/ReSent?email=${encodeURIComponent(_email)}`, {
       method: "GET",
-    });
+    }, "SuperAdmin", apiMode.auth);
   },
 };
 

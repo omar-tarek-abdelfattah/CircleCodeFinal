@@ -99,7 +99,7 @@ export const getAvailableStatuses = (role: UserRole): ShipmentStatusString[] => 
     case UserRole.Seller:
       return SELLER_STATUSES;
     case UserRole.agent:
-      return AGENT_STATUSES;
+      return AGENT_CHANGEABLE_STATUSES;
     default:
       return ALL_STATUSES;
   }
@@ -107,6 +107,8 @@ export const getAvailableStatuses = (role: UserRole): ShipmentStatusString[] => 
 export const getAvailableChangeableStatuses = (role: UserRole): ShipmentStatusString[] => {
   switch (role) {
     case UserRole.Admin:
+      return ALL_STATUSES;
+    case UserRole.SuperAdmin:
       return ALL_STATUSES;
     case UserRole.Seller:
       return SELLER_CHANGEABLE_STATUSES;

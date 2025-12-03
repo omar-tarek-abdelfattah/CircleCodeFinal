@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Package, Users, TrendingUp, DollarSign, Building2, Clock, RefreshCw, Download, Plus } from 'lucide-react';
+import { Package, Users, TrendingUp, DollarSign, Building2, Clock, RefreshCw } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { NewShipmentsTable } from '../components/NewShipmentsTable';
@@ -8,11 +8,12 @@ import { ShipmentDetailsModal } from '../components/ShipmentDetailsModal';
 import { AddShipmentModal } from '../components/AddShipmentModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { AgiOrderSummaryToday, OrderResponse, SellerResponse, ShipmentStatusString } from '../types';
+import { OrderResponse, ShipmentStatusString } from '../types';
 import { Activity } from '../lib/mockData';
 import { sellersAPI, agentsAPI, shipmentsAPI, log, branchesAPI } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { useAuth, UserRole } from '../contexts/AuthContext';
+import { Checkbox } from '../components/ui/checkbox';
 
 interface AdminDashboardProps {
   onNavigate?: (page: string) => void;
@@ -26,19 +27,24 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [addShipmentModalOpen, setAddShipmentModalOpen] = useState(false);
+
+  // Data States
   const [shipments, setShipments] = useState<any[]>([]);
   const [shipmentsCount, setShipmentsCount] = useState(0);
+  const [todayOrders, setTodayOrders] = useState<OrderResponse[]>([]);
   const [logData, setLogData] = useState<Activity[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [agentsCount, setAgentsCount] = useState(0);
   const [branches, setBranches] = useState<any[]>([]);
   const [sellers, setSellers] = useState<any[]>([]);
 
+  // Stats States
   const [completedShipments, setCompletedShipments] = useState(0);
   const [inPickupCount, setInPickupCount] = useState(0);
   const [totalCollection, setTotalCollection] = useState(0);
-  const [orderSummaryToday, setOrderSummaryToday] = useState<AgiOrderSummaryToday>({} as AgiOrderSummaryToday);
 
+  // View State
+  const [isToday, setIsToday] = useState(false);
 
   const loadShipments = async () => {
     setLoading(true);
@@ -49,17 +55,20 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     setShipments(reversedShipmentsData);
     setLoading(false);
   }
+
   useEffect(() => {
     const fetchData = async () => {
+      const today = new Date().toISOString().split('T')[0];
+
       // Fetch all data
-      const [sellersData, agentsData, agentsCount, shipmentsData, logsData, branchesData, orderSummaryToday] = await Promise.all([
+      const [sellersData, agentsData, agentsCount, shipmentsData, logsData, branchesData, todayOrdersData] = await Promise.all([
         sellersAPI.getAll(),
         agentsAPI.getAll(),
         agentsAPI.getActiveCount(),
         shipmentsAPI.getAll(),
         log.getAll(),
         branchesAPI.getAll(),
-        shipmentsAPI.getSummaryToday(),
+        shipmentsAPI.getAllbyDate(today, today),
       ]);
 
       // Filter active sellers & agents
@@ -67,16 +76,17 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       setAgents(agentsData);
       setAgentsCount(agentsCount);
       setBranches(branchesData.data || []); // branches API returns an object with `data` array
+
       const reversedShipmentsData = shipmentsData.reverse().slice(0, 5);
       const shipmentsCountt = shipmentsData.length;
       setShipmentsCount(shipmentsCountt);
       setShipments(reversedShipmentsData);
       setLogData(logsData);
+      setTodayOrders(todayOrdersData);
 
-
-      // Totals
-
+      // Totals Calculations
       setCompletedShipments(shipmentsData.filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered).length);
+
       setInPickupCount(shipmentsData.filter((s: OrderResponse) =>
         s.statusOrder === ShipmentStatusString.InPickupStage
         || s.statusOrder === ShipmentStatusString.New
@@ -85,20 +95,69 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         || s.statusOrder === ShipmentStatusString.Postponed
         || s.statusOrder === ShipmentStatusString.CustomerUnreachable
       ).length);
+
       setTotalCollection(
         shipmentsData
-          .filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees) // بس الشحنات اللي تم توصيلها
-          .reduce((sum: number, s: OrderResponse) => sum + (s.totalPrice || 0), 0)
+          .filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees)
+          .reduce((sum: number, s: OrderResponse) => sum + (s.deliveryCost || 0), 0)
       );
-      setOrderSummaryToday(orderSummaryToday);
     };
 
     fetchData();
   }, []);
 
-  // const totalShipments = shipments.length;
   const totalSellers = sellers.length;
-  const activeSellers = sellers.filter((s: SellerResponse) => s.isActive).length;
+
+  // Calculate Today's Stats
+  const todayStats = {
+    shipments: todayOrders.length,
+    pending: todayOrders.filter((s: OrderResponse) =>
+      s.statusOrder === ShipmentStatusString.InPickupStage
+      || s.statusOrder === ShipmentStatusString.New
+      || s.statusOrder === ShipmentStatusString.InWarehouse
+      || s.statusOrder === ShipmentStatusString.DeliveredToAgent
+      || s.statusOrder === ShipmentStatusString.Postponed
+      || s.statusOrder === ShipmentStatusString.CustomerUnreachable
+    ).length,
+    completed: todayOrders.filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered).length,
+    collection: todayOrders
+      .filter((s: OrderResponse) => s.statusOrder === ShipmentStatusString.Delivered || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees)
+      .reduce((sum: number, s: OrderResponse) => sum + (s.deliveryCost || 0), 0),
+    activeAgents: new Set(todayOrders.map(o => o.agentName).filter(Boolean)).size,
+    activeSellers: new Set(todayOrders.map(o => o.sellerName).filter(Boolean)).size
+  };
+
+  const currentStats = isToday ? {
+    shipments: todayStats.shipments,
+    pending: todayStats.pending,
+    completed: todayStats.completed,
+    collection: todayStats.collection,
+    activeAgents: todayStats.activeAgents,
+    sellers: todayStats.activeSellers,
+    labels: {
+      shipments: "Today's Shipments",
+      pending: "Pending Today",
+      completed: "Completed Today",
+      collection: "Collection Today",
+      agents: "Agents Active Today",
+      sellers: "Sellers Active Today"
+    }
+  } : {
+    shipments: shipmentsCount,
+    pending: inPickupCount,
+    completed: completedShipments,
+    collection: totalCollection,
+    activeAgents: agentsCount,
+    sellers: totalSellers,
+    labels: {
+      shipments: "Total Shipments",
+      pending: "Total Pending",
+      completed: "Total Completed",
+      collection: "Collection Amount",
+      agents: "Active Agents",
+      sellers: "Total Sellers"
+    }
+  };
 
   const handleViewDetails = (shipment: OrderResponse) => {
     setSelectedShipment(shipment);
@@ -111,40 +170,86 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   const handleShipmentCreated = () => {
     console.log('Shipment created, refreshing list...');
+    loadShipments();
   };
 
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-2xl p-8 text-white relative overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl mb-2">System Overview 📊</h1>
-          <p className="text-purple-100">Monitor and manage all aspects of Circle Code System.</p>
+      <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-2xl p-8 text-white relative overflow-hidden w-full"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="relative z-10">
+            <h1 className="text-3xl mb-2">System Overview 📊</h1>
+            <p className="text-purple-100">Monitor and manage all aspects of Circle Code System.</p>
+          </div>
+        </motion.div>
+
+        <div className="flex justify-end">
+          <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm w-fit">
+            <Checkbox
+              id="today-filter"
+              checked={isToday}
+              onCheckedChange={(checked) => setIsToday(checked as boolean)}
+            />
+            <label
+              htmlFor="today-filter"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Today's Data
+            </label>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Total Shipments*" value={shipmentsCount} icon={Package} gradient="from-blue-500 to-blue-600" />
-        <StatCard title="Shipments Today" value={orderSummaryToday?.totalOrder?.toString() || '0'} icon={Package} gradient="from-indigo-500 to-green-600" />
-        <StatCard title="Pending Shipments*" value={inPickupCount} icon={Clock} gradient="from-orange-500 to-orange-600" />
-        <StatCard title="Pending Today" value={orderSummaryToday?.totalPindingOrder?.toString() || '0'} icon={Clock} gradient="from-indigo-500 to-green-600" />
-        <StatCard title="Completed Shipments*" value={completedShipments} icon={TrendingUp} gradient="from-green-500 to-green-600" />
-        <StatCard title="Collection Amount" value={`$${totalCollection.toFixed(0)}`} icon={DollarSign} gradient="from-purple-500 to-purple-600" />
-        <StatCard title="Our Revenue Today" value={`$${sellers.reduce((sum: number, s: SellerResponse) => sum + (s.deliveryCost || 0), 0).toFixed(0)}`} icon={DollarSign} gradient="from-purple-500 to-green-600" />
-        <StatCard title="Active Agents" value={agentsCount} icon={Users} gradient="from-pink-500 to-pink-600" />
-        <StatCard title="Assigned Shipments" value={shipments.filter((s: OrderResponse) => (
-          s.statusOrder === ShipmentStatusString.InPickupStage
-          || s.statusOrder === ShipmentStatusString.DeliveredToAgent
-          || s.statusOrder === ShipmentStatusString.Returned
-        )).length} icon={Users} gradient="from-pink-500 to-pink-600" />
-        <StatCard title="Total Sellers" value={totalSellers} icon={Users} gradient="from-indigo-500 to-indigo-600" />
-        <StatCard title="Active Sellers Today" value={activeSellers} icon={Users} gradient="from-indigo-500 to-green-600" />
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${isToday ? 'xl:grid-cols-6' : 'xl:grid-cols-6'} gap-4`}>
+        <StatCard
+          title={currentStats.labels.shipments}
+          value={currentStats.shipments}
+          icon={Package}
+          gradient={isToday ? "from-blue-500 to-green-500" : "from-blue-500 to-blue-600"}
+          badge={isToday ? "TODAY" : undefined}
+        />
+        <StatCard
+          title={currentStats.labels.pending}
+          value={currentStats.pending}
+          icon={Clock}
+          gradient={isToday ? "from-orange-500 to-green-500" : "from-orange-500 to-orange-600"}
+          badge={isToday ? "TODAY" : undefined}
+        />
+        <StatCard
+          title={currentStats.labels.completed}
+          value={currentStats.completed}
+          icon={TrendingUp}
+          gradient={isToday ? "from-green-500 to-green-400" : "from-green-500 to-green-600"}
+          badge={isToday ? "TODAY" : undefined}
+        />
+        <StatCard
+          title={currentStats.labels.collection}
+          value={`$${currentStats.collection.toFixed(0)}`}
+          icon={DollarSign}
+          gradient={isToday ? "from-purple-500 to-green-500" : "from-purple-500 to-purple-600"}
+          badge={isToday ? "TODAY" : undefined}
+        />
+        <StatCard
+          title={currentStats.labels.agents}
+          value={currentStats.activeAgents}
+          icon={Users}
+          gradient={isToday ? "from-pink-500 to-green-500" : "from-pink-500 to-pink-600"}
+          badge={isToday ? "TODAY" : undefined}
+        />
+        <StatCard
+          title={currentStats.labels.sellers}
+          value={currentStats.sellers}
+          icon={Users}
+          gradient={isToday ? "from-indigo-500 to-green-500" : "from-indigo-500 to-indigo-600"}
+          badge={isToday ? "TODAY" : undefined}
+        />
       </div>
 
       {/* Recent Activity */}
@@ -158,7 +263,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       {/* New Shipments Table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
         <div className="flex gap-2 justify-end">
-
           <Button
             variant="outline"
             onClick={loadShipments}

@@ -329,6 +329,18 @@ export function AgentsPage() {
     return colors[index % colors.length];
   };
 
+  const handleActivation = async (agentId: string) => {
+    try {
+      await agentsAPI.activate(agentId);
+      toast.success('Agent activated successfully');
+      loadInactiveAgents();
+      fetchAgentsAndCounts();
+    } catch (error) {
+      console.error('Failed to activate agent:', error);
+      toast.error('Failed to activate agent');
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -502,8 +514,7 @@ export function AgentsPage() {
                         <TableHead>BRANCH</TableHead>
                         <TableHead>CONTACT</TableHead>
                         <TableHead>EMAIL</TableHead>
-                        <TableHead>ACTIVE ORDERS</TableHead>
-                        <TableHead>TODAY'S ORDERS</TableHead>
+                        <TableHead>ORDERS</TableHead>
                         <TableHead>STATUS</TableHead>
                         <TableHead className="text-right">ACTIONS</TableHead>
                       </TableRow>
@@ -559,18 +570,8 @@ export function AgentsPage() {
                                 {agent.numberofOrder}
                               </Badge>
                             </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="secondary"
-                                className={
-                                  agent.numberofOrder && agent.numberofOrder > 0
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
-                                }
-                              >
-                                {agent.numberofOrder || 0}
-                              </Badge>
-                            </TableCell>
+
+
                             <TableCell>
                               <div className="space-y-1.5">
                                 <div className="flex items-center gap-3">
@@ -723,8 +724,7 @@ export function AgentsPage() {
                         <TableHead>BRANCH</TableHead>
                         <TableHead>CONTACT</TableHead>
                         <TableHead>EMAIL</TableHead>
-                        <TableHead>ACTIVE ORDERS</TableHead>
-                        <TableHead>TODAY'S ORDERS</TableHead>
+                        <TableHead>ORDERS</TableHead>
                         <TableHead>STATUS</TableHead>
                         <TableHead className="text-right">ACTIONS</TableHead>
                       </TableRow>
@@ -771,18 +771,6 @@ export function AgentsPage() {
                             <TableCell>
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                                 {agent.numberofOrder}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="secondary"
-                                className={
-                                  agent.numberofOrder && agent.numberofOrder > 0
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
-                                }
-                              >
-                                {agent.numberofOrder || 0}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -871,8 +859,7 @@ export function AgentsPage() {
                         <TableHead>BRANCH</TableHead>
                         <TableHead>CONTACT</TableHead>
                         <TableHead>EMAIL</TableHead>
-                        <TableHead>ACTIVE ORDERS</TableHead>
-                        <TableHead>TODAY'S ORDERS</TableHead>
+                        <TableHead>ORDERS</TableHead>
                         <TableHead>STATUS</TableHead>
                         <TableHead className="text-right">ACTIONS</TableHead>
                       </TableRow>
@@ -922,23 +909,11 @@ export function AgentsPage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge
-                                variant="secondary"
-                                className={
-                                  agent.numberofOrder && agent.numberofOrder > 0
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
-                                }
-                              >
-                                {agent.numberofOrder || 0}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
                               <div className="space-y-1.5">
                                 <div className="flex items-center gap-3">
                                   <Switch
                                     checked={false}
-                                    onCheckedChange={() => handleToggleStatus(agent.id.toString(), 'inactive')}
+                                    onCheckedChange={() => handleActivation(agent.id.toString())}
                                     className="data-[state=checked]:bg-green-500"
                                   />
                                   <span className="text-sm font-semibold text-red-600 dark:text-red-400">

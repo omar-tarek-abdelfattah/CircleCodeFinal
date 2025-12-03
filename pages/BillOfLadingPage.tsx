@@ -12,12 +12,16 @@ import { BillOfLadingTemplate } from '../components/BillOfLadingTemplate';
 
 interface BillOfLadingPageProps {
   shipment: OrderResponseDetails | null;
+  totalPrice: number;
+  productPrice: number;
+  deliveryCost: number;
   onBack: () => void;
 }
 
-export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
+export function BillOfLadingPage({ shipment, totalPrice, productPrice, deliveryCost, onBack }: BillOfLadingPageProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  console.log(totalPrice, productPrice, deliveryCost);
 
   if (!shipment) {
     return (
@@ -155,7 +159,7 @@ export function BillOfLadingPage({ shipment, onBack }: BillOfLadingPageProps) {
       {/* Printable Content */}
       <div className="flex justify-center print:block print:m-0">
         <div ref={printRef} className="w-full max-w-[210mm]">
-          <BillOfLadingTemplate shipment={shipment} />
+          <BillOfLadingTemplate shipment={shipment} totalPrice={totalPrice} productPrice={productPrice} deliveryCost={deliveryCost} />
         </div>
       </div>
     </div>

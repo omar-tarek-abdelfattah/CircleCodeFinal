@@ -359,6 +359,13 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-1">
                 <Calendar className="w-3 h-3" />
+                <span className="text-xs">In Pickup</span>
+              </div>
+              <p className="font-medium">{shipmentDetails.inPickupStage ? formatDate(shipmentDetails.inPickupStage) : 'N/A'}</p>
+            </div>
+            <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-500 mb-1">
+                <Calendar className="w-3 h-3" />
                 <span className="text-xs">In Warehouse</span>
               </div>
               <p className="font-medium">{shipmentDetails.inWarehouseDate ? formatDate(shipmentDetails.inWarehouseDate) : 'N/A'}</p>

@@ -45,7 +45,7 @@ export function LoginPage() {
       const emailParam = searchParams.get('email');
       if (token && emailParam) {
         setEmailParams(emailParam.trimEnd());
-        setTokenParams(token.trimEnd());
+        setTokenParams(token.replace(/ /g, '+').trimEnd());
       }
     };
     init();
@@ -59,7 +59,7 @@ export function LoginPage() {
 
     try {
       if (emailParams && tokenParams) {
-        await authAPI.confirmEmail({ token: tokenParams, email: emailParams.trimEnd() });
+        await authAPI.confirmEmail({ token: tokenParams, email: emailParams });
       }
       await login(email, password);
     } catch (err: any) {

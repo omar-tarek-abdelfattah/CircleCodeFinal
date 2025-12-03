@@ -149,27 +149,30 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
       quantity: 1,
       price: 0,
     };
-    setProducts([...products, newProduct]);
+    const newProducts = [...products, newProduct];
+    setProducts(newProducts);
+    setFormData(prev => ({ ...prev, items: newProducts }));
   };
 
   const handleRemoveItem = (id: string) => {
     if (products.length > 1) {
-      setProducts(products.filter((p) => p.id !== id));
+      const newProducts = products.filter((p) => p.id !== id);
+      setProducts(newProducts);
+      setFormData(prev => ({ ...prev, items: newProducts }));
     }
   };
 
   const handleProductChange = (
-    name: string,
+    id: string,
     field: keyof ItemsRequest,
     value: string | number
   ) => {
-    setProducts(
-      products.map((p) => (p.name === name ? { ...p, [field]: value } : p))
-    );
+    const newProducts = products.map((p) => (p.id === id ? { ...p, [field]: value } : p));
+    setProducts(newProducts);
 
     setFormData((prev) => ({
       ...prev,
-      items: products,
+      items: newProducts,
     }));
   };
 
@@ -566,7 +569,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         placeholder="Item name"
                         value={product.name}
                         onChange={(e) =>
-                          handleProductChange(product.name, 'name', e.target.value)
+                          handleProductChange(product.id, 'name', e.target.value)
                         }
                         disabled={loading}
                       />
@@ -576,7 +579,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                           placeholder="Item Description"
                           value={product.description}
                           onChange={(e) =>
-                            handleProductChange(product.name, 'description', e.target.value)
+                            handleProductChange(product.id, 'description', e.target.value)
                           }
                           disabled={loading}
                         />
@@ -589,7 +592,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         value={product.quantity}
                         onChange={(e) =>
                           handleProductChange(
-                            product.name,
+                            product.id,
                             'quantity',
                             parseInt(e.target.value) || 1
                           )
@@ -606,7 +609,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                         value={product.price}
                         onChange={(e) =>
                           handleProductChange(
-                            product.name,
+                            product.id,
                             'price',
                             parseFloat(e.target.value) || 0
                           )

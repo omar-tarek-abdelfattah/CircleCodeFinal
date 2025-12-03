@@ -26,7 +26,7 @@ import { exportTableDataToExcel } from '../lib/excelUtils';
 
 
 interface ShipmentsPageProps {
-  onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
+  onNavigateToBillOfLading?: (shipment: OrderResponseDetails, totalPrice: number, productPrice: number, deliveryCost: number) => void;
   onNavigateToBulkBillOfLading?: (shipments: OrderResponseDetails[]) => void;
 }
 
@@ -221,7 +221,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     if (onNavigateToBillOfLading) {
       try {
         const details = await shipmentsAPI.getById(shipment.id);
-        onNavigateToBillOfLading(details as unknown as OrderResponseDetails);
+        onNavigateToBillOfLading(details as unknown as OrderResponseDetails, shipment.totalPrice, shipment.productPrice, shipment.deliveryCost);
       } catch (error) {
         console.error('Failed to load shipment details:', error);
         toast.error('Failed to load shipment details');

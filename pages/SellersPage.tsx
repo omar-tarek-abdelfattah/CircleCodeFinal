@@ -344,7 +344,8 @@ export function SellersPage() {
             title="Today's Active Sellers"
             value={sellers.filter(s => s.isActive).length.toString()}
             icon={UserCheck}
-
+            gradient='from-indigo-500 to-green-600'
+            badge='Today'
           />
 
         </motion.div>
@@ -357,6 +358,8 @@ export function SellersPage() {
             title="Today's Revenue"
             value={formatCurrency(totalRevenue)}
             icon={DollarSign}
+            gradient='from-indigo-500 to-green-600'
+            badge='Today'
           />
         </motion.div>
       </div>
@@ -546,11 +549,11 @@ export function SellersPage() {
                                       onCheckedChange={(checked) => handleToggleConfirmation(seller.id, checked)}
                                       className="data-[state=checked]:bg-green-500"
                                     />
-                                    <span className={`text-sm font-semibold ${seller.isActive
+                                    <span className={`text-sm font-semibold ${seller.isConfermid
                                       ? 'text-green-600 dark:text-green-400'
                                       : 'text-red-600 dark:text-red-400'
                                       }`}>
-                                      {seller.isActive ? 'Active' : 'Locked'}
+                                      {seller.isConfermid ? 'Confirmed' : 'Locked'}
                                     </span>
                                   </div>
                                 </div>

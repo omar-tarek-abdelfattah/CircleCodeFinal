@@ -101,13 +101,13 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
-          title="In Pickup Stage"
+          title="Total pending"
           value={summary?.totalPindingOrder as number}
           icon={Clock}
           gradient="from-orange-500 to-orange-600"
         />
         <StatCard
-          title="Completed"
+          title="Total Delivered"
           value={summary?.totalDeliveredOrder as number}
           icon={TrendingUp}
           gradient="from-green-500 to-green-600"
