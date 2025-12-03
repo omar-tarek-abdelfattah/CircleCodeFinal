@@ -382,6 +382,10 @@ export function EditShipmentModal({
         toast.error('Please enter phone number');
         return;
       }
+      if (!formData.phone2?.trim()) {
+        toast.error('Please enter phone number');
+        return;
+      }
       if (!formData.address.trim()) {
         toast.error('Please enter delivery address');
         return;
@@ -863,7 +867,7 @@ export function EditShipmentModal({
                             placeholder="Item Description"
                             value={product.description}
                             onChange={(e) =>
-                              handleProductChange(product.name, 'description', e.target.value)
+                              handleProductChange(product.description as string, 'description', e.target.value)
                             }
                             disabled={loading}
                           />

@@ -65,6 +65,11 @@ export function NotificationDropdown() {
     activateAgent,
     todayOrdersCount
   } = useNotifications();
+
+  if (role === UserRole.agent || role === UserRole.Seller) {
+    return null;
+  }
+
   const [open, setOpen] = React.useState(false);
   const [activeTab, setActiveTab] = useState<'notifications' | 'inactive'>('notifications');
   const [vipStates, setVipStates] = useState<Record<string, boolean>>({});

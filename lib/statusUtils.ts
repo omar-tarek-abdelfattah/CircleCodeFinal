@@ -44,7 +44,6 @@ export const AGENT_STATUSES: ShipmentStatusString[] = [
   ShipmentStatusString.Returned,
 ];
 export const AGENT_CHANGEABLE_STATUSES: ShipmentStatusString[] = [
-  ShipmentStatusString.DeliveredToAgent,
   ShipmentStatusString.Delivered,
   ShipmentStatusString.Postponed,
   ShipmentStatusString.CustomerUnreachable,

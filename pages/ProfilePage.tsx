@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import {User,Mail,Phone,Calendar,Shield,Lock,Bell,Eye,EyeOff,Camera,Save,X,Edit,ShieldCheck,Briefcase,UserCog,DollarSign,Package,TrendingUp,Clock, Sparkles,} from 'lucide-react';
+import { User, Mail, Phone, Calendar, Shield, Lock, Bell, Eye, EyeOff, Camera, Save, X, Edit, ShieldCheck, Briefcase, UserCog, DollarSign, Package, TrendingUp, Clock, Sparkles, } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,7 +9,7 @@ import { Separator } from '../components/ui/separator';
 import { Switch } from '../components/ui/switch';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../com
 import { changePasswordApi } from '../services/api.ts';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,13 +28,13 @@ export default function ProfilePage() {
 
   // Personal information state
   const [personalInfo, setPersonalInfo] = useState({
-  name: user?.name || '',
-  email: user?.email || '',
-  phone: user?.phone || '',
-  role: user?.role || 'admin',
-  joinedDate: user?.joinedDate || new Date().toISOString(),
-  salary: user?.salary || 0,
-});
+    name: user?.name || '',
+    email: user?.email || '',
+    // phone: user?.phone || '',
+    role: user?.role || 'admin',
+    // joinedDate: user?.joinedDate || new Date().toISOString(),
+    // salary: user?.salary || 0,
+  });
 
 
   // Password state
@@ -155,48 +155,48 @@ export default function ProfilePage() {
     loadProfileData();
   };
 
-const handleChangePassword = async () => {
-  if (!passwordData.currentPassword) {
-    toast.error('Please enter your current password');
-    return;
-  }
-  if (!passwordData.newPassword) {
-    toast.error('Please enter a new password');
-    return;
-  }
-  if (passwordData.newPassword !== passwordData.confirmPassword) {
-    toast.error('New passwords do not match');
-    return;
-  }
-  if (passwordData.newPassword.length < 8) {
-    toast.error('Password must be at least 8 characters');
-    return;
-  }
+  const handleChangePassword = async () => {
+    if (!passwordData.currentPassword) {
+      toast.error('Please enter your current password');
+      return;
+    }
+    if (!passwordData.newPassword) {
+      toast.error('Please enter a new password');
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
 
-  setSaving(true);
-  try {
-    // استدعي الـ API
-    await changePasswordApi(
-      personalInfo.email,
-      passwordData.currentPassword,
-      passwordData.newPassword,
-      passwordData.confirmPassword
-    );
+    setSaving(true);
+    try {
+      // استدعي الـ API
+      await changePasswordApi(
+        personalInfo.email,
+        passwordData.currentPassword,
+        passwordData.newPassword,
+        passwordData.confirmPassword
+      );
 
-    toast.success('Password changed successfully');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-    setEditingPassword(false);
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error?.message || 'Failed to change password');
-  } finally {
-    setSaving(false);
-  }
-};
+      toast.success('Password changed successfully');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setEditingPassword(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || 'Failed to change password');
+    } finally {
+      setSaving(false);
+    }
+  };
 
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
@@ -281,10 +281,10 @@ const handleChangePassword = async () => {
                     {getRoleIcon()}
                     <span className="ml-1 capitalize">{personalInfo.role}</span>
                   </Badge>
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                  {/* <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <Calendar className="w-4 h-4" />
                     <span>Joined {formatDate(personalInfo.joinedDate)}</span>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="flex flex-wrap gap-4 mt-3">
                   <div className="flex items-center gap-2 text-sm">
@@ -293,7 +293,7 @@ const handleChangePassword = async () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="w-4 h-4 text-slate-500" />
-                    <span className="text-slate-700 dark:text-slate-300">{personalInfo.phone}</span>
+                    {/* <span className="text-slate-700 dark:text-slate-300">{personalInfo.phone}</span> */}
                   </div>
                 </div>
               </div>
@@ -440,10 +440,10 @@ const handleChangePassword = async () => {
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
-                  value={personalInfo.phone}
-                  onChange={(e) =>
-                    setPersonalInfo({ ...personalInfo, phone: e.target.value })
-                  }
+                  // value={personalInfo.phone}
+                  // onChange={(e) =>
+                  //   setPersonalInfo({ ...personalInfo, phone: e.target.value })
+                  // }
                   disabled={!editingPersonal}
                   className={!editingPersonal ? 'bg-slate-50 dark:bg-slate-800/50' : ''}
                 />
@@ -459,7 +459,7 @@ const handleChangePassword = async () => {
                 </div>
               </div>
 
-              {personalInfo.role !== 'admin' && (
+              {role === UserRole.Admin && (
                 <div className="space-y-2">
                   <Label>Salary</Label>
                   <div className="flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-400">
@@ -644,8 +644,8 @@ const handleChangePassword = async () => {
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <Label>Email Notifications</Label>
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className="h-5 px-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
@@ -658,7 +658,7 @@ const handleChangePassword = async () => {
                       </div>
                       <Switch
                         checked={notifications.emailNotifications}
-                        onCheckedChange={() => {}}
+                        onCheckedChange={() => { }}
                         disabled
                         className="data-[state=checked]:bg-green-500"
                       />
@@ -705,8 +705,8 @@ const handleChangePassword = async () => {
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <Label>Marketing Emails</Label>
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className="h-5 px-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
@@ -719,7 +719,7 @@ const handleChangePassword = async () => {
                       </div>
                       <Switch
                         checked={notifications.marketingEmails}
-                        onCheckedChange={() => {}}
+                        onCheckedChange={() => { }}
                         disabled
                         className="data-[state=checked]:bg-green-500"
                       />
