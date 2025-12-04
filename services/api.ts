@@ -38,6 +38,7 @@ import {
   AgiOrderSummary,
   AgiOrderSummaryToday,
   confirmEmailResponse,
+  AuthBranchResponse,
 } from "../types";
 import { Activity } from "../lib/mockData";
 
@@ -830,6 +831,13 @@ export const authAPI = {
   logout: async (): Promise<void> => {
     // TODO: Replace with actual API call to .NET backend
     console.log("Backend API: Logout");
+  },
+
+  getBranches: async (): Promise<AuthBranchResponse[]> => {
+    // TODO: Replace with actual API call to .NET backend
+    return apiCall<AuthBranchResponse[]>("/Authentication/Branches", {
+      method: "GET",
+    }, "SuperAdmin", apiMode.auth);
   },
 
   confirmEmail: async ({ token, email }: { token: string; email: string }): Promise<void> => {

@@ -271,15 +271,15 @@ const WalletPage: React.FC = () => {
   //   }
   // };
 
-  const handleExport = async () => {
-    try {
-      await walletApi.exportData('excel');
-      toast.success('Wallet data exported successfully');
-    } catch (error) {
-      console.error('Error exporting wallet data:', error);
-      toast.error('Failed to export wallet data');
-    }
-  };
+  // const handleExport = async () => {
+  //   try {
+  //     await walletApi.exportData('excel');
+  //     toast.success('Wallet data exported successfully');
+  //   } catch (error) {
+  //     console.error('Error exporting wallet data:', error);
+  //     toast.error('Failed to export wallet data');
+  //   }
+  // };
 
   return (
     <div className="space-y-6 p-6">
@@ -483,10 +483,10 @@ const WalletPage: React.FC = () => {
           {/* <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> */}
           {/* Refresh */}
           {/* </Button> */}
-          <Button variant="outline" onClick={handleExport}>
+          {/* <Button variant="outline" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
-          </Button>
+          </Button> */}
         </div>
       </div>
 

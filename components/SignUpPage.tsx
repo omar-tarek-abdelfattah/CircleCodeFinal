@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Package, Mail, Lock, Loader2, Phone, Home } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
-import { agentRegisterApi, sellerRegisterApi } from "../services/api";
+import { agentRegisterApi, authAPI, sellerRegisterApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { AuthBranchResponse } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 export function SignUpPage() {
   const navigate = useNavigate();
@@ -22,9 +24,23 @@ export function SignUpPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [branchId, setBranchId] = useState<number | "">("");
+  const [branches, setBranches] = useState<AuthBranchResponse[]>([]);
 
   // Seller specific
   const [storeName, setStoreName] = useState("");
+
+  useEffect(() => {
+    getBranches();
+  }, []);
+
+  const getBranches = async () => {
+    try {
+      const branches = await authAPI.getBranches();
+      setBranches(branches);
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+    }
+  };
 
   const handleSignUp = async () => {
     setError("");
@@ -36,14 +52,24 @@ export function SignUpPage() {
         setLoading(false);
         return;
       }
+      if (!/^\d+$/.test(phoneNumber)) {
+        setError("Phone number must contain only digits.");
+        setLoading(false);
+        return;
+      }
+
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters long.");
+        setLoading(false);
+        return;
+      }
+      if (password !== passwordConfirmed) {
+        setError("Passwords do not match!");
+        setLoading(false);
+        return;
+      }
 
       if (role === "Agent") {
-        if (password !== passwordConfirmed) {
-          setError("Passwords do not match!");
-          setLoading(false);
-          return;
-        }
-
         await agentRegisterApi({
           email,
           password,
@@ -217,13 +243,18 @@ export function SignUpPage() {
 
               <div>
                 <Label>Branch ID</Label>
-                <Input
-                  type="number"
-                  placeholder="Branch ID"
-                  value={branchId}
-                  onChange={(e) => setBranchId(e.target.value ? Number(e.target.value) : "")}
-                  required
-                />
+                <Select value={branchId.toString()} onValueChange={(value) => setBranchId(Number(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id.toString()}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

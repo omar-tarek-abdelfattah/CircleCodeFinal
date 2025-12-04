@@ -717,3 +717,8 @@ export interface AgiWalletResult {
   outstanding?: number;
   collected?: number;
 }
+
+export interface AuthBranchResponse {
+  id: number;
+  name: string;
+}
