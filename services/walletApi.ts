@@ -22,33 +22,31 @@ export const walletApi = {
    * Example: GET /api/wallet/summary
    */
   getSummary: async (): Promise<WalletSummary> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // TODO: Replace with actual API call
-    // const response = await fetch(`${API_BASE_URL}/api/wallet/summary`, {
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
-    // return await response.json();
-    const {
-      assigned,
-      outstanding,
-      collected,
-    } = await apiCall('/Wallet') as any;
-    console.log('Wallet summary from backend:', assigned, outstanding, collected);
-    console.log('Type of data:');
 
 
-    // Return empty data until backend is connected
-    return {
-      balance: assigned,
-      totalEarnings: collected,
-      totalWithdrawals: outstanding,
-      pendingAmount: outstanding,
-    };
+    try {
+      const {
+        assigned,
+        outstanding,
+        collected,
+      } = await apiCall('/Wallet') as any;
+      return {
+        balance: assigned,
+        totalEarnings: collected,
+        totalWithdrawals: outstanding,
+        pendingAmount: outstanding,
+      };
+    } catch (error) {
+      console.error('Error fetching wallet summary:', error);
+      return {
+        balance: 0,
+        totalEarnings: 0,
+        totalWithdrawals: 0,
+        pendingAmount: 0,
+      };
+    }
+
+
   },
 
   /**
@@ -57,51 +55,9 @@ export const walletApi = {
    * TODO: Replace with actual API call
    * Example: GET /api/wallet/transactions?page=1&limit=10
    */
-  getTransactions: async (page: number = 1, limit: number = 10): Promise<Transaction[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // TODO: Replace with actual API call
-    // const response = await fetch(
-    //   `${API_BASE_URL}/api/wallet/transactions?page=${page}&limit=${limit}`,
-    //   {
-    //     headers: {
-    //       'Authorization': `Bearer ${token}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //   }
-    // );
-    // return await response.json();
 
-    // Return empty array until backend is connected
-    return [];
-  },
 
-  /**
-   * Get monthly revenue data for charts
-   * 
-   * TODO: Replace with actual API call
-   * Example: GET /api/wallet/monthly-revenue?months=12
-   */
-  getMonthlyRevenue: async (months: number = 12): Promise<Array<{ month: string; revenue: number }>> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // TODO: Replace with actual API call
-    // const response = await fetch(
-    //   `${API_BASE_URL}/api/wallet/monthly-revenue?months=${months}`,
-    //   {
-    //     headers: {
-    //       'Authorization': `Bearer ${token}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //   }
-    // );
-    // return await response.json();
-
-    // Return empty array until backend is connected
-    return [];
-  },
 
   /**
    * Refresh wallet data
@@ -109,40 +65,19 @@ export const walletApi = {
    * TODO: Replace with actual API call
    * Example: POST /api/wallet/refresh
    */
-  refresh: async (): Promise<void> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  // refresh: async (): Promise<void> => {
+  //   // Simulate API delay
+  //   await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // TODO: Replace with actual API call
-    // await fetch(`${API_BASE_URL}/api/wallet/refresh`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
-  },
+  //   // TODO: Replace with actual API call
+  //   // await fetch(`${API_BASE_URL}/api/wallet/refresh`, {
+  //   //   method: 'POST',
+  //   //   headers: {
+  //   //     'Authorization': `Bearer ${token}`,
+  //   //     'Content-Type': 'application/json',
+  //   //   },
+  //   // });
+  // },
 
-  /**
-   * Export wallet data
-   * 
-   * TODO: Replace with actual API call
-   * Example: GET /api/wallet/export?format=excel
-   */
-  exportData: async (format: 'excel' | 'pdf' = 'excel'): Promise<void> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // TODO: Replace with actual API call
-    // const response = await fetch(
-    //   `${API_BASE_URL}/api/wallet/export?format=${format}`,
-    //   {
-    //     headers: {
-    //       'Authorization': `Bearer ${token}`,
-    //     },
-    //   }
-    // );
-    // const blob = await response.blob();
-    // // Download file logic
-  },
 };

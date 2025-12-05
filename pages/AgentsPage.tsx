@@ -450,10 +450,7 @@ export function AgentsPage() {
 
               {/* Action Buttons */}
               <div className="flex gap-2">
-                <Button variant="outline" className="gap-2">
-                  <Filter className="w-4 h-4" />
-                  Apply Filter
-                </Button>
+
                 <Button variant="outline" onClick={handleReset}>
                   Reset
                 </Button>

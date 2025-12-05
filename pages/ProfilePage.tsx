@@ -33,7 +33,7 @@ export default function ProfilePage() {
     // phone: user?.phone || '',
     role: user?.role || 'admin',
     // joinedDate: user?.joinedDate || new Date().toISOString(),
-    // salary: user?.salary || 0,
+    salary: user?.salary || 0,
   });
 
 
@@ -291,10 +291,10 @@ export default function ProfilePage() {
                     <Mail className="w-4 h-4 text-slate-500" />
                     <span className="text-slate-700 dark:text-slate-300">{personalInfo.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
+                  {/* <div className="flex items-center gap-2 text-sm">
                     <Phone className="w-4 h-4 text-slate-500" />
-                    {/* <span className="text-slate-700 dark:text-slate-300">{personalInfo.phone}</span> */}
-                  </div>
+                    <span className="text-slate-700 dark:text-slate-300">{personalInfo.phone}</span>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -393,9 +393,9 @@ export default function ProfilePage() {
                     <User className="w-5 h-5" />
                     Personal Information
                   </CardTitle>
-                  <CardDescription>Update your personal details</CardDescription>
+                  <CardDescription> Personal details (more coming soon)</CardDescription>
                 </div>
-                {!editingPersonal && (
+                {/* {!editingPersonal && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -405,7 +405,7 @@ export default function ProfilePage() {
                     <Edit className="w-4 h-4" />
                     Edit
                   </Button>
-                )}
+                )} */}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -436,7 +436,7 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
@@ -447,7 +447,7 @@ export default function ProfilePage() {
                   disabled={!editingPersonal}
                   className={!editingPersonal ? 'bg-slate-50 dark:bg-slate-800/50' : ''}
                 />
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <Label>Role</Label>
@@ -670,7 +670,7 @@ export default function ProfilePage() {
                 </Tooltip>
               </TooltipProvider>
 
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Order Updates</Label>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -682,9 +682,9 @@ export default function ProfilePage() {
                   onCheckedChange={() => handleNotificationChange('orderUpdates')}
                   className="data-[state=checked]:bg-green-500"
                 />
-              </div>
+              </div> */}
 
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>System Alerts</Label>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -696,8 +696,40 @@ export default function ProfilePage() {
                   onCheckedChange={() => handleNotificationChange('systemAlerts')}
                   className="data-[state=checked]:bg-green-500"
                 />
-              </div>
+              </div> */}
 
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-between opacity-50 cursor-not-allowed">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <Label>System Alerts</Label>
+                          <Badge
+                            variant="secondary"
+                            className="h-5 px-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
+                          >
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Coming Soon
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          Important system notifications
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notifications.marketingEmails}
+                        onCheckedChange={() => { }}
+                        disabled
+                        className="data-[state=checked]:bg-green-500"
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This feature will be available in the next update</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

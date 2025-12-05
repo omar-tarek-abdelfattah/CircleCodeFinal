@@ -139,7 +139,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         id: `order-${order.id}`,
         type: 'order_created',
         title: 'New Order',
-        message: `Order created by ${order.clientName}`,
+        message: `Order created for Seller:${order.sellerName}, client :${order.clientName}`,
         timestamp: order.dateCreated,
         read: readIds.includes(`order-${order.id}`),
         orderId: order.id.toString(),

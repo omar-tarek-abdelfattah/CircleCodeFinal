@@ -14,12 +14,12 @@ import {
 import {
   FileText,
   TrendingUp,
-  Download,
+
   ArrowUpRight,
   ArrowDownRight,
   Wallet as WalletIcon,
-  Filter,
-  X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { walletApi } from '../services/walletApi';
@@ -32,18 +32,15 @@ const WalletPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<Array<{ month: string; revenue: number }>>([]);
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   // Date filter states
   const [dateFilter, setDateFilter] = useState<DateFilterType>(null);
-  const [customDateRange, setCustomDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: undefined,
-    to: undefined,
-  });
+
 
 
   const [orders, setOrders] = useState<OrderResponse[]>([]);
@@ -57,6 +54,8 @@ const WalletPage: React.FC = () => {
         || order.statusOrder === ShipmentStatusString.RejectedWithShippingFees);
       const reversedData = filteredData.reverse();
       setOrders(reversedData);
+      // Reset to first page when data loads
+      setCurrentPage(1);
     } catch (error) {
       console.error('Error loading orders data:', error);
       toast.error('Failed to load orders data');
@@ -74,16 +73,11 @@ const WalletPage: React.FC = () => {
       setIsLoading(true);
 
       // Load all wallet data in parallel
-      const [summary, transactionsData, revenueData] = await Promise.all([
+      const [summary] = await Promise.all([
         walletApi.getSummary(),
-        walletApi.getTransactions(1, 100), // Load more transactions for filtering
-        walletApi.getMonthlyRevenue(12),
       ]);
 
       setWalletSummary(summary);
-      setAllTransactions(transactionsData);
-      setTransactions(transactionsData);
-      setMonthlyRevenue(revenueData);
     } catch (error) {
       console.error('Error loading wallet data:', error);
       toast.error('Failed to load wallet data');
@@ -104,70 +98,10 @@ const WalletPage: React.FC = () => {
     });
   };
 
-  // Get date range based on filter type
-  const getDateRange = (filterType: DateFilterType): { from: Date; to: Date } | null => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    switch (filterType) {
-      case 'today':
-        return {
-          from: today,
-          to: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1),
-        };
-      case 'lastWeek':
-        return {
-          from: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
-          to: now,
-        };
-      case 'lastMonth':
-        return {
-          from: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000),
-          to: now,
-        };
-      case 'last3Months':
-        return {
-          from: new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000),
-          to: now,
-        };
-      case 'custom':
-        if (customDateRange.from && customDateRange.to) {
-          return {
-            from: customDateRange.from,
-            to: customDateRange.to,
-          };
-        }
-        return null;
-      default:
-        return null;
-    }
-  };
 
-  // Filter transactions based on date range
-  const filterTransactionsByDate = () => {
-    if (!dateFilter) {
-      setTransactions(allTransactions);
-      return;
-    }
 
-    const dateRange = getDateRange(dateFilter);
-    if (!dateRange) {
-      setTransactions(allTransactions);
-      return;
-    }
 
-    const filtered = allTransactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      return transactionDate >= dateRange.from && transactionDate <= dateRange.to;
-    });
-
-    setTransactions(filtered);
-  };
-
-  // Apply filter when date filter or custom range changes
-  useEffect(() => {
-    filterTransactionsByDate();
-  }, [dateFilter, customDateRange, allTransactions]);
 
   // Calculate filtered wallet summary based on date range
   const getFilteredSummary = () => {
@@ -200,28 +134,26 @@ const WalletPage: React.FC = () => {
 
   const filteredSummary = getFilteredSummary();
 
-  // Get filter label
-  const getFilterLabel = () => {
-    if (!dateFilter) return 'All Time';
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = orders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
 
-    switch (dateFilter) {
-      case 'today':
-        return 'Today';
-      case 'lastWeek':
-        return 'Last Week';
-      case 'lastMonth':
-        return 'Last Month';
-      case 'last3Months':
-        return 'Last 3 Months';
-      case 'custom':
-        if (customDateRange.from && customDateRange.to) {
-          return `${customDateRange.from.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${customDateRange.to.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-        }
-        return 'Custom Range';
-      default:
-        return 'All Time';
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
     }
   };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  // Get filter label
+
 
   // Get period label for the 4th card
   // const getPeriodLabel = () => {
@@ -288,7 +220,7 @@ const WalletPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-slate-900 dark:text-slate-100">Wallet</h1>
-            {dateFilter && (
+            {/* {dateFilter && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-sm">
                 <Filter className="w-3.5 h-3.5" />
                 <span>{getFilterLabel()}</span>
@@ -299,14 +231,8 @@ const WalletPage: React.FC = () => {
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            )}
+            )} */}
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {dateFilter
-              ? `Showing financial data for ${getFilterLabel().toLowerCase()}`
-              : 'Track your revenue and manage your finances'
-            }
-          </p>
         </div>
         <div className="flex gap-2">
           {/* <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
@@ -701,12 +627,12 @@ const WalletPage: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recent Transactions</CardTitle>
-              {transactions.length > 0 && (
+              <CardTitle>Transactions ({orders.length})</CardTitle>
+              {orders.length > 0 && (
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   {dateFilter
-                    ? `${transactions.length} transaction${transactions.length !== 1 ? 's' : ''} in selected period`
-                    : `Latest ${Math.min(transactions.length, 10)} transactions`
+                    ? `${orders.length} transaction${orders.length !== 1 ? 's' : ''} in selected period`
+                    : `Showing ${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, orders.length)} of ${orders.length} transactions`
                   }
                 </p>
               )}
@@ -739,11 +665,12 @@ const WalletPage: React.FC = () => {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        orders.slice(0, 10).map((order) => (
+                        currentItems.map((order) => (
                           <TableRow key={order.id}>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                {order.statusOrder === ShipmentStatusString.Delivered ? (
+                                {order.statusOrder === ShipmentStatusString.Delivered ||
+                                  order.statusOrder === ShipmentStatusString.RejectedWithShippingFees ? (
                                   <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
                                     <ArrowDownRight className="w-4 h-4 text-green-600 dark:text-green-400" />
                                   </div>
@@ -769,19 +696,25 @@ const WalletPage: React.FC = () => {
                             <TableCell className="text-right">
                               <span
                                 className={
-                                  order.statusOrder === ShipmentStatusString.Delivered
+                                  order.statusOrder === ShipmentStatusString.Delivered ||
+                                    order.statusOrder === ShipmentStatusString.RejectedWithShippingFees
                                     ? 'text-green-600 dark:text-green-400'
                                     : 'text-red-600 dark:text-red-400'
                                 }
                               >
-                                {order.statusOrder === ShipmentStatusString.Delivered ? '+' : '-'}$
+                                {order.statusOrder === ShipmentStatusString.Delivered ||
+                                  order.statusOrder === ShipmentStatusString.RejectedWithShippingFees
+                                  ? '+'
+                                  : '-'
+                                }$
                                 {order.totalPrice.toLocaleString()}
                               </span>
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant={
-                                  order.statusOrder === ShipmentStatusString.Delivered
+                                  order.statusOrder === ShipmentStatusString.Delivered ||
+                                    order.statusOrder === ShipmentStatusString.RejectedWithShippingFees
                                     ? 'default'
                                     : order.statusOrder === ShipmentStatusString.InWarehouse
                                       ? 'secondary'
@@ -798,12 +731,32 @@ const WalletPage: React.FC = () => {
                   </Table>
                 </div>
 
-                {orders.length > 10 && (
-                  <div className="mt-4 text-center">
-                    <p className="text-sm text-slate-500 mb-2">
-                      Showing 10 of {orders.length} orders
-                    </p>
-                    <Button variant="outline">View All Orders</Button>
+                {/* Pagination Controls */}
+                {orders.length > 0 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      Showing page {currentPage} of {totalPages}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </>

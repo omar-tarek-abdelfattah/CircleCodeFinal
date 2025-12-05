@@ -36,15 +36,16 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
 
   const fetchShipments = async () => {
     const shipments = await shipmentsAPI.getAll();
-    setShipments(shipments);
+    const reversedShipments = shipments.reverse();
+    setShipments(reversedShipments);
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        fetchSummary();
-        fetchShipments();
-        setTotalCollection(shipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered).reduce((total, shipment) => total + shipment.totalPrice, 0));
+        await fetchSummary();
+        await fetchShipments();
+        setTotalCollection(shipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered).reduce((total, shipment) => total + shipment.productPrice, 0));
 
       } catch (error) {
         console.error("Failed to fetch seller dashboard data:", error);
@@ -52,7 +53,7 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
     };
 
     fetchData();
-  }, []);
+  }, [shipments]);
 
   const handleViewDetails = (shipment: OrderResponse) => {
     if (shipment && (shipment.id)) {
@@ -113,7 +114,7 @@ export function SellerDashboard({ onNavigate }: SellerDashboardProps) {
           gradient="from-green-500 to-green-600"
         />
         <StatCard
-          title="Collection Amount"
+          title="Profit"
           value={`$${totalCollection.toFixed(0)}`}
           icon={DollarSign}
           gradient="from-purple-500 to-purple-600"

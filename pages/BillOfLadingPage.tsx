@@ -12,9 +12,9 @@ import { BillOfLadingTemplate } from '../components/BillOfLadingTemplate';
 
 interface BillOfLadingPageProps {
   shipment: OrderResponseDetails | null;
-  totalPrice: number;
-  productPrice: number;
-  deliveryCost: number;
+  totalPrice?: number;
+  productPrice?: number;
+  deliveryCost?: number;
   onBack: () => void;
 }
 
@@ -159,7 +159,7 @@ export function BillOfLadingPage({ shipment, totalPrice, productPrice, deliveryC
       {/* Printable Content */}
       <div className="flex justify-center print:block print:m-0">
         <div ref={printRef} className="w-full max-w-[210mm]">
-          <BillOfLadingTemplate shipment={shipment} totalPrice={totalPrice} productPrice={productPrice} deliveryCost={deliveryCost} />
+          <BillOfLadingTemplate shipment={shipment} totalPrice={totalPrice as number} productPrice={productPrice as number} deliveryCost={deliveryCost as number} />
         </div>
       </div>
     </div>

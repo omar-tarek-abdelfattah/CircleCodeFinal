@@ -47,8 +47,12 @@ export function ShipmentDetailsModal({
     try {
       const response = await shipmentsAPI.getById(id)
       if (response.zoneId) {
-        const zoneResponse = await zonesAPI.getById(response.zoneId as number)
-        setZoneDetails(zoneResponse as ZoneResponseDetails)
+        try {
+          const zoneResponse = await zonesAPI.getById(response.zoneId as number)
+          setZoneDetails(zoneResponse as ZoneResponseDetails)
+        } catch (error) {
+          console.error("Error fetching zone details:", error);
+        }
       };
 
 
@@ -153,9 +157,12 @@ export function ShipmentDetailsModal({
               <Badge
                 className={`${getStatusColor(
                   shipmentDetails.statusOrder?.toString() as ShipmentStatus
-                )} text-base px-4 py-2`}
+                )} text-center px-4 py-2`}
+
               >
                 {shipmentDetails.statusOrder?.toString().replace("_", " ").toUpperCase() || 'N/A'}
+                <br />
+                Created by : {shipmentDetails.userCreateName}
               </Badge>
             </div>
           </motion.div>

@@ -476,7 +476,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   // Calculate selected orders totals
   const selectedTotalProductCost = shipments
     .filter(s => selectedOrderIds.has(s.id))
-    .reduce((sum, s) => sum + (s.totalPrice || 0), 0);
+    .reduce((sum, s) => sum + (s.productPrice || 0), 0);
 
   const selectedTotalDeliveryCost = shipments
     .filter(s => selectedOrderIds.has(s.id))
@@ -727,58 +727,37 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                 {statusFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1">
                     {/* Status: {statusFilter.map(s => getStatusLabel(s)).join(', ')} */}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => setStatusFilter([])}
-                    />
+
                   </Badge>
                 )}
                 {sellerFilter !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
                     Seller: {sellerFilter}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => setSellerFilter('all')}
-                    />
+
                   </Badge>
                 )}
                 {storeFilter !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
                     Store: {storeFilter}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => setStoreFilter('all')}
-                    />
+
                   </Badge>
                 )}
                 {manifestSearch && (
                   <Badge variant="secondary" className="gap-1">
                     Manifest: {manifestSearch}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => setManifestSearch('')}
-                    />
+
                   </Badge>
                 )}
                 {agentSearch && (
                   <Badge variant="secondary" className="gap-1">
                     Agent: {agentSearch}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => setAgentSearch('')}
-                    />
+
                   </Badge>
                 )}
                 {(dateFrom || dateTo) && (
                   <Badge variant="secondary" className="gap-1">
                     Date: {formatDateShort(dateFrom)} - {formatDateShort(dateTo)}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => {
-                        setDateFrom(undefined);
-                        setDateTo(undefined);
-                      }}
-                    />
+
                   </Badge>
                 )}
                 <Button
@@ -978,8 +957,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       </TableHead>
                       <TableHead>TRACKING ID</TableHead>
                       <TableHead>CUSTOMER</TableHead>
-                      <TableHead>MERCHANT</TableHead>
-                      <TableHead>AGENT</TableHead>
+                      {role !== UserRole.Seller && <TableHead>MERCHANT</TableHead>}
+                      {role !== UserRole.agent && <TableHead>AGENT</TableHead>}
                       <TableHead>DATE CREATED</TableHead>
                       <TableHead className="bg-slate-50 dark:bg-slate-800/50">PRODUCT COST</TableHead>
                       <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead>
@@ -1024,12 +1003,14 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                             {shipment.id}
                           </TableCell>
                           <TableCell>{shipment.clientName}</TableCell>
-                          <TableCell>{shipment.sellerName}</TableCell>
-                          <TableCell>
-                            {shipment.agentName || (
-                              <span className="text-slate-400">Unassigned</span>
-                            )}
-                          </TableCell>
+                          {role !== UserRole.Seller && <TableCell>{shipment.sellerName}</TableCell>}
+                          {role !== UserRole.agent && (
+                            <TableCell>
+                              {shipment.agentName || (
+                                <span className="text-slate-400">Unassigned</span>
+                              )}
+                            </TableCell>
+                          )}
                           <TableCell>{formatDate(shipment.dateCreated)}</TableCell>
                           <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/30">
                             <div className="flex items-center gap-1">
@@ -1300,16 +1281,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
               </Card>
             </div>
 
-            {/* Manifest & Agent Search */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Manifest / Tracking Number</Label>
-                <Input
-                  placeholder="Search by manifest"
-                  value={manifestSearch}
-                  onChange={(e) => setManifestSearch(e.target.value)}
-                />
-              </div>
+            {/* Agent Search */}
+            {role !== UserRole.agent && (<div className="grid grid-cols-2 gap-4">
 
               <div className="space-y-2">
                 <Label>Agent Name</Label>
@@ -1327,7 +1300,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </div>)}
           </div>
 
           <DialogFooter>

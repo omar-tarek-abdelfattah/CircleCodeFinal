@@ -74,6 +74,8 @@ export default function ReportsPage() {
 
   // Revenue: Sum of deliveryCost for all orders
   const totalRevenue = orders.reduce((sum, order) => sum + (order.deliveryCost || 0), 0);
+  const sellerRevenue = orders.filter((order) => order.statusOrder === 'Delivered')
+    .reduce((sum, order) => sum + (order.productPrice || 0), 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -167,7 +169,7 @@ export default function ReportsPage() {
               Total Revenue
             </p>
             <h2 className="text-slate-900 dark:text-slate-100">
-              ${totalRevenue.toLocaleString()}
+              ${role === UserRole.Seller ? sellerRevenue.toLocaleString() : totalRevenue.toLocaleString()}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Revenue generated

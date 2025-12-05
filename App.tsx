@@ -125,8 +125,8 @@ function AppContent() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h2 className="text-2xl mb-2">{currentPage}</h2>
-          <p className="text-slate-600 dark:text-slate-400">This page is not available for your role.</p>
+          <h2 className="text-2xl mb-2">Welcome To Circle Code</h2>
+          <p className="text-slate-600 dark:text-slate-400">Circle Code is a logistics and delivery management system that helps sellers and agents manage their shipments and deliveries.</p>
         </div>
       </div>
     );

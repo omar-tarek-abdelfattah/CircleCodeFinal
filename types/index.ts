@@ -589,6 +589,8 @@ export interface AgiOrderResponse {
   statusOrder?: ShipmentStatusString;
   sellerName?: string | null;
   totalPrice?: number;
+  deliveryCost?: number;
+  productPrice?: number;
 }
 
 export interface AgiOrderResponseDetails {
@@ -665,6 +667,8 @@ export interface AgiOrderResponse {
   statusOrder?: ShipmentStatusString;
   sellerName?: string | null;
   totalPrice?: number;
+  deliveryCost?: number;
+  productPrice?: number;
 }
 
 export interface AgiOrderResponseDetails {

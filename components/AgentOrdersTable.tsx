@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Package, Eye, RefreshCw, ArrowRight } from 'lucide-react';
-import { AgiOrderResponse, OrderResponse, Shipment } from '../types';
+import { AgiOrderResponse, OrderResponse, Shipment, ShipmentStatusString } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -47,19 +47,20 @@ export function AgentOrdersTable({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      new: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-      in_pickup_stage: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      in_warehouse: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-      delivered_to_agent: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-      delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-      postponed: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-      customer_unreachable: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
-      rejected_no_shipping_fees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-      rejected_with_shipping_fees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-      partially_delivered: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
-      returned: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+  const getStatusColor = (status: ShipmentStatusString) => {
+    const colors: Record<keyof typeof ShipmentStatusString, string> = {
+      New: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      InPickupStage: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      InWarehouse: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+      DeliveredToAgent: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+      Delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      Postponed: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+      CustomerUnreachable: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
+      RejectedNoShippingFees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      RejectedByUs: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      RejectedWithShippingFees: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      PartiallyDelivered: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
+      Returned: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
     };
     return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
   };
@@ -96,14 +97,16 @@ export function AgentOrdersTable({
                   <TableHead>Tracking ID</TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead className="bg-slate-50 dark:bg-slate-800/50">Product Price</TableHead>
+                  <TableHead className="bg-slate-50 dark:bg-slate-800/50">Delivery Cost</TableHead>
+                  <TableHead className="bg-slate-100 dark:bg-slate-800">Total Price</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayShipments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12">
+                    <TableCell colSpan={7} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2 text-slate-500">
                         <Package className="w-12 h-12 opacity-20" />
                         <p>No active orders</p>
@@ -128,11 +131,17 @@ export function AgentOrdersTable({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(shipment.statusOrder as unknown as string)}>
+                        <Badge className={getStatusColor(shipment.statusOrder as unknown as ShipmentStatusString)}>
                           {formatStatus(shipment.statusOrder as unknown as string)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono">
+                      <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/50">
+                        ${shipment.productPrice?.toFixed(2) || 0}
+                      </TableCell>
+                      <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/50">
+                        ${shipment.deliveryCost?.toFixed(2) || 0}
+                      </TableCell>
+                      <TableCell className="font-mono bg-slate-100 dark:bg-slate-800">
                         ${shipment.totalPrice?.toFixed(2) || 0}
                       </TableCell>
                       <TableCell className="text-right">
@@ -145,14 +154,14 @@ export function AgentOrdersTable({
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
+                          {/* <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleChangeStatus(shipment)}
                             title="Change Order Status"
                           >
                             <RefreshCw className="w-4 h-4" />
-                          </Button>
+                          </Button> */}
                         </div>
                       </TableCell>
                     </motion.tr>

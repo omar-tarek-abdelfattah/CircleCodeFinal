@@ -191,7 +191,7 @@ export function EditShipmentModal({
   useEffect(() => {
     const init = async () => {
       setLoading(true)
-      if (shipment && isOpen) {
+      if (shipment && isOpen && role !== UserRole.agent) {
         let currentSellerZones: ZonesForSellerResponse[] = [];
 
         if (role === UserRole.Seller) {
@@ -199,7 +199,6 @@ export function EditShipmentModal({
         }
 
         const details = await populateModalDetails()
-        console.log(details);
 
         if (details) {
           const defaultSeller = await populateSellers(details)
@@ -418,9 +417,11 @@ export function EditShipmentModal({
         return;
       }
     }
-    if (products.some((p) => !p.name || p.price <= 0)) {
-      toast.error('Please complete all product information');
-      return;
+    if (userRole !== UserRole.agent) {
+      if (products.some((p) => !p.name || p.price <= 0)) {
+        toast.error('Please complete all product information');
+        return;
+      }
     }
 
     setLoading(true);
@@ -789,7 +790,7 @@ export function EditShipmentModal({
                   </Label>
                   <Select
                     value={formData.statusOrder?.toString()}
-                    onValueChange={(value) => handleChange('statusOrder', value)}
+                    onValueChange={(value) => handleChange('statusOrder', parseInt(value))}
                     disabled={loading || !canEdit}
                   >
                     <SelectTrigger id="status">

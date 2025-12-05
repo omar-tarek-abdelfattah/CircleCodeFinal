@@ -24,6 +24,7 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  salary?: number;
 }
 
 interface AuthContextType {

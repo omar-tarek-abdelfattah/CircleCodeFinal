@@ -42,7 +42,8 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
 
   const fetchShipments = async () => {
     const shipments = await shipmentsAPI.getAllAssignedShipments();
-    setAssignedShipments(shipments);
+    const reversedShipments = shipments.reverse();
+    setAssignedShipments(reversedShipments);
   };
   useEffect(() => {
     const init = () => {
@@ -94,7 +95,8 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
         />
         <StatCard
           title="Completed Today"
-          value={summaryToday?.totalOrder as number}
+          value={assignedShipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered
+            || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees).length}
           icon={CheckCircle}
           trend={{ value: 20, positive: true }}
           delay={0.3}
