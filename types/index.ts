@@ -2,7 +2,7 @@
 
 import { UserRole } from "@/contexts/AuthContext";
 
-// ezayak ya maher 
+
 
 export enum ShipmentStatus {
   New = "0",
@@ -20,6 +20,29 @@ export enum ShipmentStatus {
   RejectedByUs = "10",
   Returned = "11"
 }
+
+export enum AgentShipmentStatus {
+  Delivered = 0,
+  Postponed = 1,
+  CustomerUnreachable = 2,
+  RejectedNoShippingFees = 3,
+  RejectedWithShippingFees = 4,
+  PartiallyDelivered = 5,
+  RejectedByUs = 6,
+  Returned = 7,
+}
+export enum AgentShipmentStatusString {
+  Delivered = "Delivered",
+  Postponed = "Postponed",
+  CustomerUnreachable = "CustomerUnreachable",
+  RejectedNoShippingFees = "RejectedNoShippingFees",
+  RejectedWithShippingFees = "RejectedWithShippingFees",
+  PartiallyDelivered = "PartiallyDelivered",
+  RejectedByUs = "RejectedByUs",
+  Returned = "Returned",
+}
+
+
 
 export enum ShipmentStatusString {
   New = "New",

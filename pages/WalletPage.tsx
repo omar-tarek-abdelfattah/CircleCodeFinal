@@ -460,7 +460,7 @@ const WalletPage: React.FC = () => {
                     {dateFilter ? 'Period Earnings' : 'Total Earnings'}
                   </p>
                   <h2 className="text-slate-900 dark:text-slate-100">
-                    {isLoading ? '...' : `$${filteredSummary?.totalEarnings.toLocaleString() || 0}`}
+                    {isLoading ? '...' : `$${orders.filter((order) => order.statusOrder === ShipmentStatusString.Delivered || order.statusOrder === ShipmentStatusString.RejectedWithShippingFees).reduce((total, order) => total + order.deliveryCost, 0) || 0}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {dateFilter ? 'Credits received' : 'Lifetime earnings'}

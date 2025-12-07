@@ -84,7 +84,9 @@ export function NewShipmentsTable({
                 <TableHead>Tracking ID</TableHead>
                 <TableHead>Customer Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
+                <TableHead>Product Price</TableHead>
+                <TableHead>Delivery Cost</TableHead>
+                <TableHead>Total Amount</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -128,8 +130,18 @@ export function NewShipmentsTable({
                         {shipment.statusOrder?.replace('_', ' ')}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div>
+                        <p>ج.م {shipment.productPrice}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p>ج.م {shipment.deliveryCost}</p>
+                      </div>
+                    </TableCell>
                     <TableCell className="font-mono">
-                      ${shipment.totalPrice.toFixed(2)}
+                      <p>ج.م {shipment.totalPrice.toFixed(2)}</p>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

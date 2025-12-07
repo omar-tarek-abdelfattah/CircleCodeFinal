@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
+import { Switch } from './ui/switch';
 import { NotificationDropdown } from './NotificationDropdown';
 
 interface NavItem {
@@ -75,6 +76,12 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
+  const [language, setLanguage] = useState<'en' | 'ar'>('en');
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'ar' : 'en');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
 
@@ -96,6 +103,15 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mr-2">
+              <span className={`text-sm font-medium ${language === 'en' ? 'text-primary' : 'text-muted-foreground'}`}>EN</span>
+              <Switch
+                checked={language === 'ar'}
+                onCheckedChange={() => toggleLanguage()}
+                className="data-[state=checked]:bg-primary"
+              />
+              <span className={`text-sm font-medium ${language === 'ar' ? 'text-primary' : 'text-muted-foreground'}`}>AR</span>
+            </div>
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               {theme === 'light' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>

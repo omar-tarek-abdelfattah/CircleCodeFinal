@@ -68,7 +68,7 @@ export default function ReportsPage() {
   // Calculate display values
   const totalShipments = orders.length;
   // Delivery Rate: (Delivered / Total) * 100.
-  const deliveredOrders = orders.filter((order) => order.statusOrder === 'Delivered');
+  const deliveredOrders = orders.filter((order) => order.statusOrder === 'Delivered' || order.statusOrder === 'RejectedWithShippingFees');
   const deliveredCount = deliveredOrders.length;
   const deliveryRate = totalShipments > 0 ? ((deliveredCount / totalShipments) * 100).toFixed(1) : '0';
 

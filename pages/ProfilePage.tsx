@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, Calendar, Shield, Lock, Bell, Eye, EyeOff, Camera, Save, X, Edit, ShieldCheck, Briefcase, UserCog, DollarSign, Package, TrendingUp, Clock, Sparkles, } from 'lucide-react';
+import { User, Mail, Shield, Lock, Bell, Eye, EyeOff, Camera, Save, X, ShieldCheck, Briefcase, UserCog, DollarSign, Package, TrendingUp, Clock, Sparkles, } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -73,9 +73,6 @@ export default function ProfilePage() {
   const loadProfileData = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       // Set role-specific statistics
       if (personalInfo.role === 'seller') {
         setStatistics({
@@ -139,7 +136,7 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success('Personal information updated successfully');
       setEditingPersonal(false);
     } catch (error) {
@@ -168,20 +165,26 @@ export default function ProfilePage() {
       toast.error('New passwords do not match');
       return;
     }
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,15}$/;
+    if (!passwordRegex.test(passwordData.newPassword)) {
+      toast.error('Password must be between 8 and 15 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
       return;
     }
 
     setSaving(true);
     try {
       // استدعي الـ API
-      await changePasswordApi(
+      const changePasswordResponse = await changePasswordApi(
         personalInfo.email,
         passwordData.currentPassword,
         passwordData.newPassword,
         passwordData.confirmPassword
       );
+
+      if (!changePasswordResponse) {
+        toast.error('Failed to change password, Make sure the old password is correct');
+        return;
+      }
 
       toast.success('Password changed successfully');
       setPasswordData({

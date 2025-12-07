@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
@@ -16,15 +16,30 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      setToken(urlToken);
+    }
+  }, []);
+
   const handleReset = async () => {
     if (!email || !token || !password || !confirmPassword) {
-      toast.error('Please fill all fields');
+      toast.error('Please fill all fields or token is missing');
+      return;
+    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,15}$/;
+    if (!passwordRegex.test(password)) {
+      toast.error('Password must be between 8 and 15 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
       return;
     }
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
+
+
 
     setLoading(true);
     try {

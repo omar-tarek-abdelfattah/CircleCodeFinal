@@ -95,7 +95,8 @@ export async function apiCall<T>(
 
     if (!response.ok) {
       if (response.status == 401 && mode == apiMode.auth) {
-        throw new Error("invalid Credentials");
+        const jsonError = JSON.parse(await response.text());
+        throw new Error(jsonError.ErrorMessage);
       }
       const errorText = await response.text();
       console.error(`❌ API Error: ${response.status} - ${errorText}`);
@@ -219,8 +220,8 @@ export async function saveNewPasswordApi(data: {
 }
 
 // 🔹 Change Password
-export async function changePasswordApi(email: string, oldPassword: string, password: string, confirmPassword: string) {
-  return await apiCall<any>(
+export async function changePasswordApi(email: string, oldPassword: string, password: string, confirmPassword: string): Promise<boolean> {
+  return await apiCall<boolean>(
     `/Authentication/change-password/${encodeURIComponent(email)}`,
     {
       method: "POST",

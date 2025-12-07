@@ -89,11 +89,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(loggedUser);
       localStorage.setItem('user', JSON.stringify(loggedUser));
     } catch (error: any) {
+      console.log(error.message);
       if (error.message && error.message.includes("invalid Credentials")) {
         throw new Error("Invalid email or password");
       }
       if (error.message && error.message.toLowerCase().includes("confirm")) {
         throw new Error("Please confirm your email address.");
+      }
+      if (error.message && error.message.toLowerCase().includes("Your account is on hold")) {
+        throw new Error(error.message);
       }
       throw error;
     }

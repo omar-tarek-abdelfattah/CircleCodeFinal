@@ -20,10 +20,10 @@ import {
 } from './ui/select';
 import { toast } from 'sonner';
 import { Edit, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { Agent, AgentResponse, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, SellerResponse, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse } from '../types';
+import { Agent, AgentResponse, OrderResponse, OrderResponseDetails, OrderUpdate, Seller, SellerResponse, ShipmentStatus, ShipmentStatusString, StatusOrderDto, ZoneRegion, ZoneResponse, ZonesForSellerResponse, AgentShipmentStatus } from '../types';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { agentsAPI, sellersAPI, shipmentsAPI, zonesAPI } from '@/services/api';
-import { getAvailableChangeableStatuses, getAvailableStatuses, getStatusLabel } from '@/lib/statusUtils';
+import { getAvailableChangeableStatuses, getAvailableChangeableToStatuses, getAvailableStatuses, getStatusLabel } from '@/lib/statusUtils';
 
 interface ProductItem {
   id: string;
@@ -89,7 +89,7 @@ export function EditShipmentModal({
     { id: '1', name: '', quantity: 1, price: 0, description: '' },
   ]);
 
-  const availableStatuses = userRole ? getAvailableChangeableStatuses(userRole) : [];
+  const availableStatuses = userRole ? getAvailableChangeableToStatuses(userRole) : [];
 
   const populateModalDetails = async () => {
     setLoading(true)
@@ -454,9 +454,20 @@ export function EditShipmentModal({
         return;
       }
       if (role === UserRole.agent) {
+        let statusToSend = formData.statusOrder;
+
+        // Find the key (e.g., "Delivered") from standard ShipmentStatus (e.g., 4)
+        const statusKey = Object.keys(ShipmentStatus).find(
+          key => parseInt(ShipmentStatus[key as keyof typeof ShipmentStatus]) === Number(formData.statusOrder)
+        );
+
+        if (statusKey && statusKey in AgentShipmentStatus) {
+          statusToSend = AgentShipmentStatus[statusKey as keyof typeof AgentShipmentStatus] as unknown as StatusOrderDto;
+        }
+
         await shipmentsAPI.updateForAgent(shipment.id, {
           id: shipment.id,
-          statusOrder: formData.statusOrder as unknown as ShipmentStatus,
+          statusOrder: statusToSend as unknown as ShipmentStatus,
           cancelledNotes: formData.cancellednotes,
         });
         toast.success('Shipment updated successfully');
@@ -799,7 +810,7 @@ export function EditShipmentModal({
                     <SelectContent>
                       {availableStatuses.map((status) => (
                         <SelectItem key={status} value={ShipmentStatus[status]}>
-                          {getStatusLabel(status)}
+                          {getStatusLabel(status as ShipmentStatusString)}
                         </SelectItem>
                       ))}
                     </SelectContent>

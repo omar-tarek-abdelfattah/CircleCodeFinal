@@ -1,5 +1,5 @@
 import { UserRole } from '@/contexts/AuthContext';
-import { ShipmentStatusString } from '../types';
+import { AgentShipmentStatusString, ShipmentStatusString } from '../types';
 
 // All available statuses (admin only)
 export const ALL_STATUSES: ShipmentStatusString[] = [
@@ -52,6 +52,17 @@ export const AGENT_CHANGEABLE_STATUSES: ShipmentStatusString[] = [
   ShipmentStatusString.PartiallyDelivered,
   ShipmentStatusString.RejectedWithShippingFees,
   ShipmentStatusString.Returned,
+];
+
+export const AGENT_CHANGEABLE_TO_STATUSES: AgentShipmentStatusString[] = [
+  AgentShipmentStatusString.Delivered,
+  AgentShipmentStatusString.Postponed,
+  AgentShipmentStatusString.CustomerUnreachable,
+  AgentShipmentStatusString.PartiallyDelivered,
+  AgentShipmentStatusString.RejectedNoShippingFees,
+  AgentShipmentStatusString.Returned,
+  AgentShipmentStatusString.RejectedWithShippingFees,
+  AgentShipmentStatusString.RejectedByUs,
 ];
 
 // Get status label (human-readable)
@@ -118,6 +129,20 @@ export const getAvailableChangeableStatuses = (role: UserRole): ShipmentStatusSt
       return AGENT_CHANGEABLE_STATUSES;
     default:
       return AGENT_CHANGEABLE_STATUSES;
+  }
+};
+export const getAvailableChangeableToStatuses = (role: UserRole): (ShipmentStatusString | AgentShipmentStatusString)[] => {
+  switch (role) {
+    case UserRole.Admin:
+      return ALL_STATUSES;
+    case UserRole.SuperAdmin:
+      return ALL_STATUSES;
+    case UserRole.Seller:
+      return SELLER_CHANGEABLE_STATUSES;
+    case UserRole.agent:
+      return AGENT_CHANGEABLE_TO_STATUSES;
+    default:
+      return AGENT_CHANGEABLE_TO_STATUSES;
   }
 };
 // Get available statuses based on user role

@@ -98,7 +98,6 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
           value={assignedShipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered
             || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees).length}
           icon={CheckCircle}
-          trend={{ value: 20, positive: true }}
           delay={0.3}
           gradient="from-green-500 to-green-600"
         />
@@ -106,7 +105,6 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
           title="Today's Earnings"
           value={`EGP${summaryToday?.totalOrder}`}
           icon={DollarSign}
-          trend={{ value: 18, positive: true }}
           delay={0.4}
           gradient="from-yellow-500 to-yellow-600"
         />

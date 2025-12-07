@@ -58,8 +58,9 @@ export function SignUpPage() {
         return;
       }
 
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters long.");
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,15}$/;
+      if (!passwordRegex.test(password)) {
+        setError("Password must be between 8 and 15 characters, and contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
         setLoading(false);
         return;
       }

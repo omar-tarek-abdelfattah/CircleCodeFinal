@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Filter, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText } from 'lucide-react';
-import { AgentResponse, OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString } from '../types';
+import { AgentResponse, OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString, AgentShipmentStatus } from '../types';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { agentsAPI, shipmentsAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -21,7 +21,7 @@ import { EditShipmentModal } from '../components/EditShipmentModal';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/skeleton';
 import { StatCard } from '../components/StatCard';
-import { getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus, SELLER_CHANGEABLE_STATUSES, AGENT_CHANGEABLE_STATUSES } from '../lib/statusUtils';
+import { getStatusLabel, getStatusColor, getAvailableStatuses, isInProgressStatus, isCompletedStatus, SELLER_CHANGEABLE_STATUSES, AGENT_CHANGEABLE_STATUSES, getAvailableChangeableToStatuses } from '../lib/statusUtils';
 import { exportTableDataToExcel } from '../lib/excelUtils';
 
 
@@ -144,6 +144,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
   // Get available statuses based on user role
   const availableStatuses = role ? getAvailableStatuses(role as UserRole) : [];
+  const availableStatusesForAgent = role ? getAvailableChangeableToStatuses(role as UserRole) : [];
 
   // Apply filters (and exclude hidden orders)
   const filteredShipments = visibleShipments.filter(s => {
@@ -155,7 +156,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       searchQuery === '' ||
       recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sellerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.id.toLowerCase().includes(searchQuery.toLowerCase());
+      s.id.trim().toLowerCase().includes(searchQuery.trim().toLowerCase());
 
     const matchesStatus =
       statusFilter.length === 0 || statusFilter.includes(status);
@@ -199,6 +200,12 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
   const hiddenOrders = shipments.filter(s => hiddenOrderIds.has(s.id));
 
   // Pagination
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, sellerFilter, storeFilter, manifestSearch, agentSearch, dateFrom, dateTo]);
+
+
   const totalPages = Math.ceil(filteredShipments.length / itemsPerPage);
   let paginatedShipments = filteredShipments.slice(
     (currentPage - 1) * itemsPerPage,
@@ -499,12 +506,21 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
     }
 
     try {
-      console.log(bulkStatus);
+      // console.log(bulkStatus);
+
+      let statusToSend = bulkStatus as unknown as ShipmentStatus;
+
+      if (role === UserRole.agent) {
+        const agentStatusValue = AgentShipmentStatus[bulkStatus as keyof typeof AgentShipmentStatus];
+        if (agentStatusValue !== undefined) {
+          statusToSend = agentStatusValue as unknown as ShipmentStatus;
+        }
+      }
 
       // TODO: Connect to backend API
       await shipmentsAPI.bulkUpdateStatus({
         orderIdS: Array.from(selectedOrderIds),
-        statusOrder: bulkStatus as unknown as ShipmentStatus,
+        statusOrder: statusToSend,
         agentId: selectedAgentId ? parseInt(selectedAgentId) : undefined,
         // cancellednotes: bulkCancelledNotes,
       });
@@ -698,8 +714,28 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                   placeholder="Search by tracking number, sender, or recipient..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 pr-10"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const allIds = filteredShipments.map(s => s.id);
+                      setSelectedOrderIds((prev) => {
+                        const newSet = new Set(prev);
+                        allIds.forEach(id => newSet.add(id));
+                        return newSet;
+                      });
+                      setSearchQuery('');
+                      toast.success(`Added ${allIds.length} orders to selection`);
+                    }
+                  }}
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               {/* Filter Button */}
@@ -1427,11 +1463,18 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableStatuses.map(status => (
+                  {role !== UserRole.agent ? availableStatuses.map(status => (
                     <SelectItem key={status} value={status}>
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${getStatusColor(status).split(' ')[0]}`} />
                         {getStatusLabel(status)}
+                      </div>
+                    </SelectItem>
+                  )) : availableStatusesForAgent.map(status => (
+                    <SelectItem key={status} value={status}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${getStatusColor(status as ShipmentStatusString).split(' ')[0]}`} />
+                        {getStatusLabel(status as ShipmentStatusString)}
                       </div>
                     </SelectItem>
                   ))}
