@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface AddAgentModalProps {
 }
 
 export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [branches, setBranches] = useState<BranchData[]>([]);
@@ -159,10 +161,10 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Add New Agent
+            {t("Add New Agent")}
           </DialogTitle>
           <DialogDescription>
-            Enter the details of the new agent below.
+            {t("Enter the details of the new agent below.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -171,11 +173,11 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                UserName <span className="text-red-500">*</span>
+                {t("UserName ")}<span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="JohnDoe"
+                placeholder="Maher Ayman-ماهر ايمن"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 disabled={loading}
@@ -185,7 +187,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
-                Email Address <span className="text-red-500">*</span>
+                {t("Email Address")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="email"
@@ -200,7 +202,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phone">
-                Phone Number <span className="text-red-500">*</span>
+                {t("Phone Number")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phone"
@@ -215,7 +217,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             {/* Branch */}
             <div className="space-y-2">
               <Label htmlFor="branshId">
-                Branch <span className="text-slate-400">(Optional)</span>
+                {t("Branch")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.branshId.toString()}
@@ -250,7 +252,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             </div> */}
             <div className="space-y-2">
               <Label htmlFor="passowrd">
-                Password <span className="text-slate-400"></span>
+                {t("Password")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="password"
@@ -263,7 +265,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassowrd">
-                Confirm Password <span className="text-slate-400"></span>
+                {t("Confirm Password")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="confirmPassword"
@@ -284,7 +286,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -297,7 +299,7 @@ export function AddAgentModal({ open, onOpenChange, onSuccess }: AddAgentModalPr
                   Adding...
                 </>
               ) : (
-                'Add Agent'
+                t("Add Agent")
               )}
             </Button>
           </DialogFooter>

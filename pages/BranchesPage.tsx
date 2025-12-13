@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from 'react';
 import { NewBranchRequest, BranchData, BranchResponseDetails } from '../types';
 import { Card } from '../components/ui/card';
@@ -45,6 +46,7 @@ import { branchesAPI } from '@/services/api';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 
 export function BranchesPage() {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const [branches, setBranches] = useState<BranchData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -258,7 +260,7 @@ export function BranchesPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">All Branches</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("All Branches")}</p>
               <p className="text-3xl font-bold mt-1">{stats.totalBranches}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
@@ -270,7 +272,7 @@ export function BranchesPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Active Now</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("Active Now")}</p>
               <p className="text-3xl font-bold mt-1">{stats.activeBranches}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
@@ -281,7 +283,7 @@ export function BranchesPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Inactive </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("Inactive")} </p>
               <p className="text-3xl font-bold mt-1">{stats.inactiveBranches}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
@@ -293,7 +295,7 @@ export function BranchesPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Total Orders</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("Total Orders")}</p>
               <p className="text-3xl font-bold mt-1">{stats.totalOrders}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
@@ -305,7 +307,7 @@ export function BranchesPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Total Agents</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("Total Agents")}</p>
               <p className="text-3xl font-bold mt-1">{stats.totalAgents}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
@@ -317,7 +319,7 @@ export function BranchesPage() {
 
       {/* Main Content */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Branch Management</h1>
+        <h1 className="text-2xl font-bold">{t("Branch Management")}</h1>
         <div className="flex gap-2">
           {hiddenBranches.length > 0 && (
             <Button
@@ -332,7 +334,7 @@ export function BranchesPage() {
           {role === UserRole.SuperAdmin && (
             <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" />
-              Add Branch
+              {t("Add Branch")}
             </Button>
           )}
         </div>
@@ -344,9 +346,9 @@ export function BranchesPage() {
           <div className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <div>
-              <h2 className="font-semibold">Branches ({filteredBranches.length})</h2>
+              <h2 className="font-semibold">{t("Branches")}</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Manage and track your branches ({filteredBranches.length})
+                {t("Manage and track your branches")}
               </p>
             </div>
             <Button
@@ -356,7 +358,7 @@ export function BranchesPage() {
               disabled={loading}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              {t("Refresh")}
             </Button>
 
           </div>
@@ -366,7 +368,7 @@ export function BranchesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
-                placeholder="Search branches..."
+                placeholder={t("Search branches...")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -385,7 +387,7 @@ export function BranchesPage() {
                 htmlFor="inactive-filter"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                Show Inactive Only
+                {t("Show Inactive Only")}
               </label>
             </div>
           </div>
@@ -396,15 +398,15 @@ export function BranchesPage() {
               <TableHeader>
                 <TableRow className="bg-slate-50 dark:bg-slate-800/50">
                   {/* <TableHead className="w-16">ID</TableHead> */}
-                  <TableHead>BRANCH NAME</TableHead>
-                  <TableHead>ADDRESS</TableHead>
-                  <TableHead>COUNTRY</TableHead>
-                  <TableHead>MANAGER</TableHead>
-                  <TableHead className="text-center">ORDERS</TableHead>
-                  <TableHead className="text-center">AGENTS</TableHead>
+                  <TableHead>{t("BRANCH NAME")}</TableHead>
+                  <TableHead>{t("ADDRESS")}</TableHead>
+                  <TableHead>{t("COUNTRY")}</TableHead>
+                  <TableHead>{t("MANAGER")}</TableHead>
+                  <TableHead className="text-center">{t("ORDERS")}</TableHead>
+                  <TableHead className="text-center">{t("AGENTS")}</TableHead>
                   {/* <TableHead>BUSINESS HOURS</TableHead> */}
-                  <TableHead>STATUS</TableHead>
-                  <TableHead className="text-right">ACTIONS</TableHead>
+                  <TableHead>{t("STATUS")}</TableHead>
+                  <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -450,7 +452,7 @@ export function BranchesPage() {
                                 : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                             }
                           >
-                            {branch.isActive ? 'Active' : 'Deactivate'}
+                            {branch.isActive ? t('Active') : t('Deactivate')}
                           </Badge>
                         </div>
                       </TableCell>
@@ -497,9 +499,9 @@ export function BranchesPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Showing {paginatedBranches.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
-              {Math.min(currentPage * itemsPerPage, filteredBranches.length)} of{' '}
-              {filteredBranches.length} items
+              {t("Showing")} {paginatedBranches.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
+              {Math.min(currentPage * itemsPerPage, filteredBranches.length)} {t("of")}{' '}
+              {filteredBranches.length} {t("Branches")}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -508,7 +510,7 @@ export function BranchesPage() {
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
               >
-                Previous
+                {t("Previous")}
               </Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <Button
@@ -527,7 +529,7 @@ export function BranchesPage() {
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
               >
-                Next
+                {t("Next")}
               </Button>
             </div>
           </div>

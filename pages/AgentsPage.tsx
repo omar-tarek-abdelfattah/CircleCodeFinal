@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Users, UserCheck, TrendingUp, Search, Filter, Plus, Eye, Phone, Edit, EyeOff, CalendarClock } from 'lucide-react';
@@ -38,6 +39,7 @@ import { agentsAPI, shipmentsAPI } from '../services/api';
 import { useEffect } from 'react';
 
 export function AgentsPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [agents, setAgents] = useState<AgentResponse[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<AgentResponse | null>(null);
@@ -218,7 +220,7 @@ export function AgentsPage() {
 
   const handleToggleStatus = async (agentId: string, currentStatus: 'active' | 'inactive') => {
 
-    if (currentStatus === 'active') {
+    if (currentStatus === t("Active")) {
       // User wants to deactivate/lock
       const agent = agents.find(a => a.id.toString() === agentId);
       if (agent) {
@@ -346,9 +348,9 @@ export function AgentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl mb-2">Agents Management</h1>
+          <h1 className="text-3xl mb-2">{t("Agents Management")}</h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Manage and track all delivery agents
+            {t("Manage and track all delivery agents")}
           </p>
         </div>
       </div>
@@ -366,10 +368,10 @@ export function AgentsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    Total Agents
+                    {t("Total Agents")}
                   </p>
                   <p className="text-3xl mb-1">{totalAgents}</p>
-                  <p className="text-sm text-slate-500">All registered agents</p>
+                  <p className="text-sm text-slate-500">{t("All registered agents")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -390,10 +392,10 @@ export function AgentsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    Active Agents
+                    {t("Active Agents")}
                   </p>
                   <p className="text-3xl mb-1">{activeAgentsCount}</p>
-                  <p className="text-sm text-slate-500">Active agents</p>
+                  <p className="text-sm text-slate-500">{t("Active agents")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -414,10 +416,10 @@ export function AgentsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    On Duty
+                    {t("On Duty")}
                   </p>
                   <p className="text-3xl mb-1">{onDutyAgentsCount}</p>
-                  <p className="text-sm text-slate-500">Currently assigned shipments</p>
+                  <p className="text-sm text-slate-500">{t("Currently assigned shipments")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -441,7 +443,7 @@ export function AgentsPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
-                  placeholder="Search agents..."
+                  placeholder={t("Search agents...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -452,7 +454,7 @@ export function AgentsPage() {
               <div className="flex gap-2">
 
                 <Button variant="outline" onClick={handleReset}>
-                  Reset
+                  {t("Reset")}
                 </Button>
                 {hiddenAgents.length > 0 && (
                   <Button
@@ -469,7 +471,7 @@ export function AgentsPage() {
                   onClick={() => setAddAgentModalOpen(true)}
                 >
                   <Plus className="w-4 h-4" />
-                  Add New Agent
+                  {t("Add New Agent")}
                 </Button>
               </div>
             </div>
@@ -481,9 +483,9 @@ export function AgentsPage() {
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="all">All Agents</TabsTrigger>
-            <TabsTrigger value="locked">Locked Agents</TabsTrigger>
-            <TabsTrigger value="inActive">Inactive Agents</TabsTrigger>
+            <TabsTrigger value="all">{t("All Agents")}</TabsTrigger>
+            <TabsTrigger value="locked">{t("Locked Agents")}</TabsTrigger>
+            <TabsTrigger value="inActive">{t("Inactive Agents")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -498,7 +500,7 @@ export function AgentsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Manage and track your items
+                  {t("Manage and track your Agents")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -506,14 +508,14 @@ export function AgentsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>AGENT</TableHead>
+                        <TableHead>{t("AGENT")}</TableHead>
                         {/* <TableHead>ID</TableHead> */}
-                        <TableHead>BRANCH</TableHead>
-                        <TableHead>CONTACT</TableHead>
-                        <TableHead>EMAIL</TableHead>
-                        <TableHead>ORDERS</TableHead>
-                        <TableHead>STATUS</TableHead>
-                        <TableHead className="text-right">ACTIONS</TableHead>
+                        <TableHead>{t("BRANCH")}</TableHead>
+                        <TableHead>{t("CONTACT")}</TableHead>
+                        <TableHead>{t("EMAIL")}</TableHead>
+                        <TableHead>{t("ORDERS")}</TableHead>
+                        <TableHead>{t("STATUS")}</TableHead>
+                        <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -574,14 +576,14 @@ export function AgentsPage() {
                                 <div className="flex items-center gap-3">
                                   <Switch
                                     checked={agent.isactive && !isTemporarilyDeactivated(agent)}
-                                    onCheckedChange={() => handleToggleStatus(agent.id.toString(), agent.isactive ? 'active' : 'inactive')}
+                                    onCheckedChange={() => handleToggleStatus(agent.id.toString(), agent.isactive ? t("Active") : 'inactive')}
                                     className="data-[state=checked]:bg-green-500"
                                   />
                                   <span className={`text-sm font-semibold ${agent.isactive === true && !isTemporarilyDeactivated(agent)
                                     ? 'text-green-600 dark:text-green-400'
                                     : 'text-red-600 dark:text-red-400'
                                     }`}>
-                                    {agent.isactive === true && !isTemporarilyDeactivated(agent) ? 'Active' : 'inactive'}
+                                    {agent.isactive === true && !isTemporarilyDeactivated(agent) ? t("Active") : t('inactive')}
                                   </span>
                                 </div>
                                 {isTemporarilyDeactivated(agent) && agent.isLock && (
@@ -668,7 +670,7 @@ export function AgentsPage() {
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1}
                       >
-                        Previous
+                        {t("Previous")}
                       </Button>
                       <div className="flex gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -689,7 +691,7 @@ export function AgentsPage() {
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage === totalPages}
                       >
-                        Next
+                        {t("Next")}
                       </Button>
                     </div>
                   </div>
@@ -709,7 +711,7 @@ export function AgentsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Locked Agents
+                  {t("Locked Agents")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -717,13 +719,13 @@ export function AgentsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>AGENT</TableHead>
-                        <TableHead>BRANCH</TableHead>
-                        <TableHead>CONTACT</TableHead>
-                        <TableHead>EMAIL</TableHead>
-                        <TableHead>ORDERS</TableHead>
-                        <TableHead>STATUS</TableHead>
-                        <TableHead className="text-right">ACTIONS</TableHead>
+                        <TableHead>{t("AGENT")}</TableHead>
+                        <TableHead>{t("BRANCH")}</TableHead>
+                        <TableHead>{t("CONTACT")}</TableHead>
+                        <TableHead>{t("EMAIL")}</TableHead>
+                        <TableHead>{t("ORDERS")}</TableHead>
+                        <TableHead>{t("STATUS")}</TableHead>
+                        <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -779,7 +781,7 @@ export function AgentsPage() {
                                     className="data-[state=checked]:bg-green-500"
                                   />
                                   <span className="text-sm font-semibold text-red-600 dark:text-red-400">
-                                    Inactive
+                                    {t("Inactive")}
                                   </span>
                                 </div>
                               </div>
@@ -844,7 +846,7 @@ export function AgentsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Inactive Agents
+                  {t("Inactive Agents")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -852,13 +854,13 @@ export function AgentsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>AGENT</TableHead>
-                        <TableHead>BRANCH</TableHead>
-                        <TableHead>CONTACT</TableHead>
-                        <TableHead>EMAIL</TableHead>
-                        <TableHead>ORDERS</TableHead>
-                        <TableHead>STATUS</TableHead>
-                        <TableHead className="text-right">ACTIONS</TableHead>
+                        <TableHead>{t("AGENT")}</TableHead>
+                        <TableHead>{t("BRANCH")}</TableHead>
+                        <TableHead>{t("CONTACT")}</TableHead>
+                        <TableHead>{t("EMAIL")}</TableHead>
+                        <TableHead>{t("ORDERS")}</TableHead>
+                        <TableHead>{t("STATUS")}</TableHead>
+                        <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -914,7 +916,7 @@ export function AgentsPage() {
                                     className="data-[state=checked]:bg-green-500"
                                   />
                                   <span className="text-sm font-semibold text-red-600 dark:text-red-400">
-                                    Inactive
+                                    {t("Inactive")}
                                   </span>
                                 </div>
                               </div>
@@ -1006,7 +1008,7 @@ export function AgentsPage() {
                           : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                       }
                     >
-                      {selectedAgent.isactive === true && !isTemporarilyDeactivated(selectedAgent) ? 'Active' : 'Inactive'}
+                      {selectedAgent.isactive === true && !isTemporarilyDeactivated(selectedAgent) ? t("Active") : 'Inactive'}
                     </Badge>
                     <Badge variant="secondary">
                       {selectedAgent.numberofOrder} Active Orders

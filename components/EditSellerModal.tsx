@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -31,6 +32,7 @@ interface EditSellerModalProps {
 }
 
 export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditSellerModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<SellerUpdateRequest>({} as SellerUpdateRequest);
   const [sellerDetails, setSellerDetails] = useState<SellerResponseDetails | null>(null);
@@ -173,10 +175,10 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Edit Seller
+            {t("Edit Seller")}
           </DialogTitle>
           <DialogDescription>
-            Update the seller's information below.
+            {t("Update the seller's information below.")}
           </DialogDescription>
           <Button
             variant="outline"
@@ -185,7 +187,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             disabled={loading}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t("Refresh")}
           </Button>
         </DialogHeader>
 
@@ -207,7 +209,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Username <span className="text-red-500">*</span>
+                {t("Username")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -221,7 +223,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
-                Email Address <span className="text-red-500">*</span>
+                {t("Email Address")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="email"
@@ -236,7 +238,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phone">
-                Phone Number <span className="text-red-500">*</span>
+                {t("Phone Number")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phone"
@@ -251,7 +253,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* Store Name */}
             <div className="space-y-2">
               <Label htmlFor="storeName">
-                Store Name <span className="text-slate-400">(Optional)</span>
+                {t("Store Name")} <span className="text-slate-400">{t("Optional")}</span>
               </Label>
               <Input
                 id="storeName"
@@ -265,7 +267,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* Address */}
             <div className="space-y-2">
               <Label htmlFor="address">
-                Address <span className="text-red-500">*</span>
+                {t("Address")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="address"
@@ -279,7 +281,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* Branch */}
             <div className="space-y-2">
               <Label htmlFor="branch">
-                Branch <span className="text-red-500">*</span>
+                {t("Branch")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.branchId?.toString() || ''}
@@ -302,9 +304,9 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
             {/* VIP Status */}
             <div className="flex items-center justify-between space-x-2 border p-3 rounded-md">
               <div className="space-y-0.5">
-                <Label htmlFor="vip">VIP Seller</Label>
+                <Label htmlFor="vip">{t("VIP Seller")}</Label>
                 <div className="text-sm text-slate-500">
-                  Enable VIP status for this seller
+                  {t("Enable VIP status for this seller")}
                 </div>
               </div>
               <Switch
@@ -323,7 +325,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -336,7 +338,7 @@ export function EditSellerModal({ open, onOpenChange, seller, onSuccess }: EditS
                   Updating...
                 </>
               ) : (
-                'Update Seller'
+                t("Update Seller")
               )}
             </Button>
           </DialogFooter>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -29,6 +30,7 @@ import { shipmentsAPI } from '@/services/api';
 type DateFilterType = 'today' | 'lastWeek' | 'lastMonth' | 'last3Months' | 'custom' | null;
 
 const WalletPage: React.FC = () => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
@@ -219,7 +221,7 @@ const WalletPage: React.FC = () => {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-slate-900 dark:text-slate-100">Wallet</h1>
+            <h1 className="text-slate-900 dark:text-slate-100">{t("Wallet")}</h1>
             {/* {dateFilter && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-sm">
                 <Filter className="w-3.5 h-3.5" />
@@ -429,13 +431,13 @@ const WalletPage: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                    {dateFilter ? 'Period Balance' : 'Current Balance'}
+                    {dateFilter ? 'Period Balance' : t('Current Balance')}
                   </p>
                   <h2 className="text-slate-900 dark:text-slate-100">
-                    {isLoading ? '...' : `$${((filteredSummary?.pendingAmount || 0) + (filteredSummary?.totalEarnings || 0)).toLocaleString()}`}
+                    {isLoading ? '...' : `${t("EGP")} ${((filteredSummary?.pendingAmount || 0) + (filteredSummary?.totalEarnings || 0)).toLocaleString()}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {dateFilter ? 'Net for period' : 'Available funds'}
+                    {dateFilter ? 'Net for period' : t('Available funds')}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
@@ -457,13 +459,13 @@ const WalletPage: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                    {dateFilter ? 'Period Earnings' : 'Total Earnings'}
+                    {dateFilter ? 'Period Earnings' : t('Total Earnings')}
                   </p>
                   <h2 className="text-slate-900 dark:text-slate-100">
-                    {isLoading ? '...' : `$${orders.filter((order) => order.statusOrder === ShipmentStatusString.Delivered || order.statusOrder === ShipmentStatusString.RejectedWithShippingFees).reduce((total, order) => total + order.deliveryCost, 0) || 0}`}
+                    {isLoading ? '...' : `${t("EGP")} ${orders.filter((order) => order.statusOrder === ShipmentStatusString.Delivered || order.statusOrder === ShipmentStatusString.RejectedWithShippingFees).reduce((total, order) => total + order.deliveryCost, 0) || 0}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {dateFilter ? 'Credits received' : 'Lifetime earnings'}
+                    {dateFilter ? 'Credits received' : t('Lifetime earnings')}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center flex-shrink-0">
@@ -485,13 +487,13 @@ const WalletPage: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                    Pending Amount
+                    {t("Pending Amount")}
                   </p>
                   <h2 className="text-slate-900 dark:text-slate-100">
-                    {isLoading ? '...' : `$${filteredSummary?.pendingAmount.toLocaleString() || 0}`}
+                    {isLoading ? '...' : `${t("EGP")} ${filteredSummary?.pendingAmount.toLocaleString() || 0}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {dateFilter ? 'Pending in period' : 'Awaiting clearance'}
+                    {dateFilter ? 'Pending in period' : t('Awaiting clearance')}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0">
@@ -627,16 +629,16 @@ const WalletPage: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Transactions ({orders.length})</CardTitle>
+              <CardTitle>{t("Transactions")} {orders.length}</CardTitle>
               {orders.length > 0 && (
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   {dateFilter
                     ? `${orders.length} transaction${orders.length !== 1 ? 's' : ''} in selected period`
-                    : `Showing ${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, orders.length)} of ${orders.length} transactions`
+                    : `${t("Showing")} ${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, orders.length)} ${t("of")} ${orders.length} ${t("transactions")}`
                   }
                 </p>
               )}
-            </div>
+            </div>  
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -649,12 +651,12 @@ const WalletPage: React.FC = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>client name</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Seller</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t("Type")}</TableHead>
+                        <TableHead>{t("client name")}</TableHead>
+                        <TableHead>{t("Date")}</TableHead>
+                        <TableHead>{t("Seller")}</TableHead>
+                        <TableHead className="text-right">{t("Amount")}</TableHead>
+                        <TableHead>{t("Status")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -704,9 +706,9 @@ const WalletPage: React.FC = () => {
                               >
                                 {order.statusOrder === ShipmentStatusString.Delivered ||
                                   order.statusOrder === ShipmentStatusString.RejectedWithShippingFees
-                                  ? '+'
+                                  ? '+' 
                                   : '-'
-                                }$
+                                }{t("EGP")}
                                 {order.totalPrice.toLocaleString()}
                               </span>
                             </TableCell>
@@ -735,7 +737,7 @@ const WalletPage: React.FC = () => {
                 {orders.length > 0 && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Showing page {currentPage} of {totalPages}
+                      {t("Showing page")} {currentPage} {t("of")} {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -745,7 +747,7 @@ const WalletPage: React.FC = () => {
                         disabled={currentPage === 1}
                       >
                         <ChevronLeft className="w-4 h-4 mr-1" />
-                        Previous
+                        {t("Previous")}
                       </Button>
                       <Button
                         variant="outline"
@@ -753,7 +755,7 @@ const WalletPage: React.FC = () => {
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
                       >
-                        Next
+                        {t("Next")}
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </div>

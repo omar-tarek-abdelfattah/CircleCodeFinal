@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -54,7 +55,7 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
     });
     onOpenChange(false);
   };
-
+  const { t } = useTranslation();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm() || !user) return;
@@ -79,13 +80,13 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
-          <DialogDescription>Update user information</DialogDescription>
+          <DialogTitle>{t("Edit Admin")}</DialogTitle>
+          <DialogDescription>{t("Update Admin information")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t("NAME")}</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -95,7 +96,7 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("EMAIL")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -108,7 +109,7 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
 
 
             <div className="grid gap-2">
-              <Label htmlFor="salary">Salary</Label>
+              <Label htmlFor="salary">{t("SALARY")}</Label>
               <Input
                 id="salary"
                 type="number"
@@ -123,9 +124,9 @@ export function EditUserModal({ open, onOpenChange, user, onUpdate }: EditUserMo
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {t("Cancel")}
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">{t("Save Changes")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

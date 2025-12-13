@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { 
@@ -35,6 +36,7 @@ interface BillOfLadingModalProps {
 }
 
 export function BillOfLadingModal({ shipment, isOpen, onClose }: BillOfLadingModalProps) {
+  const { t } = useTranslation();
   const printRef = useRef<HTMLDivElement>(null);
 
   if (!shipment) return null;

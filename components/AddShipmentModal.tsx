@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -33,6 +34,7 @@ interface AddShipmentModalProps {
 }
 
 export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
 
@@ -321,10 +323,10 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
-            Add New Shipment
+            {t("Add New Shipment")}
           </DialogTitle>
           <DialogDescription>
-            Enter the shipment details below to create a new order.
+            {t("Enter the shipment details below to create a new order.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -334,13 +336,13 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                Customer Information
+                {t("Customer Information")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="customerName">
-                    Customer Name <span className="text-red-500">*</span>
+                    {t("Customer Name")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="customerName"
@@ -353,7 +355,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">
-                    Phone Number <span className="text-red-500">*</span>
+                    {t("Phone Number")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="phone"
@@ -368,7 +370,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
               <div className="space-y-2">
                 <Label htmlFor="phone2">
-                  Phone 2 <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
+                  {t("Phone 2")} <span className="text-slate-400 dark:text-slate-500">{t("Optional")}</span>
                 </Label>
                 <Input
                   id="phone2"
@@ -385,12 +387,12 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                Delivery Address
+                {t("Delivery Address")}
               </h3>
 
               <div className="space-y-2">
                 <Label htmlFor="address">
-                  Address <span className="text-red-500">*</span>
+                  {t("Address")} <span className="text-red-500">*</span>
                 </Label>
                 <Textarea
                   id="address"
@@ -405,7 +407,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
               <div className="space-y-2">
                 <Label htmlFor="notes">
-                  Delivery Notes <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
+                  {t("Delivery Notes")} <span className="text-slate-400 dark:text-slate-500">{t("Optional")}</span>
                 </Label>
                 <Textarea
                   id="notes"
@@ -421,7 +423,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="zone">
-                    Zone <span className="text-red-500">*</span>
+                    {t("Zone")} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.zoneId.toString()}
@@ -459,7 +461,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
                 <div className="space-y-2">
                   <Label htmlFor="region">
-                    Region <span className="text-red-500">*</span>
+                    {t("Region")} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.regionName}
@@ -486,7 +488,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="apartmentNumber">
-                    Apartment Number <span className="text-red-500">*</span>
+                    {t("Apartment Number")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="apartmentNumber"
@@ -499,7 +501,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
 
                 <div className="space-y-2">
                   <Label htmlFor="buildingNumber">
-                    Building Number <span className="text-red-500">*</span>
+                    {t("Building Number ")}<span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="buildingNumber"
@@ -517,12 +519,12 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  Seller
+                  {t("Seller")}
                 </h3>
 
                 <div className="space-y-2">
                   <Label htmlFor="seller">
-                    Select Seller <span className="text-red-500">*</span>
+                    {t("Select Seller")} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.sellerId.toString()}
@@ -547,16 +549,16 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                Products
+                {t("Products")}
               </h3>
 
               <div className="space-y-3">
                 {/* Header */}
                 <div className="grid grid-cols-12 gap-2 text-xs font-medium text-slate-600 dark:text-slate-400 px-2">
-                  <div className="col-span-5">Item Name (up) & Description (down) <span className="text-red-500">*</span></div>
-                  <div className="col-span-2">Qty <span className="text-red-500">*</span></div>
-                  <div className="col-span-2">Price <span className="text-red-500">*</span></div>
-                  <div className="col-span-2">Total</div>
+                  <div className="col-span-5">{t("Item Name (up) & Description (down)")}<span className="text-red-500">*</span></div>
+                  <div className="col-span-2">{t("Qty")} <span className="text-red-500">*</span></div>
+                  <div className="col-span-2">{t("Price")} <span className="text-red-500">*</span></div>
+                  <div className="col-span-2">{t("Total")}</div>
                   <div className="col-span-1"></div>
                 </div>
 
@@ -618,7 +620,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                       />
                     </div>
                     <div className="col-span-2 flex items-center h-9 px-3 text-sm text-slate-700 dark:text-slate-300">
-                      ${(product.quantity * product.price).toFixed(2)}
+                      {t("EGP")} {(product.quantity * product.price).toFixed(2)}
                     </div>
                     <div className="col-span-1 flex items-center justify-center">
                       {products.length > 1 && (
@@ -647,35 +649,35 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   className="w-full"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Item
+                  {t("Add Item")}
                 </Button>
               </div>
 
               {/* Totals */}
               <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Products Total:</span>
+                  <span className="text-slate-600 dark:text-slate-400">{t("Products Total:")}</span>
                   <span className="font-mono text-slate-900 dark:text-slate-100">
-                    ${calculateProductsTotal().toFixed(2)}
+                    {t("EGP")} {calculateProductsTotal().toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
+                  <span className="text-slate-600 dark:text-slate-400">{t("Delivery Fee:")}</span>
                   <span className="font-mono text-slate-900 dark:text-slate-100">
                     {(() => {
                       const selectedRegion = selectedRegions.find(r => r.name === formData.regionName);
-                      return selectedRegion ? `$${selectedRegion.price.toFixed(2)}` : '$0.00';
+                      return selectedRegion ? `$${selectedRegion.price.toFixed(2)}`  : `${t("EGP")} 0.00`;
                     })()}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-base pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    Grand Total:
+                    {t("Grand Total:")}
                   </span>
                   <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                    ${calculateGrandTotal().toFixed(2)}
+                    {t("EGP")} {calculateGrandTotal().toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -689,7 +691,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -702,7 +704,7 @@ export function AddShipmentModal({ isOpen, onClose, onSuccess }: AddShipmentModa
                   Creating...
                 </>
               ) : (
-                'Add Shipment'
+                t("Add Shipment")
               )}
             </Button>
           </DialogFooter>

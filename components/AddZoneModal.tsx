@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -29,6 +30,7 @@ interface AddZoneModalProps {
 }
 
 export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [zoneName, setZoneName] = useState('');
   const [regions, setRegions] = useState<ZoneRegion[]>([
@@ -142,7 +144,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Add New Zone</DialogTitle>
+          <DialogTitle>{t("Add New Zone")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
@@ -151,7 +153,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
               {/* Zone Name */}
               <div className="space-y-2">
                 <Label htmlFor="zoneName">
-                  Zone Name <span className="text-red-500">*</span>
+                  {t("Zone Name")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="zoneName"
@@ -165,7 +167,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>
-                    Regions <span className="text-red-500">*</span>
+                    {t("regions")} <span className="text-red-500">*</span>
                   </Label>
                   <Button
                     type="button"
@@ -175,7 +177,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
                     className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Add Region
+                    {t("Add Region")}
                   </Button>
                 </div>
 
@@ -218,7 +220,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
               {/* Associated Branch */}
               <div className="space-y-2">
                 <Label htmlFor="branch">
-                  Associated Branch <span className="text-red-500">*</span>
+                  {t("Associated Branch")} <span className="text-red-500">*</span>
                 </Label>
                 <Select value={selectedBranch} onValueChange={setSelectedBranch} disabled={loadingBranches}>
                   <SelectTrigger id="branch">
@@ -243,7 +245,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -251,7 +253,7 @@ export function AddZoneModal({ open, onOpenChange, onSuccess }: AddZoneModalProp
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Zone
+              {t("Create Zone")}
             </Button>
           </DialogFooter>
         </form>

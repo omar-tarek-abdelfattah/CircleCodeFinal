@@ -1,4 +1,4 @@
-
+import { useTranslation } from "react-i18next";
 import { motion } from 'motion/react';
 import { Package, Eye, Edit, Plus, ArrowRight } from 'lucide-react';
 import { OrderResponse, Shipment } from '../types';
@@ -33,6 +33,7 @@ export function NewShipmentsTable({
   showAddButton = true,
   onViewAll,
 }: NewShipmentsTableProps) {
+  const { t } = useTranslation();
   const displayShipments = shipments.slice(0, maxItems);
   console.log(displayShipments)
 
@@ -55,9 +56,9 @@ export function NewShipmentsTable({
           <div>
             <CardTitle className="flex items-center gap-2">
               <Package className="w-5 h-5" />
-              New Shipments
+              {t("New Shipments")}
             </CardTitle>
-            <CardDescription>Latest {maxItems} shipments added to the system</CardDescription>
+            <CardDescription>{t("Latest 5 shipments added to the system")}</CardDescription>
           </div>
           <div className="flex gap-2">
             {showAddButton && (
@@ -66,11 +67,11 @@ export function NewShipmentsTable({
                 className="gap-2 bg-gradient-to-r from-blue-500 to-purple-600"
               >
                 <Plus className="w-4 h-4" />
-                Add Shipment
+                {t("Add Shipment")}
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={onViewAll}>
-              View All
+              {t("View All")}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
@@ -81,13 +82,13 @@ export function NewShipmentsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tracking ID</TableHead>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Product Price</TableHead>
-                <TableHead>Delivery Cost</TableHead>
-                <TableHead>Total Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("TRACKING ID")}</TableHead>
+                <TableHead>{t("Customer Name")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Product Price")}</TableHead>
+                <TableHead>{t("Delivery Cost")}</TableHead>
+                <TableHead>{t("TOTAL AMOUNT")}</TableHead>
+                <TableHead className="text-right">{t("ACTIONS")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,21 +128,21 @@ export function NewShipmentsTable({
                     <TableCell>
 
                       <Badge className={getStatusColor(shipment?.statusOrder as string)}>
-                        {shipment.statusOrder?.replace('_', ' ')}
+                        {t(shipment.statusOrder?.replace('_', ' ').toLowerCase() || '')}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p>ج.م {shipment.productPrice}</p>
+                        <p>{t("EGP")} {shipment.productPrice}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p>ج.م {shipment.deliveryCost}</p>
+                        <p>{t("EGP")} {shipment.deliveryCost}</p>
                       </div>
                     </TableCell>
                     <TableCell className="font-mono">
-                      <p>ج.م {shipment.totalPrice.toFixed(2)}</p>
+                      <p>{t("EGP")} {shipment.totalPrice.toFixed(2)}</p>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

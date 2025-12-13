@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Filter, Plus, Eye, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, Clock, X, Calendar as CalendarIcon, FileSpreadsheet, DollarSign, Truck, Receipt, Edit, UserPlus, EyeOff, FileText } from 'lucide-react';
 import { AgentResponse, OrderResponse, OrderResponseDetails, ShipmentStatus, ShipmentStatusString, AgentShipmentStatus } from '../types';
@@ -31,6 +32,7 @@ interface ShipmentsPageProps {
 }
 
 export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOfLading }: ShipmentsPageProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const [shipments, setShipments] = useState<OrderResponse[]>([]);
   // const [shipmentsDetails, setShipmentsDetails] = useState<OrderResponse>({} as OrderResponse);
@@ -644,10 +646,10 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
         <div>
           <h1 className="text-3xl flex items-center gap-2">
             <Package className="w-8 h-8" />
-            Order Management
+            {t("Order Management")}
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
-            Manage and track your order management
+            {t("Manage and track your order management")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -658,7 +660,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
             disabled={loading}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t("Refresh")}
           </Button>
           {role !== UserRole.agent && (
             <Button
@@ -666,7 +668,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
               onClick={() => setAddShipmentModalOpen(true)}
             >
               <Plus className="w-4 h-4" />
-              New Order
+              {t("New Order")}
             </Button>
           )}
         </div>
@@ -676,7 +678,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <StatCard
-            title="Total Orders"
+            title={t("Total Orders")}
             value={loadingStats ? "..." : totalOrders.toString()}
             icon={Package}
           // subtitle="Total shipments"
@@ -685,7 +687,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
         <div>
           <StatCard
-            title="Pending"
+            title={t("Pending")}
             value={loadingStats ? "..." : packagesInProgress.toString()}
             icon={Clock}
           // subtitle="In progress"
@@ -694,7 +696,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
 
         <div>
           <StatCard
-            title="Completed"
+            title={t("Completed")}
             value={loadingStats ? "..." : completedShipments.toString()}
             icon={CheckCircle}
           // subtitle="Completed shipments"
@@ -711,7 +713,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
-                  placeholder="Search by tracking number, sender, or recipient..."
+                  placeholder={t("Search by tracking number, sender, or recipient...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-10"
@@ -745,7 +747,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                 className="gap-2 relative"
               >
                 <Filter className="w-4 h-4" />
-                Filters
+                {t("Filters")}
                 {activeFiltersCount > 0 && (
                   <Badge className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-blue-500 text-white">
                     {activeFiltersCount}
@@ -820,34 +822,34 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     <span className="font-semibold text-blue-900 dark:text-blue-100">
-                      {selectedOrderIds.size} {selectedOrderIds.size === 1 ? 'Order' : 'Orders'} Selected
+                      {selectedOrderIds.size} {selectedOrderIds.size === 1 ? t("Order") : t("Orders")} {t("Selected")}
                     </span>
                   </div>
                   <div className="flex items-center gap-6 flex-wrap">
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">Product Cost</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{t("PRODUCT COST")}</p>
                         <p className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                          ${selectedTotalProductCost.toFixed(2)}
+                          {t("EGP")} {selectedTotalProductCost.toFixed(2)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Truck className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">Delivery Cost</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{t("Delivery Cost")}</p>
                         <p className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                          ${selectedTotalDeliveryCost.toFixed(2)}
+                          {t("EGP")} {selectedTotalDeliveryCost.toFixed(2)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Receipt className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">Total Amount</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{t("TOTAL AMOUNT")}</p>
                         <p className="font-mono font-semibold text-blue-600 dark:text-blue-400 text-lg">
-                          ${selectedTotalAmount.toFixed(2)}
+                          {t("EGP")} {selectedTotalAmount.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -863,7 +865,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                         className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600"
                       >
                         <Receipt className="w-4 h-4" />
-                        Print Bill of Lading
+                        {t("Print Bill of Lading")}
                       </Button>
                       <Button
                         variant="default"
@@ -872,7 +874,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                         className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-600"
                       >
                         <FileSpreadsheet className="w-4 h-4" />
-                        Export Selected
+                        {t("Export Selected")}
                       </Button>
                     </>
                   )}
@@ -884,7 +886,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600"
                     >
                       <Edit className="w-4 h-4" />
-                      Change Status
+                      {t("Change Status")}
                     </Button>
                   )}
                   {role === UserRole.Admin || role === UserRole.SuperAdmin && (
@@ -895,7 +897,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       className="gap-2 bg-gradient-to-r from-purple-500 to-pink-600"
                     >
                       <UserPlus className="w-4 h-4" />
-                      Assign to Agent
+                      {t("Assign to Agent")}
                     </Button>
                   )}
                   <Button
@@ -905,7 +907,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                     className="gap-2"
                   >
                     <X className="w-4 h-4" />
-                    Clear
+                    {t("Clear")}
                   </Button>
                 </div>
               </div>
@@ -920,8 +922,8 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Order Management</CardTitle>
-                <CardDescription>Manage and track your order management</CardDescription>
+                <CardTitle>{t("Order Management")}</CardTitle>
+                <CardDescription>{t("Manage and track your order management")}</CardDescription>
               </div>
               <div className="flex gap-2">
                 {hiddenOrderIds.size > 0 && (
@@ -951,7 +953,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       onClick={handleExport}
                     >
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
-                      Export {filteredShipments.length > 0 ? `(${filteredShipments.length})` : ''}
+                      {t("Export")} {filteredShipments.length > 0 ? `(${filteredShipments.length})` : ''}
                     </Button>
                     <Button
                       variant="outline"
@@ -961,7 +963,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                       className="gap-2"
                     >
                       <Receipt className="w-4 h-4" />
-                      Print {selectedOrderIds.size > 0 ? `(${selectedOrderIds.size})` : ''}
+                      {t("Print")} {selectedOrderIds.size > 0 ? `(${selectedOrderIds.size})` : ''}
                     </Button>
                   </>
                 )}
@@ -972,7 +974,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                     onClick={() => setAddShipmentModalOpen(true)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    New Order
+                    {t("New Order")}
                   </Button>
                 )}
               </div>
@@ -991,16 +993,16 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                           aria-label="Select all orders"
                         />
                       </TableHead>
-                      <TableHead>TRACKING ID</TableHead>
-                      <TableHead>CUSTOMER</TableHead>
-                      {role !== UserRole.Seller && <TableHead>MERCHANT</TableHead>}
-                      {role !== UserRole.agent && <TableHead>AGENT</TableHead>}
-                      <TableHead>DATE CREATED</TableHead>
-                      <TableHead className="bg-slate-50 dark:bg-slate-800/50">PRODUCT COST</TableHead>
-                      <TableHead className="bg-slate-50 dark:bg-slate-800/50">DELIVERY COST</TableHead>
-                      <TableHead className="bg-slate-100 dark:bg-slate-800">TOTAL AMOUNT</TableHead>
-                      <TableHead>STATUS</TableHead>
-                      <TableHead className="text-right">ACTIONS</TableHead>
+                      <TableHead>{t("TRACKING ID")}</TableHead>
+                      <TableHead>{t("CUSTOMER")}</TableHead>
+                      {role !== UserRole.Seller && <TableHead>{t("MERCHANT")}</TableHead>}
+                      {role !== UserRole.agent && <TableHead>{t("AGENT")}</TableHead>}
+                      <TableHead>{t("DATE CREATED")}</TableHead>
+                      <TableHead className="bg-slate-50 dark:bg-slate-800/50">{t("PRODUCT COST")}</TableHead>
+                      <TableHead className="bg-slate-50 dark:bg-slate-800/50">{t("DELIVERY COST")}</TableHead>
+                      <TableHead className="bg-slate-100 dark:bg-slate-800">{t("TOTAL AMOUNT")}</TableHead>
+                      <TableHead>{t("STATUS")}</TableHead>
+                      <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1043,7 +1045,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                           {role !== UserRole.agent && (
                             <TableCell>
                               {shipment.agentName || (
-                                <span className="text-slate-400">Unassigned</span>
+                                <span className="text-slate-400">{t("Unassigned")}</span>
                               )}
                             </TableCell>
                           )}
@@ -1071,7 +1073,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(shipment.statusOrder as ShipmentStatusString)}>
-                              {shipment.statusOrder?.replace('_', ' ')}
+                              {t(shipment.statusOrder?.replace('_', ' ').toLowerCase() || '')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -1139,7 +1141,7 @@ export function ShipmentsPage({ onNavigateToBillOfLading, onNavigateToBulkBillOf
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Page {currentPage} of {totalPages}
+                  {t("Page")} {currentPage} {t("of")} {totalPages}
                 </p>
                 <div className="flex gap-2">
                   <Button

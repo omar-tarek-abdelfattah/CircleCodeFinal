@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -51,6 +52,7 @@ export function DeactivationPeriodModal({
   currentToDate,
   onSuccess,
 }: DeactivationPeriodModalProps) {
+  const { t } = useTranslation();
   // Use the new props if available, otherwise fall back to old props
   // const entityId = itemId || sellerId || agentId || adminId || '';
   const entityName = itemName || sellerName || agentName || adminName || '';
@@ -159,10 +161,9 @@ export function DeactivationPeriodModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Set Deactivation Period</DialogTitle>
+          <DialogTitle>{t("Set Deactivation Period")}</DialogTitle>
           <DialogDescription>
-            Set a temporary deactivation period for <span className="font-semibold text-slate-900 dark:text-slate-100">{entityName}</span>.
-            The account will be inactive until the selected date.
+            {t("Set a temporary deactivation period for The account will be inactive until the selected date.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,7 +173,7 @@ export function DeactivationPeriodModal({
             {/* To Date and Time */}
             <div className="flex gap-4">
               <div className="flex-1 space-y-2">
-                <Label>To Date</Label>
+                <Label>{t("To Date")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -201,7 +202,7 @@ export function DeactivationPeriodModal({
                 </Popover>
               </div>
               <div className="w-32 space-y-2">
-                <Label>Time</Label>
+                <Label>{t("Time")}</Label>
                 <Input
                   type="time"
                   value={selectedTime}
@@ -232,7 +233,7 @@ export function DeactivationPeriodModal({
               className="gap-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               <X className="w-4 h-4" />
-              Clear Period
+              {t("Clear Period")}
             </Button>
             <Button
               type="button"
@@ -240,11 +241,11 @@ export function DeactivationPeriodModal({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" disabled={loading} className="gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Save Period
+              {t("Save Period")}
             </Button>
           </DialogFooter>
         </form>

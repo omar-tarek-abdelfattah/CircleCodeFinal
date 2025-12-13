@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface EditAgentModalProps {
 }
 
 export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAgentModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<AgentUpdateRequest>({} as AgentUpdateRequest);
   const [branches, setBranches] = useState<BranchData[]>([]);
@@ -119,10 +121,10 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Edit Agent
+            {t("Edit Agent")}
           </DialogTitle>
           <DialogDescription>
-            Update the agent's information below.
+            {t("Update the agent's information below.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -131,7 +133,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Full Name <span className="text-red-500">*</span>
+                {t("Full Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -145,7 +147,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
-                Email Address <span className="text-red-500">*</span>
+                {t("Email Address")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="email"
@@ -160,7 +162,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
             {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phone">
-                Phone Number <span className="text-red-500">*</span>
+                {t("Phone Number")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phone"
@@ -175,7 +177,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
             {/* Branch */}
             <div className="space-y-2">
               <Label htmlFor="branch">
-                Branch <span className="text-slate-400">(Optional)</span>
+                {t("Branch")} <span className="text-slate-400">{t("Optional")}</span>
               </Label>
               <Select
                 value={branches.find((branch) => branch.id === formData.branchId)?.id.toString()}
@@ -217,7 +219,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -230,7 +232,7 @@ export function EditAgentModal({ open, onOpenChange, agent, onSuccess }: EditAge
                   Updating...
                 </>
               ) : (
-                'Update Agent'
+                t("Update Agent")
               )}
             </Button>
           </DialogFooter>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
@@ -56,6 +57,7 @@ import { Checkbox } from '@/components/ui/checkbox.tsx';
 
 
 export function SellersPage() {
+  const { t } = useTranslation();
   const [sellers, setSellers] = useState<SellerResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -268,7 +270,7 @@ export function SellersPage() {
     if (amount === undefined || amount === null || isNaN(amount)) {
       return 'EGP 0.00';
     }
-    return `EGP ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${t("EGP")} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const formatDate = (dateString: string | undefined | null) => {
@@ -291,10 +293,10 @@ export function SellersPage() {
         <div>
           <h1 className="text-3xl flex items-center gap-2">
             <Users className="w-8 h-8" />
-            Sellers Management
+            {t("Sellers Management")}
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
-            Manage and track all sellers in the system
+            {t("Manage and track all sellers in the system")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -305,7 +307,7 @@ export function SellersPage() {
             disabled={loading}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t("Refresh")}
           </Button>
         </div>
       </motion.div>
@@ -318,7 +320,7 @@ export function SellersPage() {
           transition={{ delay: 0.1 }}
         >
           <StatCard
-            title="Total Sellers"
+            title={t("Total Sellers")}
             value={totalSellers.toString()}
             icon={Users}
           />
@@ -329,7 +331,7 @@ export function SellersPage() {
           transition={{ delay: 0.2 }}
         >
           <StatCard
-            title="Confirmed Sellers"
+            title={t("Confirmed Sellers")}
             value={activeSellersCount}
             icon={UserCheck}
           />
@@ -341,11 +343,11 @@ export function SellersPage() {
           transition={{ delay: 0.2 }}
         >
           <StatCard
-            title="Today's Active Sellers"
+            title={t("Today's Active Sellers")}
             value={sellers.filter(s => s.isActive).length.toString()}
             icon={UserCheck}
             gradient='from-indigo-500 to-green-600'
-            badge='Today'
+            badge={t("Today")}
           />
 
         </motion.div>
@@ -355,11 +357,11 @@ export function SellersPage() {
           transition={{ delay: 0.3 }}
         >
           <StatCard
-            title="Today's Revenue"
+            title={t("Today's Revenue")}
             value={formatCurrency(totalRevenue)}
             icon={DollarSign}
             gradient='from-indigo-500 to-green-600'
-            badge='Today'
+            badge={t("Today")}
           />
         </motion.div>
       </div>
@@ -375,7 +377,7 @@ export function SellersPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <Input
-                placeholder="Search by name or store name..."
+                placeholder={t("Search by name or store name...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -388,8 +390,8 @@ export function SellersPage() {
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="all">All Sellers</TabsTrigger>
-            <TabsTrigger value="locked">Locked Sellers</TabsTrigger>
+            <TabsTrigger value="all">{t("All Sellers")}</TabsTrigger>
+            <TabsTrigger value="locked">{t("Locked Sellers")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -404,10 +406,9 @@ export function SellersPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Sellers</CardTitle>
+                    <CardTitle>{t("Sellers")}</CardTitle>
                     <CardDescription>
-                      {filteredSellers.length} {filteredSellers.length === 1 ? 'seller' : 'sellers'} found
-                      <br /><span>shipments, profit, delivery cost and activity are for today *</span>
+                      <br /><span>{t("shipments, profit, delivery cost and activity are for today")}</span>
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -427,7 +428,7 @@ export function SellersPage() {
                       onClick={() => setAddSellerModalOpen(true)}
                     >
                       <Plus className="w-4 h-4" />
-                      Add Seller
+                      {t("Add Seller")}
                     </Button>
                   </div>
                 </div>
@@ -438,15 +439,15 @@ export function SellersPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>NAME</TableHead>
-                          <TableHead>STORE NAME</TableHead>
-                          <TableHead>ADDRESS</TableHead>
-                          <TableHead>SHIPMENTS*</TableHead>
-                          <TableHead>PROFIT*</TableHead>
-                          <TableHead>DELIVERY COST*</TableHead>
-                          <TableHead>Activity*</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">ACTIONS</TableHead>
+                          <TableHead>{t("NAME")}</TableHead>
+                          <TableHead>{t("STORE NAME")}</TableHead>
+                          <TableHead>{t("ADDRESS")}</TableHead>
+                          <TableHead>{t("SHIPMENTS")}</TableHead>
+                          <TableHead>{t("PROFIT")}</TableHead>
+                          <TableHead>{t("DELIVERY COST")}</TableHead>
+                          <TableHead>{t("Activity")}</TableHead>
+                          <TableHead>{t("Status")}</TableHead>
+                          <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -535,7 +536,7 @@ export function SellersPage() {
                                       ? 'text-green-600 dark:text-green-400'
                                       : 'text-red-600 dark:text-red-400'
                                       }`}>
-                                      {seller.isActive ? 'Active' : 'Inactive'}
+                                      {seller.isActive ? t('Active') : t('Inactive')}
                                     </span>
                                   </div>
                                 </div>
@@ -553,7 +554,7 @@ export function SellersPage() {
                                       ? 'text-green-600 dark:text-green-400'
                                       : 'text-red-600 dark:text-red-400'
                                       }`}>
-                                      {seller.isConfermid ? 'Confirmed' : 'Locked'}
+                                      {seller.isConfermid ? t('Confirmed') : t('Locked')}
                                     </span>
                                   </div>
                                 </div>
@@ -620,9 +621,9 @@ export function SellersPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Locked Sellers</CardTitle>
+                    <CardTitle>{t("Locked Sellers")}</CardTitle>
                     <CardDescription>
-                      {lockedSellers.length} {lockedSellers.length === 1 ? 'seller' : 'sellers'} found
+                      {lockedSellers.length} {lockedSellers.length === 1 ? t("seller") : t("sellers")} {t("found")}
                     </CardDescription>
                   </div>
                 </div>
@@ -633,15 +634,15 @@ export function SellersPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>NAME</TableHead>
-                          <TableHead>STORE NAME</TableHead>
-                          <TableHead>ADDRESS</TableHead>
-                          <TableHead>TOTAL SHIPMENTS</TableHead>
-                          <TableHead>PROFIT</TableHead>
-                          <TableHead>DELIVERY COST</TableHead>
-                          <TableHead>Activity</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">ACTIONS</TableHead>
+                          <TableHead>{t("NAME")}</TableHead>
+                          <TableHead>{t("STORE NAME")}</TableHead>
+                          <TableHead>{t("ADDRESS")}</TableHead>
+                          <TableHead>{t("SHIPMENTS")}</TableHead>
+                          <TableHead>{t("PROFIT")}</TableHead>
+                          <TableHead>{t("DELIVERY COST")}</TableHead>
+                          <TableHead>{t("Activity")}</TableHead>
+                          <TableHead>{t("Status")}</TableHead>
+                          <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -719,7 +720,7 @@ export function SellersPage() {
                                       ? 'text-green-600 dark:text-green-400'
                                       : 'text-red-600 dark:text-red-400'
                                       }`}>
-                                      {seller.isActive ? 'Active' : 'Inactive'}
+                                      {seller.isActive ? t("Active") : t("Inactive")}
                                     </span>
                                   </div>
                                 </div>
@@ -736,7 +737,7 @@ export function SellersPage() {
                                       ? 'text-green-600 dark:text-green-400'
                                       : 'text-red-600 dark:text-red-400'
                                       }`}>
-                                      {false ? 'Running' : 'Locked'}
+                                      {false ? 'Running' : t('Locked')}
                                     </span>
                                   </div>
                                 </div>
@@ -876,7 +877,7 @@ export function SellersPage() {
                     {sellerDetails.isActive ? "Active" : "Inactive"}
                   </Badge>
                   <Badge variant={sellerDetails.isConfermid ? "default" : "destructive"}>
-                    {sellerDetails.isConfermid ? "Running" : "Locked"}
+                    {sellerDetails.isConfermid ? "Running" : t('Locked')}
                   </Badge>
                 </div>
               </div>

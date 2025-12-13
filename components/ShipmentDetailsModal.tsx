@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import {
   Package,
@@ -38,6 +39,7 @@ export function ShipmentDetailsModal({
   onClose,
   onUpdateStatus,
 }: ShipmentDetailsModalProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
 
 
@@ -134,7 +136,7 @@ export function ShipmentDetailsModal({
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Package className="w-6 h-6" />
-              Shipment Details
+              {t("Shipment Details")}
             </DialogTitle>
           </div>
           <DialogDescription className="sr-only">
@@ -151,7 +153,7 @@ export function ShipmentDetailsModal({
           >
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <p className="text-sm text-blue-100">Tracking Number</p>
+                <p className="text-sm text-blue-100">{t("Tracking Number")}</p>
                 <p className="text-2xl font-mono">{shipmentDetails.id}</p>
               </div>
               <Badge
@@ -160,9 +162,9 @@ export function ShipmentDetailsModal({
                 )} text-center px-4 py-2`}
 
               >
-                {shipmentDetails.statusOrder?.toString().replace("_", " ").toUpperCase() || 'N/A'}
+                {t(shipmentDetails.statusOrder?.toString().toLowerCase() || 'n/a')}
                 <br />
-                Created by : {shipmentDetails.userCreateName}
+                {t("Created by")} {shipmentDetails.userCreateName}
               </Badge>
             </div>
           </motion.div>
@@ -171,7 +173,7 @@ export function ShipmentDetailsModal({
           <div>
             <h3 className="text-sm mb-3 flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Delivery Progress
+              {t("Delivery Progress")}
             </h3>
             <div className="flex items-center justify-between relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-700" />
@@ -192,7 +194,7 @@ export function ShipmentDetailsModal({
                     {index < currentStatusIndex ? "✓" : index + 1}
                   </motion.div>
                   <p className="text-xs mt-2 text-center capitalize">
-                    {status.replace("_", " ")}
+                    {t(status.toLowerCase())}
                   </p>
                 </div>
               ))}
@@ -212,15 +214,15 @@ export function ShipmentDetailsModal({
             >
               <h3 className="flex items-center gap-2 text-sm font-semibold">
                 <User className="w-4 h-4" />
-                Seller Information
+                {t("Seller Information")}
               </h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-xs text-slate-500 block">Name</span>
+                  <span className="text-xs text-slate-500 block">{t("Name")}</span>
                   <p>{displayValue(shipmentDetails.sellerName)}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 block">Created By</span>
+                  <span className="text-xs text-slate-500 block">{t("Created By")}</span>
                   <p>{displayValue(shipmentDetails.userCreateName)}</p>
                 </div>
               </div>
@@ -235,20 +237,20 @@ export function ShipmentDetailsModal({
             >
               <h3 className="flex items-center gap-2 text-sm font-semibold">
                 <User className="w-4 h-4" />
-                Client Information
+                {t("Client Information")}
               </h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-xs text-slate-500 block">Name</span>
+                  <span className="text-xs text-slate-500 block">{t("Name")}</span>
                   <p>{displayValue(shipmentDetails.clientName)}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-xs text-slate-500 block">Phone 1</span>
+                    <span className="text-xs text-slate-500 block">{t("Phone 1")}</span>
                     <p>{displayValue(shipmentDetails.phone1)}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500 block">Phone 2</span>
+                    <span className="text-xs text-slate-500 block">{t("Phone 2")}</span>
                     <p>{displayValue(shipmentDetails.phone2)}</p>
                   </div>
                 </div>
@@ -264,30 +266,30 @@ export function ShipmentDetailsModal({
             >
               <h3 className="flex items-center gap-2 text-sm font-semibold">
                 <MapPin className="w-4 h-4" />
-                Delivery Address
+                {t("Delivery Address")}
               </h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-xs text-slate-500 block">Address</span>
+                  <span className="text-xs text-slate-500 block">{t("Address")}</span>
                   <p>{displayValue(shipmentDetails.address)}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-xs text-slate-500 block">Building No.</span>
+                    <span className="text-xs text-slate-500 block">{t("Building No.")}</span>
                     <p>{displayValue(shipmentDetails.bulidingNumber)}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500 block">Apartment No.</span>
+                    <span className="text-xs text-slate-500 block">{t("Apartment No.")}</span>
                     <p>{displayValue(shipmentDetails.apartmentNumber)}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-xs text-slate-500 block">Region</span>
+                    <span className="text-xs text-slate-500 block">{t("Region")}</span>
                     <p>{displayValue(shipmentDetails.regionName)}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500 block">Country</span>
+                    <span className="text-xs text-slate-500 block">{t("Country")}</span>
                     <p>{displayValue(shipmentDetails.country)}</p>
                   </div>
                 </div>
@@ -305,29 +307,29 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
-                <span className="text-xs">Delivery Fee</span>
+                <span className="text-xs">{t("Delivery Fee")}</span>
               </div>
-              <p className="font-mono font-semibold">{shipment?.deliveryCost || 'N/A'}<span className="text-xs">EGP</span></p>
+              <p className="font-mono font-semibold">{shipment?.deliveryCost || 'N/A'}<span className="text-xs">{t("EGP")}</span></p>
             </div>
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
-                <span className="text-xs">Order Fee</span>
+                <span className="text-xs">{t("Order Fee")}</span>
               </div>
-              <p className="font-mono font-semibold">{shipment?.productPrice || 'N/A'}<span className="text-xs">EGP</span></p>
+              <p className="font-mono font-semibold">{shipment?.productPrice || 'N/A'}<span className="text-xs">{t("EGP")}</span></p>
             </div>
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <DollarSign className="w-4 h-4" />
-                <span className="text-xs">Total Price</span>
+                <span className="text-xs">{t("Total Price")}</span>
               </div>
-              <p className="font-mono font-semibold">{shipment?.totalPrice || 'N/A'}<span className="text-xs">EGP</span></p>
+              <p className="font-mono font-semibold">{shipment?.totalPrice || 'N/A'}<span className="text-xs">{t("EGP")}</span></p>
             </div>
 
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <Truck className="w-4 h-4" />
-                <span className="text-xs">Agent</span>
+                <span className="text-xs">{t("Agent")}</span>
               </div>
               <p className="text-sm font-medium truncate" title={shipmentDetails.agentName || ''}>{displayValue(shipmentDetails.agentName)}</p>
             </div>
@@ -335,7 +337,7 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <MapPinned className="w-4 h-4" />
-                <span className="text-xs">Zone</span>
+                <span className="text-xs">{t("Zone")}</span>
               </div>
               <p className="text-sm font-medium">{displayValue(zoneDetails.name)}</p>
             </div>
@@ -343,9 +345,9 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mb-1">
                 <MapPinned className="w-4 h-4" />
-                <span className="text-xs">In Pickup</span>
+                <span className="text-xs">{t("In Pickup")}</span>
               </div>
-              <p className="text-sm font-medium">{shipmentDetails.inPickupStage ? "Yes" : "No"}</p>
+              <p className="text-sm font-medium">{shipmentDetails.inPickupStage ? t("Yes") : t("No")}</p>
             </div>
           </motion.div>
 
@@ -359,37 +361,37 @@ export function ShipmentDetailsModal({
             <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-1">
                 <Calendar className="w-3 h-3" />
-                <span className="text-xs">Created</span>
+                <span className="text-xs">{t("Created")}</span>
               </div>
               <p className="font-medium">{formatDate(shipmentDetails.dateCreated)}</p>
             </div>
             <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-1">
                 <Calendar className="w-3 h-3" />
-                <span className="text-xs">In Pickup</span>
+                <span className="text-xs">{t("In Pickup")}</span>
               </div>
-              <p className="font-medium">{shipmentDetails.inPickupStage ? formatDate(shipmentDetails.inPickupStage) : 'N/A'}</p>
+              <p className="font-medium">{shipmentDetails.inPickupStage ? formatDate(shipmentDetails.inPickupStage) : t("N/A")}</p>
             </div>
             <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-1">
                 <Calendar className="w-3 h-3" />
-                <span className="text-xs">In Warehouse</span>
+                <span className="text-xs">{t("In Warehouse")}</span>
               </div>
-              <p className="font-medium">{shipmentDetails.inWarehouseDate ? formatDate(shipmentDetails.inWarehouseDate) : 'N/A'}</p>
+              <p className="font-medium">{shipmentDetails.inWarehouseDate ? formatDate(shipmentDetails.inWarehouseDate) : t("N/A")}</p>
             </div>
             <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-1">
                 <Calendar className="w-3 h-3" />
-                <span className="text-xs">Delivered to Agent</span>
+                <span className="text-xs">{t("Delivered to Agent")}</span>
               </div>
-              <p className="font-medium">{shipmentDetails.delivered_Agent_date ? formatDate(shipmentDetails.delivered_Agent_date) : 'N/A'}</p>
+              <p className="font-medium">{shipmentDetails.delivered_Agent_date ? formatDate(shipmentDetails.delivered_Agent_date) : t("N/A")}</p>
             </div>
             <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-1">
                 <Calendar className="w-3 h-3" />
-                <span className="text-xs">Delivered</span>
+                <span className="text-xs">{t("Delivered")}</span>
               </div>
-              <p className="font-medium">{shipmentDetails.delivered_date ? formatDate(shipmentDetails.delivered_date) : 'N/A'}</p>
+              <p className="font-medium">{shipmentDetails.delivered_date ? formatDate(shipmentDetails.delivered_date) : t("N/A")}</p>
             </div>
           </motion.div>
 
@@ -402,7 +404,7 @@ export function ShipmentDetailsModal({
           >
             <div className="flex items-center gap-2 mb-2">
               <FileText className="w-4 h-4" />
-              <h3 className="text-sm font-semibold">Notes</h3>
+              <h3 className="text-sm font-semibold">{t("Notes")}</h3>
             </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
               {displayValue(shipmentDetails.notes)}
@@ -419,15 +421,15 @@ export function ShipmentDetailsModal({
             >
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Package className="w-4 h-4" />
-                Items
+                {t("Items")}
               </h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 dark:bg-slate-800">
                     <tr>
-                      <th className="px-4 py-2 text-left">Item</th>
-                      <th className="px-4 py-2 text-right">Quantity</th>
-                      <th className="px-4 py-2 text-right">Price</th>
+                      <th className="px-4 py-2 text-left">{t("Item")}</th>
+                      <th className="px-4 py-2 text-right">{t("Quantity")}</th>
+                      <th className="px-4 py-2 text-right">{t("Price")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -435,7 +437,7 @@ export function ShipmentDetailsModal({
                       <tr key={idx}>
                         <td className="px-4 py-2">{item.name}</td>
                         <td className="px-4 py-2 text-right">{item.quantity}</td>
-                        <td className="px-4 py-2 text-right">${item.price}</td>
+                        <td className="px-4 py-2 text-right"> {t("EGP")} {item.price}</td>
                       </tr>
                     ))}
                   </tbody>

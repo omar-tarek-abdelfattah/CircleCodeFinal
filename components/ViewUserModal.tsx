@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ interface ViewUserModalProps {
 }
 
 export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) {
+  const { t } = useTranslation();
   if (!user) return null;
 
 
@@ -35,15 +37,15 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            User Details
+            {t("User Details")}
           </DialogTitle>
-          <DialogDescription>Detailed information about the user</DialogDescription>
+          <DialogDescription>{t("Detailed information about the Admin")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Registration Date</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">{t("Registration Date")}</p>
               <p className="font-semibold">{formatDate(user.hiringDate)}</p>
             </div>
           </div>
@@ -51,20 +53,20 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
           {/* Contact Information */}
           <div className="space-y-3">
             <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-              Contact Information
+              {t("Contact Information")}
             </h3>
             <div className="grid gap-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                 <Users className="w-5 h-5 text-slate-500" />
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Name</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("Name")}</p>
                   <p className="font-semibold">{user.name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                 <Mail className="w-5 h-5 text-slate-500" />
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Email</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("Email")}</p>
                   <p className="font-semibold">{user.email}</p>
                 </div>
               </div>
@@ -80,11 +82,11 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
 
           {/* Status */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Status</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t("Status")}</h3>
             <div className="grid grid-cols-2 gap-4">
 
               <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Status</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{t("Status")}</p>
                 <Badge
                   variant="outline"
                   className={
@@ -93,7 +95,7 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
                       : 'text-green-600 border-green-600'
                   }
                 >
-                  {user.isLock ? 'INACTIVE' : 'ACTIVE'}
+                  {user.isLock ? t("Inactive") : t("Active")}
                 </Badge>
               </div>
             </div>
@@ -102,14 +104,14 @@ export function ViewUserModal({ open, onOpenChange, user }: ViewUserModalProps) 
           {/* Financial Information */}
           <div className="space-y-3">
             <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-              Financial Information
+              {t("Financial Information")}
             </h3>
             <div className="flex items-center gap-3 p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800">
               <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
               <div>
-                <p className="text-xs text-green-700 dark:text-green-400">Salary</p>
+                <p className="text-xs text-green-700 dark:text-green-400">{t("SALARY")}</p>
                 <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                  ${user.salary?.toLocaleString()}
+                  {t("EGP")} {user.salary?.toLocaleString()}
                 </p>
               </div>
             </div>

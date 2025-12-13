@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
@@ -19,6 +20,7 @@ import { agentsAPI, branchesAPI, shipmentsAPI } from '../services/api';
 import { Checkbox } from '../components/ui/checkbox';
 
 export default function ReportsPage() {
+  const { t } = useTranslation();
   const [isToday, setIsToday] = useState(false);
   const { role } = useAuth();
 
@@ -83,12 +85,12 @@ export default function ReportsPage() {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-slate-900 dark:text-slate-100">Reports & Analytics</h1>
+            <h1 className="text-slate-900 dark:text-slate-100">{t("Reports & Analytics")}</h1>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {isToday
-              ? 'Comprehensive analytics and insights for today'
-              : 'Comprehensive analytics and insights for your business'}
+              ? t("Comprehensive analytics and insights for today")
+              : t("Comprehensive analytics and insights for your business")}
           </p>
         </div>
         <div className="flex gap-2 print:hidden">
@@ -102,17 +104,17 @@ export default function ReportsPage() {
               htmlFor="today-filter"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
             >
-              Today's Data
+              {t("Today's Data")}
             </label>
           </div>
 
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
-            Print
+            {t("Print")}
           </Button>
           <Button variant="outline" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
-            Export
+            {t("Export")}
           </Button>
         </div>
       </div>
@@ -128,11 +130,11 @@ export default function ReportsPage() {
 
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 mt-4">
-              Total Shipments
+              {t("Total Shipments")}
             </p>
             <h2 className="text-slate-900 dark:text-slate-100">{totalShipments.toLocaleString()}</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {isToday ? "Today's shipments" : "Across all periods"}
+              {isToday ? t("Today's shipments") : t("Across all periods")}
             </p>
           </CardContent>
         </Card>
@@ -146,11 +148,11 @@ export default function ReportsPage() {
 
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 mt-4">
-              Delivery Rate
+              {t("Delivery Rate")}
             </p>
             <h2 className="text-slate-900 dark:text-slate-100">{deliveryRate}%</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Successfully delivered
+              {t("Successfully delivered")}
             </p>
           </CardContent>
         </Card>
@@ -162,17 +164,16 @@ export default function ReportsPage() {
                 <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <Badge variant="outline" className="text-green-600 border-green-600">
-                +18.2%
               </Badge>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 mt-4">
-              Total Revenue
+              {t("Total Revenue")}
             </p>
             <h2 className="text-slate-900 dark:text-slate-100">
               ${role === UserRole.Seller ? sellerRevenue.toLocaleString() : totalRevenue.toLocaleString()}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Revenue generated
+              
             </p>
           </CardContent>
         </Card>
@@ -186,7 +187,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Top Performing Agents
+                  {t("Top Performing Agents")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -215,7 +216,7 @@ export default function ReportsPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p>{agent.numberofOrder || 0} Orders</p>
+                            <p>{agent.numberofOrder || 0} {t("Orders")}</p>
                           </div>
                         </motion.div>
                       ))}
@@ -231,7 +232,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
-                  Branch Performance
+                  {t("Branch Performance")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -255,7 +256,7 @@ export default function ReportsPage() {
                             <p className="text-sm text-slate-600 dark:text-slate-400">{branch.address}</p>
                           </div>
                           <div className="text-right">
-                            <Badge variant="secondary">{branch.ordersNumber || 0} Orders</Badge>
+                            <Badge variant="secondary">{branch.ordersNumber || 0} {t("Orders")}</Badge>
                           </div>
                         </motion.div>
                       ))}

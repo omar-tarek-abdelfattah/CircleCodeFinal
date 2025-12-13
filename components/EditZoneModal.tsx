@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -30,6 +31,7 @@ interface EditZoneModalProps {
 }
 
 export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [zoneName, setZoneName] = useState('');
   const [regions, setRegions] = useState<ZoneRegion[]>([]);
@@ -165,7 +167,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Edit Zone</DialogTitle>
+          <DialogTitle>{t("Edit Zone")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
@@ -174,7 +176,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
               {/* Zone Name */}
               <div className="space-y-2">
                 <Label htmlFor="zoneName">
-                  Zone Name <span className="text-red-500">*</span>
+                  {t("Zone Name")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="zoneName"
@@ -188,7 +190,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>
-                    Regions <span className="text-red-500">*</span>
+                    {t("regions")} <span className="text-red-500">*</span>
                   </Label>
                   <Button
                     type="button"
@@ -198,7 +200,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
                     className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Add Region
+                    {t("Add Region")}
                   </Button>
                 </div>
 
@@ -241,7 +243,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
               {/* Associated Branch */}
               <div className="space-y-2">
                 <Label htmlFor="branch">
-                  Associated Branch <span className="text-red-500">*</span>
+                  {t("Associated Branch")} <span className="text-red-500">*</span>
                 </Label>
                 <Select value={selectedBranch} onValueChange={(value) => setSelectedBranch(value)}>
                   <SelectTrigger id="branch">
@@ -266,7 +268,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -274,7 +276,7 @@ export function EditZoneModal({ open, onOpenChange, zone, onSuccess }: EditZoneM
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Zone
+              {t("Update Zone")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,0 +1,366 @@
+{
+  "System Overview 📊": "نظرة عامة 📊",
+  "Monitor and manage all aspects of Circle Code System.": "مراقبة وإدارة جميع جوانب نظام",
+  "Total Shipments": "إجمالي الشحنات",
+  "Total Pending": "إجمالي الشحنات المعلقة",
+  "Total Completed": "إجمالي الشحنات المكتملة",
+  "Collection Amount": "إجمالي المبلغ المحصل",
+  "Active Agents": "المناديب النشطة",
+  "Total Sellers": "إجمالي البائعين",
+  "Today's Data" : "بيانات اليوم",
+  "Today's Shipments": "شحنات اليوم",
+  "Pending Today": "الشحنات المعلقة اليوم",
+  "Completed Today": "الشخنات ",
+  "Collection Today":"المبلغ المحصل اليوم",
+  "Agents Active Today":"المناديب النشطة اليوم",
+  "Sellers Active Today":"البائعين النشطة اليوم",
+  "TODAY": "اليوم",
+  "EGP": "ج.م",
+  "Recent Activities": "اخر النشاطات",
+  "Recent Activity": "اخر النشاطات",
+  "Last 7 actions on the system": "اخر 7 نشاطات علي النظام",
+  "New Shipments": "الشحنات الجديدة",
+  "Latest 5 shipments added to the system": "اخر 5 شحنات على النظام",
+  "Add Shipment": "اضافة شحنة",
+  "View All": "مشاهدة الكل",
+  "Top Performing Agents": "المناديب الأفضل اداء",
+  "Orders": "شحنات",
+  "Order": "شحنة",
+  "Branch Performance" : "اداء الفروع",
+  "Order Management": "إدارة الشحنات",
+  "Manage and track your order management" : "✅ إدارة وتتبع شحناتك",
+  "New Order": "إضافة شحنة",
+  "Refresh": "تحديث",
+  "Total Orders": "إجمالي الشحنات",
+  "Pending": "اجمالي الشحنات المعلقة",
+  "Completed": "إجمالي الشحنات المكتملة",
+  "Search by tracking number, sender, or recipient..." : "ابحث بالرقم المرجعي، المرسل، أو المستلم...",
+  "Filters": "تصفية",
+  "TRACKING ID": "رقم التتبع",
+  "CUSTOMER": "العميل",
+  "MERCHANT": "البائع",
+  "AGENT": "المندوب",
+  "DATE CREATED": "تاريخ الانشاء",
+  "PRODUCT COST": "سعر المنتج",
+  "DELIVERY COST": "رسوم التوصيل",
+  "TOTAL AMOUNT": "إجمالي المبلغ",
+  "ACTIONS": "إجراءات",
+  "STATUS": "الحالة",
+  "new": "جديد",
+  "inpickupstage": "فى مرحلة التحميل",
+  "inwarehouse": "فى المخزن",
+  "deliveredtoagent": "تعين الي مندوب",
+  "delivered": "تم التوصيل",
+  "postponed": "مؤجلة",
+  "customerunreachable": "لا يمكن الوصول للعميل",
+  "rejectednoshippingfees": "مرفوض بدون رسوم الشحن",
+  "rejectedwithshippingfees": "مرفوض مع رسوم الشحن",
+  "partiallydelivered": "تم التسليم جزئيا",
+  "rejectedbyus": "تم الرفض منا",
+  "returned": "مرتجع",
+  "Page": "صفحة",
+  "of": "من",
+  "Export": "تصدير",
+  "Print": "طباعة",
+  "Unassigned": "غير معينة",
+  "Sellers Management": "إدارة البائعين",
+  "Manage and track all sellers in the system": "إدارة جميع البائعين في النظام",
+  "Confirmed Sellers": "البائعين المؤكدين",
+  "Today's Active Sellers": "البائعين النشطة اليوم",
+  "Today": "اليوم",
+  "Today's Revenue": "العائد اليومي",
+  "Search by name or store name...": "ابحث بالاسم أو اسم المتجر...",
+  "All Sellers": "جميع البائعين",
+  "Locked Sellers": "البائعين غير الناشطين",
+  "Sellers": "البائعين",
+  "found": "اكتشف",
+  "sellers": "بائعين",
+  "seller": "بائع",
+  "shipments, profit, delivery cost and activity are for today": "الشحنات،العائد،رسوم الشحن و النشاطات اليوم",
+  "Add Seller": "اضافة بائع",
+  "NAME": "الأسم",
+  "STORE NAME": "أسم المتجر",
+  "ADDRESS": "العنوان",
+  "SHIPMENTS": "الشحنات",
+  "PROFIT" : "الربح",
+  "Activity": "النشاط",
+  "Status": "الحالة",
+  "Locked Sellers": "البائعين غير الناشطين",
+  "Active": "نشط",
+  "Inactive": "غير نشط",
+  "dashboard": "الداش بورد",
+  "shipments": "الشحنات",
+  "agents": "المناديب",
+  "branches": "الفروع",
+  "zones": "المناطق",
+  "wallet": "المحفظة",
+  "reports": "التقارير",
+  "admins": "المديرين",
+  "profile": "الملف الشخصي",
+  "Confirmed": "نشط",
+  "Locked": "غير نشط",
+  "Agents Management" : "إدارة المناديب",
+  "Manage and track all delivery agents": "ادارة ومتابعة المناديب داخل النظام",
+  "Total Agents": "اجمالي المناديب",
+  "All registered agents": "المناديب المسجلين في النظام",
+  "Active Agents": "المناديب النشطة",
+  "Active agents": "",
+  "On Duty": "فى الخدمة",
+  "Currently assigned shipments": "مناديب لديهم شحنات",
+  "Search agents...": "ابحث بالمندوب.....",
+  "Reset": "اعادة",
+  "Add New Agent": "اضافة مندوب جديد",
+  "All Agents": "كل المناديب",
+  "Locked Agents": "مناديب غير نشطة",
+  "Inactive Agents" : "مناديب بأنتظار التفعيل",
+  "Manage and track your Agents": "إدارة و متابعة المناديب",
+  "ORDERS": "شحنات",
+  "EMAIL" : "بريد الكتروني",
+  "CONTACT": "رقم التواصل",
+  "BRANCH" :"الفرع",
+  "Next" : "التالى",
+  "Previous": "السابق",
+  "All Branches": "جميع الفروع",
+  "Active Now": "نشط",
+  "Branch Management" : "إدارة الفروع",
+  "Add Branch": "اضافة فرع",
+  "Branches": "الفروع",
+  "Manage and track your branches": "إدارة ومتابعة الفروع علي النظام",
+  "Search branches..." : "ابحث عن فرع...",
+  "Show Inactive Only": "الفروع غير النشطة فقط",
+  "AGENTS": "المناديب",
+  "MANAGER": "مدير الفرع",
+  "COUNTRY": "الدولة",
+  "BRANCH NAME": "اسم الفرع",
+  "Deactivate": "غير نشط",
+  "Showing": "اكتشف",
+  "Total Zones": "إجمالي المناطق",
+  "Coverage areas": "المناطق المغطاه",
+  "Total Regions": "إجمالي الاماكن داخل المناطق",
+  "Across all zones": "في كل المناطق",
+  "Delivery Zone Map (Coming SOON)": "خريطة مناطق التوصيل (قريبا)",
+  "Add Zone": "اضافة منطقة",
+  "Delivery Zones": "مناطق التوصيل",
+  "Zone List": "المناطق",
+  "orders": "شحنة",
+  "Activate": "تنشيط",
+  "regions": "مكان",
+  "Wallet": "المحفظة",
+  "Current Balance": "الرصيد الحالى",
+  "Available funds": "الرصيد المتاح",
+  "Total Earnings": "رسوم التوصيل",
+  "Lifetime earnings": "إجمالي ارباح التوصيل",
+  "Pending Amount": "المبلغ المعلق",
+  "Awaiting clearance": "قايد التحصيل",
+  "Transactions": "العمليات",
+  "Showing": "يعرض",
+  "transactions": "عملية",
+  "Type": "النوع",
+  "client name": "أسم العميل",
+  "Date": "التاريخ",
+  "Seller": "البائع",
+  "Amount": "المبلغ",
+  "Showing page": "يعرض صفحة",
+  "Reports & Analytics" : "التقارير والتحليلات",
+  "Comprehensive analytics and insights for today": "تحليلات ورؤى شاملة لليوم",
+  "Comprehensive analytics and insights for your business": "تحليلات ورؤى شاملة لأعمالك",
+  "Total Shipments": "إجمالى الشحنات",
+  "Today's shipments": "شحنات اليوم",
+  "Across all periods": "علي جميع الفترات",
+  "Delivery Rate": "معدل التوصيل",
+  "Successfully delivered": "تم التسليم بنجاح",
+  "Total Revenue": "إجمالي الإيرادات",
+  "Revenue generated": "Revenue generated",
+  "Admins Management": "إدارة المديرين",
+  "Manage Admin and their access to the system": "إدارة المسؤولين وصلاحياتهم في النظام",
+  "All Admins in system": "جميع المديرين في النظام",
+  "Total Admins": "إجمالي المديرين",
+  "Admin Management": "إدارة المديرين",
+  "Manage Admins and their access permissions":"إدارة وتعيين مديرين الفروع",
+  "Add Admin": "أضافة مدير",
+  "Search Admins...": "أبحث عن مدير...",
+  "Apply Filter": "تطبيق التصفية",
+  "All": "الكل",
+  "BRANCHES" : "الفروع",
+  "SALARY": "المرتب",
+  "HIRING DATE": "تاريخ التعيين",
+  "all branches": "كل الفروع",
+  "Admins": "مدير",
+  "UserName": "اسم المستخدم",
+  "Email Address": "البريد الالكتروني",
+  "Phone Number": "رقم الهاتف",
+  "Branch": "الفرع",
+  "Password": "كلمة المرور",
+  "Confirm Password": "تأكيد كلمة المرور",
+  "Cancel": "ألغاء",
+  "Add Agent": "أضافة المندوب",
+  "Enter the details of the new agent below.": "أدخل التفاصيل للمندوب الجديد.",
+  "Add New Branch": "أضافة فرع جديد",
+  "Branch Name": "اسم الفرع",
+  "Enter branch name": "أدخل اسم الفرع",
+  "Manager": "المدير",
+  "Select Manager": "أختار المدير",
+  "Address": "العنوان",
+  "Enter branch address": "أدخل عنوان الفرع",
+  "Country": "الدولة",
+  "Enter country name": "أدخل اسم الدولة",
+  "Opening Time": "وقت العمل",
+  "Closing Time": "وقت الاغلاق",
+  "Create Branch": "أنشاء الفرع",
+  "Add New Seller": "أضافة بائع جديد",
+  "Enter the details of the new seller below.": "أدخل التفاصيل للبائع الجديد.",
+  "Store Name": "أسم المتجر",
+  "VIP Seller": "بائع مميز",
+  "Enable VIP status for this seller": "تحديد البائع كــ مميز",
+  "Add New Shipment": "أضافة شحنة جديدة",
+  "Enter the shipment details below to create a new order.": "أدخل تفاصيل الشحنة أدناه لإنشاء طلب جديد.",
+  "Customer Information" : "بيانات العميل",
+  "Customer Name": "بيانات العميل",
+  "Phone Number": "رقم الهاتف",
+  "Phone 2": "رقم هاتف اخر",
+  "Optional": "اختياري",
+  "Delivery Address": "عنوان التوصيل",
+  "Delivery Notes": "ملاحظات التوصيل",
+  "Zone": "المنطقة",
+  "Region": "المكان",
+  "Apartment Number": "رقم الشقة",
+  "Building Number ": "رقم المبنى",
+  "Select Seller": "اختر البائع",
+  "Products": "المنتاجات",
+  "Item Name (up) & Description (down)": "اسم المنتج (للأعلى) والوصف (للأسفل)",
+  "Qty": "عدد",
+  "Price": "سعر",
+  "Total": "اجمالى",
+  "Add Item": "اضافة منتج",
+  "Delivery Fee:": "رسوم التوصيل :",
+  "Grand Total:": "اجمالى الكلى :",
+  "Add New Admin": "أضافة مدير جديد",
+  "Create a new user account in the system": "إنشاء حساب مسؤول جديد في النظام",
+  "Name (should only contain letters and numbers)*": "الاسم (يجب أن يحتوي على حروف وأرقام فقط)*",
+  "Phone": "الهاتف",
+  "Add New Zone": "اضافة منطقة جديدة",
+  "Zone Name": "اسم المنطقة",
+  "Add Region": "اضافة مكان",
+  "Associated Branch": "الفرع المرتبط",
+  "Create Zone": "إنشاء المنطقة",
+  "assigned_shipments": "الشحنات المعينة",
+  "Ready for deliveries 🚚": "🚚 جاهز للتوصيل",
+  "You have active shipments to deliver today ?": "هل لديك شحنات نشطة لتسليمها اليوم؟",
+  "Active Shipments": "الشحنات النشطة",
+  "In Pickup Stage": "فى مرحلة التحميل",
+  "Completed Today": "المكتملة اليوم",
+  "Today's Earnings": "الارباح اليومية",
+  "Active Orders": "الشحنات النشطة",
+  "Your assigned orders and deliveries": "طلباتك وعمليات التسليم المخصصة لك",
+  "Product Price": "سعر المنتج",
+  "Total Price": "اجمالى السعر",
+  "Set Deactivation Period": "تحديد فترة التعطيل",
+  "Set a temporary deactivation period for The account will be inactive until the selected date.": "حدد فترة تعطيل مؤقتة للحساب. سيظل الحساب غير نشط حتى التاريخ المحدد.",
+  "To Date": "الى تاريخ",
+  "Time" : "الوقت",
+  "Clear Period": "ازالة الفترة",
+  "Save Period": "حفظ الفترة",
+  "Edit Agent": "تعديل المندوب",
+  "Update the agent's information below.": "قم بتحديث معلومات المندوب أدناه.",
+  "Full Name": "ألاسم بالكامل",
+  "Update Agent": "تعديل المندوب",
+  "Branch Name": "أسم الفرع",
+  "Update Branch": "تعديل الفرع",
+  "Edit Branch": "تعديل الفرع",
+  "Edit Seller": "تعديل البائع",
+  "Update the seller's information below.": "قم بتحديث معلومات البائع أدناه.",
+  "Username": "اسم المستخدم",
+  "Update Seller": "تعديل البائع",
+  "Edit Shipment": "تعديل الشحنة",
+  "You cannot edit orders that have been processed by admin or agent.": "لا يمكنك تعديل الطلبات التي تمت معالجتها بواسطة المسؤول أو الوكيل",
+  "Update the shipment details below. if some data is missing, please press on refresh button to update it. 🛡": "قم بتحديث تفاصيل الشحنة أدناه. إذا كانت بعض البيانات مفقودة، يرجى الضغط على زر التحديث لتحديثها. 🛡",
+  "Assign Agent": "تعين مندوب",
+  "Building Number": "رقم العقار",
+  "Select Status": "اختيار حالة",
+  "Cancelation Notes": "ملاحظات الغاء",
+  "Select Agent": "اختيار المندوب",
+  "cancellednotes": "ملاحظات الالغاء",
+  "Cancelled Notes": "ملاحظات الالغاء",
+  "Products": "المنتاجات",
+  "Item Name (up) & Description(low)": "اسم الصنف (أعلى) والوصف (أسفل)",
+  "Edit Admin": "تعديل مدير",
+  "Update Admin information": "تعديل بيانات المدير",
+  "Save Changes": "حفظ التغيرات",
+  "Edit Zone": "تعديل المنطقة",
+  "Update Zone": "تعديل المنطقة",
+  "Sign in to access your dashboard": "سجّل الدخول للوصول إلى لوحة التحكم الخاصة بك",
+  "Forgot your password?": "نسيت كلمة السر ؟",
+  "Email for password reset:": "البريد الإلكتروني لإعادة تعيين كلمة المرور:",
+  "Don't have an account? Sign Up": "ليس لديك حساب؟ سجل الآن",
+  "Sign In": "تسجيل الدخول",
+  "Delivery Cost": "رسوم التوصيل",
+  "Notifications": "الأشعارات",
+  "Inactive Users": "Inactive Users",
+  "Shipment Details": "تفاصيل الشحنة",
+  "Tracking Number": "رقم التتبع",
+  "Created by": "تم الانشاء بواسطة :",
+  "Delivery Progress": "تتبع التوصيل", 
+  "Seller Information": "معلومات البائع",
+  "Name": "الاسم",
+  "Created By": "تم الانشاء بواسطة",
+  "Client Information": "معلومات العميل",
+  "Phone 1": "رقم هاتف 1",
+  "Phone 2": "رقم هاتف 2",
+  "Delivery Address": "عنوان التوصيل",
+  "Building No.": "رقم المبني",
+  "Apartment No.": "رقم الشقة",
+  "Order Fee": "رسوم التوصيل",
+  "Agent": "المندوب",
+  "In Pickup": "مرحلة التحميل",
+  "Yes": "نعم",
+  "No": "لا",
+  "Created": "الأنشاء",
+  "In Pickup": "مرحلة التحميل",
+  "In Warehouse": "فى المخزن",
+  "Delivered to Agent": "تعين الى مندوب",
+  "Delivered": "تم التوصيل",
+  "N/A": "لا يوجد",
+  "Notes": "ملاحظات",
+  "Items": "المنتاجات",
+  "Item": "منتج",
+  "Quantity": "عدد",
+  "Price": "سعر",
+  "User Details": "بيانات المدير",
+  "Detailed information about the Admin": "معلومات تفصيلية حول المسؤول",
+  "Registration Date": "تاريخ التسجيل",
+  "Contact Information": "معلومات التواصل",
+  "Email": "البريد الألكتروني",
+  "Financial Information": "المعلومات المالية",
+  "My Profile": "ملفى الشخصي",
+  "Manage your personal information and preferences": "إدارة معلوماتك الشخصية وتفضيلاتك",
+  "Personal Information": "المعلومات الشخصية",
+  "Personal details (more coming soon)": "تفاصيل شخصية ( المزيد قريبا)",
+  "Role": "الصلاحية",
+  "Change Password": "تغير كلمة المرور",
+  "Update your password to keep your account secure": "قم بتحديث كلمة مرورك للحفاظ على أمان حسابك",
+  "Current Password": "كلمة المرور الحالية",
+  "New Password": "كلمة المرور الجديدة",
+  "Confirm New Password": "تأكيد كلمة المرور الجديدة",
+  "Preferences": "التفضيلات",
+  "Manage your notification and display settings": "إدارة إعدادات الإشعارات والعرض",
+  "Dark Mode": "الوضع الداكن",
+  "Switch between light and dark theme": "التبديل بين الوضع الفاتح والوضع الداكن",
+  "Email Notifications": "اشعارات البريد الالكتروني",
+  "Coming Soon": "قريبا",
+  "Receive email updates": "استلام التحديثات عبر البريد الإلكتروني",
+  "System Alerts": "تنبيهات النظام",
+  "Important system notifications": "إشعارات النظام المهمة",
+  "Marketing Emails": "رسائل التسويق الإلكترونية",
+  "Promotional content and offers": "المحتوى الترويجي والعروض",
+  "All Rights Reserved By": "جميع الحقوق محفوظة لـ",
+  "Circle Code": "سيركل كود",
+  "Design and development": "تصميم و تطوير",
+  "My Account": "حسابى",
+  "logout": "تسجيل الخروج",
+  "Selected": "محدده",
+  "Print Bill of Lading": "طباعة بوليصة الشحن",
+  "Export Selected": "تصدير المحدد",
+  "Change Status": "تغير الحالة",
+  "Assign to Agent": "تعيين الي مندوب",
+  "Clear": "مسح"
+}

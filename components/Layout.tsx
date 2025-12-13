@@ -16,7 +16,9 @@ import {
   Building2,
   FileText,
   Truck,
+  Globe, // ما زلنا نحتفظ بها للاستخدام في مكان آخر أو كرمز للغة
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; 
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -31,11 +33,31 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
-import { Switch } from './ui/switch';
 import { NotificationDropdown } from './NotificationDropdown';
 
+// ⚠️ سأفترض أن لديك مكون Switch في مكتبة UI الخاصة بك. إذا لم يكن متوفراً، استخدم HTML input type="checkbox"
+// (يجب أن تستبدل <LanguageSwitchComponent> بمكون Switch الفعلي)
+const LanguageSwitchComponent = ({ checked, onCheckedChange }) => (
+    <div className="flex items-center space-x-2 p-2">
+        <span className={`text-sm font-medium ${!checked ? 'text-blue-500' : 'text-slate-500'}`}>EN</span>
+        {/* هذا هو المكون الافتراضي للـ Switch. استخدم هنا المكون الفعلي لديك */}
+        <input 
+            type="checkbox" 
+            checked={checked} 
+            onChange={e => onCheckedChange(e.target.checked)}
+            className="w-10 h-6 appearance-none bg-slate-300 rounded-full cursor-pointer transition-colors relative 
+                       checked:bg-blue-500 after:absolute after:top-[2px] after:left-[2px] after:w-5 after:h-5 
+                       after:bg-white after:rounded-full after:transition-all checked:after:translate-x-4 dark:bg-slate-700"
+            style={{ minWidth: '40px' }} 
+        />
+        <span className={`text-sm font-medium ${checked ? 'text-blue-500' : 'text-slate-500'}`}>AR</span>
+    </div>
+);
+
+
+// المفاتيح التي تم تعديلها لاستخدام دالة الترجمة t()
 interface NavItem {
-  label: string;
+  labelKey: string; 
   icon: React.ReactNode;
   path: string;
   roles: UserRole[];
@@ -44,17 +66,17 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, path: 'dashboard', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Shipments', icon: <Package className="w-5 h-5" />, path: 'shipments', roles: [UserRole.Seller, UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Assigned Shipments', icon: <Truck className="w-5 h-5" />, path: 'assigned-shipments', roles: [UserRole.agent] },
-  { label: 'Sellers', icon: <Users className="w-5 h-5" />, path: 'sellers', roles: [UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Agents', icon: <Users className="w-5 h-5" />, path: 'agents', roles: [UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Branches', icon: <Building2 className="w-5 h-5" />, path: 'branches', roles: [UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Zones', icon: <MapPin className="w-5 h-5" />, path: 'zones', roles: [UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Wallet', icon: <Wallet className="w-5 h-5" />, path: 'wallet', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Reports', icon: <FileText className="w-5 h-5" />, path: 'reports', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
-  { label: 'Admins', icon: <User className="w-5 h-5" />, path: 'users', roles: [UserRole.SuperAdmin] },
-  { label: 'Profile', icon: <User className="w-5 h-5" />, path: 'profile', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, path: "dashboard", roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'shipments', icon: <Package className="w-5 h-5" />, path: "shipments", roles: [UserRole.Seller, UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'assigned_shipments', icon: <Truck className="w-5 h-5" />, path: 'assigned-shipments', roles: [UserRole.agent] },
+  { labelKey: 'sellers', icon: <Users className="w-5 h-5" />, path: 'sellers', roles: [UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'agents', icon: <Users className="w-5 h-5" />, path: 'agents', roles: [UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'branches', icon: <Building2 className="w-5 h-5" />, path: 'branches', roles: [UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'zones', icon: <MapPin className="w-5 h-5" />, path: 'zones', roles: [UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'wallet', icon: <Wallet className="w-5 h-5" />, path: 'wallet', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'reports', icon: <FileText className="w-5 h-5" />, path: 'reports', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
+  { labelKey: 'admins', icon: <User className="w-5 h-5" />, path: 'users', roles: [UserRole.SuperAdmin] },
+  { labelKey: 'profile', icon: <User className="w-5 h-5" />, path: 'profile', roles: [UserRole.Seller, UserRole.agent, UserRole.Admin, UserRole.SuperAdmin] },
 ];
 
 interface LayoutProps {
@@ -69,6 +91,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const { newOrdersCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const { i18n, t } = useTranslation(); 
 
   if (!user) return null;
 
@@ -76,11 +100,23 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
-  const [language, setLanguage] = useState<'en' | 'ar'>('en');
-
-  const toggleLanguage = () => {
-    setLanguage(prev => prev === 'en' ? 'ar' : 'en');
+  // دالة تغيير اللغة (بدون تغيير الاتجاه RTL/LTR)
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    // ⚠️ تم حذف السطر: document.documentElement.dir = ...
   };
+  
+  // دالة لمعالجة التبديل
+  const handleLanguageToggle = (isChecked: boolean) => {
+    // إذا كان الزر في وضع التشغيل (checked) = اللغة العربية (ar)
+    // إذا كان الزر في وضع الإيقاف (unchecked) = اللغة الإنجليزية (en)
+    const newLang = isChecked ? 'ar' : 'en';
+    changeLanguage(newLang);
+  };
+
+  // الحالة الحالية للزر (Checked = ar)
+  const isArabic = i18n.language.includes('ar');
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
@@ -98,24 +134,25 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <Package className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl hidden sm:block">Circle Code</span>
+              <span className="text-xl hidden sm:block">{t('Circle Code') || 'Circle Code'}</span> 
             </motion.div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-2">
-              <span className={`text-sm font-medium ${language === 'en' ? 'text-primary' : 'text-muted-foreground'}`}>EN</span>
-              <Switch
-                checked={language === 'ar'}
-                onCheckedChange={() => toggleLanguage()}
-                className="data-[state=checked]:bg-primary"
-              />
-              <span className={`text-sm font-medium ${language === 'ar' ? 'text-primary' : 'text-muted-foreground'}`}>AR</span>
-            </div>
+            
+            {/* 4. زر تبديل اللغة (Language Switch) */}
+            <LanguageSwitchComponent 
+                checked={isArabic} 
+                onCheckedChange={handleLanguageToggle}
+            />
+
+            {/* زر تغيير الثيم (Theme Toggle) */}
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               {theme === 'light' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
             <NotificationDropdown />
+            
+            {/* قائمة المستخدم المنسدلة (User Dropdown) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 hidden sm:flex">
@@ -125,17 +162,16 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                   </Avatar>
                   <div className="flex flex-col items-start">
                     <span className="text-sm">{user.name}</span>
-                    <Badge variant="secondary" className="text-xs capitalize">{user.role}</Badge>
+                    <Badge variant="secondary" className="text-xs capitalize">{t(user.role) || user.role}</Badge>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('My Account') || 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate('profile')}><User className="w-4 h-4 mr-2" />Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate('settings')}><Settings className="w-4 h-4 mr-2" />Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate('profile')}><User className="w-4 h-4 mr-2" />{t('profile') || 'Profile'}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-red-600"><LogOut className="w-4 h-4 mr-2" />Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="text-red-600"><LogOut className="w-4 h-4 mr-2" />{t('logout') || 'Logout'}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -167,7 +203,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     whileTap={{ scale: 0.98 }}
                   >
                     {item.icon}
-                    <span className="flex-1 text-left">{item.label}</span>
+                    {/* استخدام دالة t لترجمة عناوين القائمة الجانبية */}
+                    <span className="flex-1 text-left">{t(item.labelKey) || item.labelKey}</span> 
                     {item.showBadge && item.badgeCount && item.showBadge(user, newOrdersCount) && (
                       <Badge variant="secondary" className={`ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-xs ${currentPage === item.path ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'}`}>
                         {item.badgeCount(newOrdersCount)}
@@ -192,7 +229,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       <footer className={`fixed bottom-0 left-0 right-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'} print:hidden`}>
         <div className="px-4 lg:px-6 py-3">
           <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-            Design & Development by <span className="font-semibold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Circle Code</span> — All Rights Reserved © 2025
+            {t("All Rights Reserved By")} <span className="font-semibold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">{t("Circle Code")}</span> — {t("Design and development") || 'All Rights Reserved'} © 2025
           </p>
         </div>
       </footer>

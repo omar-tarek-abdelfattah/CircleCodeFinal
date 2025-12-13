@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { User, Mail, Shield, Lock, Bell, Eye, EyeOff, Camera, Save, X, ShieldCheck, Briefcase, UserCog, DollarSign, Package, TrendingUp, Clock, Sparkles, } from 'lucide-react';
@@ -17,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../com
 import { changePasswordApi } from '../services/api.ts';
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { user, role } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -240,10 +242,10 @@ export default function ProfilePage() {
       >
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            My Profile
+            {t("My Profile")}
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
-            Manage your personal information and preferences
+            {t("Manage your personal information and preferences")}
           </p>
         </div>
       </motion.div>
@@ -394,9 +396,9 @@ export default function ProfilePage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <User className="w-5 h-5" />
-                    Personal Information
+                    {t("Personal Information")}
                   </CardTitle>
-                  <CardDescription> Personal details (more coming soon)</CardDescription>
+                  <CardDescription> {t("Personal details (more coming soon)")}</CardDescription>
                 </div>
                 {/* {!editingPersonal && (
                   <Button
@@ -413,7 +415,7 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t("Full Name")}</Label>
                 <Input
                   id="name"
                   value={personalInfo.name}
@@ -426,7 +428,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t("Email Address")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -453,7 +455,7 @@ export default function ProfilePage() {
               </div> */}
 
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label>{t("Role")}</Label>
                 <div>
                   <Badge variant="outline" className={getRoleColor()}>
                     {getRoleIcon()}
@@ -464,7 +466,7 @@ export default function ProfilePage() {
 
               {role === UserRole.Admin && (
                 <div className="space-y-2">
-                  <Label>Salary</Label>
+                  <Label>{t("Salary")}</Label>
                   <div className="flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-400">
                     <DollarSign className="w-5 h-5" />
                     {personalInfo.salary.toLocaleString()}
@@ -510,13 +512,13 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lock className="w-5 h-5" />
-                Change Password
+                {t("Change Password")}
               </CardTitle>
-              <CardDescription>Update your password to keep your account secure</CardDescription>
+              <CardDescription>{t("Update your password to keep your account secure")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword">{t("Current Password")}</Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
@@ -546,7 +548,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t("New Password")}</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -576,7 +578,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">{t("Confirm New Password")}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -623,16 +625,16 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
-                Preferences
+                {t("Preferences")}
               </CardTitle>
-              <CardDescription>Manage your notification and display settings</CardDescription>
+              <CardDescription>{t("Manage your notification and display settings")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Dark Mode</Label>
+                  <Label>{t("Dark Mode")}</Label>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Switch between light and dark theme
+                    {t("Switch between light and dark theme")}
                   </p>
                 </div>
                 <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
@@ -646,17 +648,17 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between opacity-50 cursor-not-allowed">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <Label>Email Notifications</Label>
+                          <Label>{t("Email Notifications")}</Label>
                           <Badge
                             variant="secondary"
                             className="h-5 px-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
-                            Coming Soon
+                            {t("Coming Soon")}
                           </Badge>
                         </div>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          Receive email updates
+                          {t("Receive email updates")}
                         </p>
                       </div>
                       <Switch
@@ -707,17 +709,17 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between opacity-50 cursor-not-allowed">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <Label>System Alerts</Label>
+                          <Label>{t("System Alerts")}</Label>
                           <Badge
                             variant="secondary"
                             className="h-5 px-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
-                            Coming Soon
+                            {t("Coming Soon")}
                           </Badge>
                         </div>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          Important system notifications
+                          {t("Important system notifications")}
                         </p>
                       </div>
                       <Switch
@@ -739,17 +741,17 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between opacity-50 cursor-not-allowed">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <Label>Marketing Emails</Label>
+                          <Label>{t("Marketing Emails")}</Label>
                           <Badge
                             variant="secondary"
                             className="h-5 px-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
-                            Coming Soon
+                            {t("Coming Soon")}
                           </Badge>
                         </div>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          Promotional content and offers
+                          {t("Promotional content and offers")}
                         </p>
                       </div>
                       <Switch

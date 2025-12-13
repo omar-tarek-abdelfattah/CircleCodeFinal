@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Package, Users, TrendingUp, DollarSign, Building2, Clock, RefreshCw } from 'lucide-react';
@@ -22,6 +23,7 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   const { role } = useAuth();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState<OrderResponse | null>(null);
@@ -135,12 +137,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     activeAgents: todayStats.activeAgents,
     sellers: todayStats.activeSellers,
     labels: {
-      shipments: "Today's Shipments",
-      pending: "Pending Today",
-      completed: "Completed Today",
-      collection: "Collection Today",
-      agents: "Agents Active Today",
-      sellers: "Sellers Active Today"
+      shipments: t("Today's Shipments"),
+      pending: t("Pending Today"),
+      completed: t("Completed Today"),
+      collection: t("Collection Today"),
+      agents: t("Agents Active Today"),
+      sellers: t("Sellers Active Today")
     }
   } : {
     shipments: shipmentsCount,
@@ -150,12 +152,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     activeAgents: agentsCount,
     sellers: totalSellers,
     labels: {
-      shipments: "Total Shipments",
-      pending: "Total Pending",
-      completed: "Total Completed",
-      collection: "Collection Amount",
-      agents: "Active Agents",
-      sellers: "Total Sellers"
+      shipments: t("Total Shipments"),
+      pending: t("Total Pending"),
+      completed: t("Total Completed"),
+      collection: t("Collection Amount"),
+      agents: t("Active Agents"),
+      sellers: t("Total Sellers")
     }
   };
 
@@ -184,8 +186,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
           <div className="relative z-10">
-            <h1 className="text-3xl mb-2">System Overview 📊</h1>
-            <p className="text-purple-100">Monitor and manage all aspects of Circle Code System.</p>
+            <h1 className="text-3xl mb-2">{t("System Overview 📊")}</h1>
+            <p className="text-purple-100">{t("Monitor and manage all aspects of Circle Code System.")}</p>
           </div>
         </motion.div>
 
@@ -200,7 +202,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               htmlFor="today-filter"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
             >
-              Today's Data
+              {t("Today's Data")}
             </label>
           </div>
         </div>
@@ -213,49 +215,49 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           value={currentStats.shipments}
           icon={Package}
           gradient={isToday ? "from-blue-500 to-green-500" : "from-blue-500 to-blue-600"}
-          badge={isToday ? "TODAY" : undefined}
+          badge={isToday ? t("TODAY") : undefined}
         />
         <StatCard
           title={currentStats.labels.pending}
           value={currentStats.pending}
           icon={Clock}
           gradient={isToday ? "from-orange-500 to-green-500" : "from-orange-500 to-orange-600"}
-          badge={isToday ? "TODAY" : undefined}
+          badge={isToday ? t("TODAY") : undefined}
         />
         <StatCard
           title={currentStats.labels.completed}
           value={currentStats.completed}
           icon={TrendingUp}
           gradient={isToday ? "from-green-500 to-green-400" : "from-green-500 to-green-600"}
-          badge={isToday ? "TODAY" : undefined}
+          badge={isToday ? t("TODAY") : undefined}
         />
         <StatCard
           title={currentStats.labels.collection}
-          value={`$${currentStats.collection.toFixed(0)}`}
+          value={`${t("EGP")} ${currentStats.collection.toFixed(0)}`}
           icon={DollarSign}
           gradient={isToday ? "from-purple-500 to-green-500" : "from-purple-500 to-purple-600"}
-          badge={isToday ? "TODAY" : undefined}
+          badge={isToday ? t("TODAY") : undefined}
         />
         <StatCard
           title={currentStats.labels.agents}
           value={currentStats.activeAgents}
           icon={Users}
           gradient={isToday ? "from-pink-500 to-green-500" : "from-pink-500 to-pink-600"}
-          badge={isToday ? "TODAY" : undefined}
+          badge={isToday ? t("TODAY") : undefined}
         />
         <StatCard
           title={currentStats.labels.sellers}
           value={currentStats.sellers}
           icon={Users}
           gradient={isToday ? "from-indigo-500 to-green-500" : "from-indigo-500 to-indigo-600"}
-          badge={isToday ? "TODAY" : undefined}
+          badge={isToday ? t("TODAY") : undefined}
         />
       </div>
 
       {/* Recent Activity */}
       {role === UserRole.SuperAdmin && (
         <Card className="p-4 shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("Recent Activities")}</h2>
           <RecentActivity activities={logData} />
         </Card>
       )}
@@ -289,7 +291,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Top Performing Agents
+                {t("Top Performing Agents")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -318,7 +320,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p>{agent.numberofOrder || 0} Orders</p>
+                          <p>{agent.numberofOrder || 0} {t("Orders")}</p>
                         </div>
                       </motion.div>
                     ))}
@@ -334,7 +336,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                Branch Performance
+                {t("Branch Performance")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -358,7 +360,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                           <p className="text-sm text-slate-600 dark:text-slate-400">{branch.address}</p>
                         </div>
                         <div className="text-right">
-                          <Badge variant="secondary">{branch.ordersNumber || 0} Orders</Badge>
+                          <Badge variant="secondary">{branch.ordersNumber || 0} {t("Orders")}</Badge>
                         </div>
                       </motion.div>
                     ))}

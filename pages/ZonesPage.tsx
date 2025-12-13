@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Zone, ZoneResponseDetails } from '../types';
@@ -32,6 +33,7 @@ import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { zonesAPI } from '@/services/api';
 
 export function ZonesPage() {
+  const { t } = useTranslation();
   const [zones, setZones] = useState<Zone[]>([]);
   const [branches] = useState<any[]>([]);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
@@ -214,9 +216,9 @@ export function ZonesPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Zones</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{t("Total Zones")}</p>
                   <h3 className="text-3xl mt-2">{totalZones}</h3>
-                  <p className="text-sm text-slate-500 mt-1">Coverage areas</p>
+                  <p className="text-sm text-slate-500 mt-1">{t("Coverage areas")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-slate-600 dark:text-slate-400" />
@@ -235,9 +237,9 @@ export function ZonesPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Regions</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{t("Total Regions")}</p>
                   <h3 className="text-3xl mt-2">{totalRegions}</h3>
-                  <p className="text-sm text-slate-500 mt-1">Across all zones</p>
+                  <p className="text-sm text-slate-500 mt-1">{t("Across all zones")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <Navigation className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -256,9 +258,9 @@ export function ZonesPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Orders</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{t("Total Orders")}</p>
                   <h3 className="text-3xl mt-2">{totalOrders}</h3>
-                  <p className="text-sm text-slate-500 mt-1">In all zones</p>
+                  <p className="text-sm text-slate-500 mt-1">{t("Across all zones")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-slate-600 dark:bg-slate-700 flex items-center justify-center">
                   <Package className="w-6 h-6 text-white" />
@@ -280,7 +282,7 @@ export function ZonesPage() {
           <Card className="border-slate-200 dark:border-slate-800">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Delivery Zone Map (Coming SOON!)</CardTitle>
+                <CardTitle>{t("Delivery Zone Map (Coming SOON)")}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
@@ -288,7 +290,7 @@ export function ZonesPage() {
                     className="gap-2 bg-blue-600 hover:bg-blue-700"
                   >
                     <Plus className="w-4 h-4" />
-                    Add Zone
+                    {t("Add Zone")}
                   </Button>
                 </div>
               </div>
@@ -300,7 +302,7 @@ export function ZonesPage() {
                 <div className="absolute inset-0">
                   <ImageWithFallback
                     src="https://images.unsplash.com/photo-1542382257-80dedb725088?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwbWFwJTIwYWVyaWFsfGVufDF8fHx8MTc2MjAwMzYwMnww&ixlib=rb-4.1.0&q=80&w=1080"
-                    alt="Delivery Zone Map"
+                    alt={t("Delivery Zone Map")}
                     className="w-full h-full object-cover opacity-30 dark:opacity-20"
                   />
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-50/50 dark:from-slate-900/80 dark:to-slate-800/80" />
@@ -328,7 +330,7 @@ export function ZonesPage() {
 
                 {/* Map Legend */}
                 <div className="absolute top-4 left-4 z-10 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-lg shadow-lg p-3 border border-slate-200 dark:border-slate-700">
-                  <h4 className="text-xs font-medium mb-2 text-slate-700 dark:text-slate-300">Delivery Zones</h4>
+                  <h4 className="text-xs font-medium mb-2 text-slate-700 dark:text-slate-300">{t("Delivery Zones")}</h4>
                   <div className="space-y-1.5">
                     {visibleZones.slice(0, 5).map((zone) => (
                       <div key={zone.id} className="flex items-center gap-2 text-xs">
@@ -470,7 +472,7 @@ export function ZonesPage() {
           <Card className="border-slate-200 dark:border-slate-800 h-[calc(100vh-20rem)] overflow-y-auto">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Zone List</CardTitle>
+                <CardTitle>{t("Zone List")}</CardTitle>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -482,7 +484,7 @@ export function ZonesPage() {
                       htmlFor="inactive-zone-filter"
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      Show Inactive Only
+                     {t("Show Inactive Only")}
                     </label>
                   </div>
                   {hiddenZones.length > 0 && (
@@ -523,9 +525,9 @@ export function ZonesPage() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium mb-1">{zone.name}</h4>
                           <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 mb-1">
-                            <span>{zone.regions?.length || 0} regions</span>
+                            <span>{zone.regions?.length || 0} {t("regions")}</span>
                             <span>•</span>
-                            <span>{zone.orders} orders</span>
+                            <span>{zone.orders} {t("orders")}</span>
                             <span>•</span>
                             <Badge
                               variant={zone.status === 'active' ? 'default' : 'secondary'}
@@ -535,7 +537,7 @@ export function ZonesPage() {
                                   : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                               }
                             >
-                              {zone.status === 'active' ? 'Active' : 'Inactive'}
+                              {zone.status === t('active') ? t('Active') : t('Inactive')}
                             </Badge>
                           </div>
                           {zone.associatedBranches.length > 0 && (
@@ -547,14 +549,14 @@ export function ZonesPage() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-2">
-                          {zone.status === 'active' ? (
+                          {zone.status === t('active') ? (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleToggleStatus(zone.id, zone.status)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
-                              Deactivate
+                              {t("Deactivate")}
                             </Button>
                           ) : (
                             <Button
@@ -563,7 +565,7 @@ export function ZonesPage() {
                               onClick={() => handleToggleStatus(zone.id, zone.status)}
                               className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                             >
-                              Activate
+                              {t("Activate")}
                             </Button>
                           )}
                           <Button

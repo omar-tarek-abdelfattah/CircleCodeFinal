@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface EditBranchModalProps {
 }
 
 export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditBranchModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BranchUpdate>({} as BranchUpdate);
   const [managers, setManagers] = useState<AdminResponse[] | null>(null);
@@ -155,7 +157,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader className="flex flex-row items-center gap-2">
-          <DialogTitle>Edit Branch</DialogTitle>
+          <DialogTitle>{t("Edit Branch")}</DialogTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -172,7 +174,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Branch Name <span className="text-red-500">*</span>
+                {t("Branch Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -184,7 +186,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
 
             <div className="space-y-2">
               <Label htmlFor="managerId">
-                Manager ID <span className="text-red-500">*</span>
+                {t("Manager")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.managerId?.toString() || '0'}
@@ -207,7 +209,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
           {/* Address */}
           <div className="space-y-2">
             <Label htmlFor="address">
-              Address <span className="text-red-500">*</span>
+              {t("Address")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="address"
@@ -221,7 +223,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="country">
-                Country <span className="text-red-500">*</span>
+                {t("Country")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="country"
@@ -232,7 +234,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
             </div>
 
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t("Status")}</Label>
               <div className="flex items-center h-10 space-x-2">
                 <Checkbox
                   id="isActive"
@@ -245,7 +247,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
                   htmlFor="isActive"
                   className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Active
+                  {t("Active")}
                 </label>
               </div>
             </div>
@@ -255,7 +257,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="openingTime">
-                Opening Time <span className="text-red-500">*</span>
+                {t("Opening Time")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="openingTime"
@@ -267,7 +269,7 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
 
             <div className="space-y-2">
               <Label htmlFor="closingTime">
-                Closing Time <span className="text-red-500">*</span>
+                {t("Closing Time")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="closingTime"
@@ -285,11 +287,11 @@ export function EditBranchModal({ open, onOpenChange, branch, onSuccess }: EditB
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Branch
+              {t("Update Branch")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Package, Eye, RefreshCw, ArrowRight } from 'lucide-react';
@@ -30,6 +31,7 @@ export function AgentOrdersTable({
   onViewAll,
   onStatusChanged,
 }: AgentOrdersTableProps) {
+  const { t } = useTranslation();
   const [selectedShipment, setSelectedShipment] = useState<AgiOrderResponse | null>(null);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
@@ -77,13 +79,13 @@ export function AgentOrdersTable({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Active Orders
+                {t("Active Orders")}
               </CardTitle>
-              <CardDescription>Your assigned orders and deliveries</CardDescription>
+              <CardDescription>{t("Your assigned orders and deliveries")}</CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={onViewAll}>
-                View All
+                {t("View All")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -94,13 +96,13 @@ export function AgentOrdersTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tracking ID</TableHead>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="bg-slate-50 dark:bg-slate-800/50">Product Price</TableHead>
-                  <TableHead className="bg-slate-50 dark:bg-slate-800/50">Delivery Cost</TableHead>
-                  <TableHead className="bg-slate-100 dark:bg-slate-800">Total Price</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("TRACKING ID")}</TableHead>
+                  <TableHead>{t("Customer Name")}</TableHead>
+                  <TableHead>{t("STATUS")}</TableHead>
+                  <TableHead className="bg-slate-50 dark:bg-slate-800/50">{t("Product Price")}</TableHead>
+                  <TableHead className="bg-slate-50 dark:bg-slate-800/50">{t("DELIVERY COST")}</TableHead>
+                  <TableHead className="bg-slate-100 dark:bg-slate-800">{t("Total Price")}</TableHead>
+                  <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -136,13 +138,13 @@ export function AgentOrdersTable({
                         </Badge>
                       </TableCell>
                       <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/50">
-                        ${shipment.productPrice?.toFixed(2) || 0}
+                        {t("EGP")} {shipment.productPrice?.toFixed(2) || 0}
                       </TableCell>
                       <TableCell className="font-mono bg-slate-50 dark:bg-slate-800/50">
-                        ${shipment.deliveryCost?.toFixed(2) || 0}
+                        {t("EGP")} {shipment.deliveryCost?.toFixed(2) || 0}
                       </TableCell>
                       <TableCell className="font-mono bg-slate-100 dark:bg-slate-800">
-                        ${shipment.totalPrice?.toFixed(2) || 0}
+                        {t("EGP")} {shipment.totalPrice?.toFixed(2) || 0}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

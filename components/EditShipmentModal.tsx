@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -51,6 +52,7 @@ export function EditShipmentModal({
   onSuccess,
   userRole,
 }: EditShipmentModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const { role } = useAuth();
@@ -514,15 +516,15 @@ export function EditShipmentModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="w-5 h-5" />
-            Edit Shipment - {shipment.id}
+            {t("Edit Shipment")} - {shipment.id}
           </DialogTitle>
           <DialogDescription>
             {!canEdit ? (
               <span className="text-red-500">
-                You cannot edit orders that have been processed by admin or agent.
+                {t("You cannot edit orders that have been processed by admin or agent.")}
               </span>
             ) : (
-              'Update the shipment details below. if some data is missing, please press on refresh button to update it. 🛡'
+              t("Update the shipment details below. if some data is missing, please press on refresh button to update it. 🛡")
             )}
           </DialogDescription>
         </DialogHeader>
@@ -533,7 +535,7 @@ export function EditShipmentModal({
           disabled={loading}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+          {t("Refresh")}
         </Button>
 
         <form onSubmit={handleSubmit}>
@@ -543,13 +545,13 @@ export function EditShipmentModal({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  Customer Information
+                  {t("Customer Information")}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="customerName">
-                      Customer Name <span className="text-red-500">*</span>
+                      {t("Customer Name")} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="customerName"
@@ -562,7 +564,7 @@ export function EditShipmentModal({
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">
-                      Phone Number <span className="text-red-500">*</span>
+                      {t("Phone Number")} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="phone"
@@ -577,7 +579,7 @@ export function EditShipmentModal({
 
                 <div className="space-y-2">
                   <Label htmlFor="phone2">
-                    Phone 2 <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
+                    {t("Phone 2")} <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
                   </Label>
                   <Input
                     id="phone2"
@@ -596,12 +598,12 @@ export function EditShipmentModal({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                  Delivery Address
+                  {t("Delivery Address")}
                 </h3>
 
                 <div className="space-y-2">
                   <Label htmlFor="address">
-                    Address <span className="text-red-500">*</span>
+                    {t("Address")} <span className="text-red-500">*</span>
                   </Label>
                   <Textarea
                     id="address"
@@ -616,7 +618,7 @@ export function EditShipmentModal({
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">
-                    {role === UserRole.Seller ? "Cancelation Notes" : "Delivery Notes"} <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
+                    {role === UserRole.Seller ? t("Cancelation Notes") : t("Delivery Notes")} <span className="text-slate-400 dark:text-slate-500">{t("Optional")}</span>
                   </Label>
                   <Textarea
                     id="notes"
@@ -632,7 +634,7 @@ export function EditShipmentModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="zone">
-                      Zone <span className="text-red-500">*</span>
+                      {t("Zone")} <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={formData.zoneId?.toString()}
@@ -670,7 +672,7 @@ export function EditShipmentModal({
 
                   <div className="space-y-2">
                     <Label htmlFor="region">
-                      Region <span className="text-red-500">*</span>
+                      {t("Region")} <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={formData.regionName}
@@ -694,7 +696,7 @@ export function EditShipmentModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="apartmentNumber">
-                      Apartment Number <span className="text-red-500">*</span>
+                      {t("Apartment Number")} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="apartmentNumber"
@@ -707,7 +709,7 @@ export function EditShipmentModal({
 
                   <div className="space-y-2">
                     <Label htmlFor="buildingNumber">
-                      Building Number <span className="text-red-500">*</span>
+                      {t("Building Number")} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="buildingNumber"
@@ -726,12 +728,12 @@ export function EditShipmentModal({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                  Seller
+                  {t("Seller")}
                 </h3>
 
                 <div className="space-y-2">
                   <Label htmlFor="sellerId">
-                    Select Seller <span className="text-red-500">*</span>
+                    {t("Select Seller")} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.sellerId?.toString()}
@@ -760,12 +762,12 @@ export function EditShipmentModal({
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    Assign Agent
+                    {t("Assign Agent")}
                   </h3>
 
                   <div className="space-y-2">
                     <Label htmlFor="agent">
-                      Select Agent <span className="text-red-500">*</span>
+                      {t("Select Agent")} <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={formData.agentId?.toString()}
@@ -792,12 +794,12 @@ export function EditShipmentModal({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  Status
+                  {t("Status")}
                 </h3>
 
                 <div className="space-y-2">
                   <Label htmlFor="status">
-                    Select Status <span className="text-red-500">*</span>
+                    {t("Select Status")} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.statusOrder?.toString()}
@@ -823,7 +825,7 @@ export function EditShipmentModal({
             {(isAgent || isAdmin) && (
               <div className="space-y-2">
                 <Label htmlFor="cancellednotes">
-                  Cancelled Notes <span className="text-slate-400 dark:text-slate-500">(Optional)</span>
+                  {t("Cancelled Notes")} <span className="text-slate-400 dark:text-slate-500">{t("Optional")}</span>
                 </Label>
                 <Textarea
                   id="cancellednotes"
@@ -842,22 +844,22 @@ export function EditShipmentModal({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                  Products
+                  {t("Products")}
                 </h3>
 
                 <div className="space-y-3">
                   {/* Header */}
                   <div className="grid grid-cols-12 gap-2 text-xs font-medium text-slate-600 dark:text-slate-400 px-2">
                     <div className="col-span-5">
-                      Item Name (up) & Description(low) <span className="text-red-500">*</span>
+                      {t("Item Name (up) & Description(low)")} <span className="text-red-500">*</span>
                     </div>
                     <div className="col-span-2">
-                      Qty <span className="text-red-500">*</span>
+                      {t("Qty")} <span className="text-red-500">*</span>
                     </div>
                     <div className="col-span-2">
-                      Price <span className="text-red-500">*</span>
+                      {t("Price")} <span className="text-red-500">*</span>
                     </div>
-                    <div className="col-span-2">Total</div>
+                    <div className="col-span-2">{t("Total")}</div>
                     <div className="col-span-1"></div>
                   </div>
 
@@ -947,34 +949,34 @@ export function EditShipmentModal({
                     className="w-full"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Item
+                    {t("Add Item")}
                   </Button>
                 </div>
 
                 <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">Products Total:</span>
+                    <span className="text-slate-600 dark:text-slate-400">{t("Products Total:")}</span>
                     <span className="font-mono text-slate-900 dark:text-slate-100">
-                      ${calculateProductsTotal().toFixed(2)}
+                      {t("EGP")} {calculateProductsTotal().toFixed(2)}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">Delivery Fee:</span>
+                    <span className="text-slate-600 dark:text-slate-400">{t("Delivery Fee:")}</span>
                     <span className="font-mono text-slate-900 dark:text-slate-100">
                       {(() => {
                         const selectedRegion = regions.find(r => r.name === formData.regionName);
-                        return selectedRegion ? `$${selectedRegion.price.toFixed(2)}` : '$0.00';
+                        return selectedRegion ? `$${selectedRegion.price.toFixed(2)}` : `${t("EGP")} 0.00`;
                       })()}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-base pt-2 border-t border-slate-200 dark:border-slate-800">
                     <span className="font-semibold text-slate-900 dark:text-slate-100">
-                      Grand Total:
+                      {t("Grand Total:")}
                     </span>
                     <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                      ${calculateGrandTotal().toFixed(2)}
+                      {t("EGP")} {calculateGrandTotal().toFixed(2)}
                     </span>
                   </div>
                 </div>

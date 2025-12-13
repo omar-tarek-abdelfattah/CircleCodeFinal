@@ -25,6 +25,7 @@ import { SignUpPage } from './components/SignUpPage';
 import ResetPasswordPage from './pages/ResetPass';
 
 
+
 type ShipmentsNavigationHandlers = {
   onNavigateToBillOfLading?: (shipment: OrderResponseDetails) => void;
   onNavigateToBulkBillOfLading?: (shipments: OrderResponseDetails[]) => void;

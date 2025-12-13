@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Package, CheckCircle, Clock, DollarSign, } from 'lucide-react';
@@ -15,6 +16,7 @@ interface AgentDashboardProps {
 }
 
 export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
+  const { t } = useTranslation();
   const [selectedShipment, setSelectedShipment] = useState<AgiOrderResponse | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [assignedShipments, setAssignedShipments] = useState<AgiOrderResponse[]>([]);
@@ -69,9 +71,9 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10">
-          <h1 className="text-3xl mb-2">Ready for deliveries! 🚚</h1>
+          <h1 className="text-3xl mb-2">{t("Ready for deliveries 🚚")}</h1>
           <p className="text-green-100">
-            You have {assignedShipments.length} active shipments to deliver today.
+            {t("You have active shipments to deliver today ?")}
           </p>
         </div>
       </motion.div>
@@ -79,7 +81,7 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Active Shipments"
+          title={t("Active Shipments")}
           value={assignedShipments.filter(s => [ShipmentStatusString.Returned, ShipmentStatusString.InPickupStage, ShipmentStatusString.DeliveredToAgent]
             .includes(s.statusOrder as ShipmentStatusString)).length}
           icon={Package}
@@ -87,14 +89,14 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
-          title="In Pickup Stage"
+          title={t("In Pickup Stage")}
           value={assignedShipments.filter(s => s.statusOrder === ShipmentStatusString.InPickupStage).length}
           icon={Clock}
           delay={0.2}
           gradient="from-orange-500 to-orange-600"
         />
         <StatCard
-          title="Completed Today"
+          title={t("Completed Today")}
           value={assignedShipments.filter(s => s.statusOrder === ShipmentStatusString.Delivered
             || s.statusOrder === ShipmentStatusString.RejectedWithShippingFees).length}
           icon={CheckCircle}
@@ -102,7 +104,7 @@ export function AgentDashboard({ onNavigate }: AgentDashboardProps) {
           gradient="from-green-500 to-green-600"
         />
         <StatCard
-          title="Today's Earnings"
+          title={t("Today's Earnings")}
           value={`EGP${summaryToday?.totalOrder}`}
           icon={DollarSign}
           delay={0.4}

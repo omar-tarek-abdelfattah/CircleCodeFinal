@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from 'react';
 import {
   Dialog,
@@ -36,6 +37,7 @@ interface AddUserModalProps {
 }
 
 export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddUserModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -95,15 +97,15 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
-          <DialogDescription>Create a new user account in the system</DialogDescription>
+          <DialogTitle>{t("Add New Admin")}</DialogTitle>
+          <DialogDescription>{t("Create a new user account in the system")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
 
             {/* Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">Name (should only contain letters and numbers)*</Label>
+              <Label htmlFor="name">{t("Name (should only contain letters and numbers)*")}</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -115,7 +117,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
             {/* Email */}
             <div className="grid gap-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("EMAIL")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -128,7 +130,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
             {/* Phone */}
             <div className="grid gap-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("Phone")}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -140,7 +142,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
             {/* Role */}
             <div className="grid gap-2">
-              <Label htmlFor="address">Address *</Label>
+              <Label htmlFor="address">{t("ADDRESS")} *</Label>
               <Input
                 id="address"
                 value={formData.address}
@@ -152,7 +154,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
             {/* Salary */}
             <div className="grid gap-2">
-              <Label htmlFor="salary">Salary</Label>
+              <Label htmlFor="salary">{t("SALARY")}</Label>
               <Input
                 id="salary"
                 type="number"
@@ -166,7 +168,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
             {/* Password */}
             <div className="grid gap-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password">{t("Password")} *</Label>
               <Input
                 id="password"
                 type="password"
@@ -179,7 +181,7 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
             {/* Confirm Password */}
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
+              <Label htmlFor="confirmPassword">{t("Confirm Password")} *</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -193,9 +195,9 @@ export function AddUserModal({ open, onOpenChange, onSubmit, defaultRole }: AddU
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {t("Cancel")}
             </Button>
-            <Button type="submit">Add User</Button>
+            <Button type="submit">{t("Add Admin")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

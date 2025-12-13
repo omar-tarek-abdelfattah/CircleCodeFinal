@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface AddSellerModalProps {
 }
 
 export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [branches, setBranches] = useState<BranchData[]>([]);
   const [formData, setFormData] = useState({
@@ -135,10 +137,10 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Add New Seller
+            {t("Add New Seller")}
           </DialogTitle>
           <DialogDescription>
-            Enter the details of the new seller below.
+            {t("Enter the details of the new seller below.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +149,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Username <span className="text-red-500">*</span>
+                {t("UserName")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -161,7 +163,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
-                Email Address <span className="text-red-500">*</span>
+                {t("Email Address")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="email"
@@ -176,7 +178,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phone">
-                Phone Number <span className="text-red-500">*</span>
+                {t("Phone Number")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phone"
@@ -191,7 +193,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             {/* Store Name */}
             <div className="space-y-2">
               <Label htmlFor="storeName">
-                Store Name <span className="text-slate-400">(Optional)</span>
+                {t("Store Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="storeName"
@@ -203,7 +205,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">
-                Address <span className="text-red-500">*</span>
+                {t("Address")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="address"
@@ -216,7 +218,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">
-                Password <span className="text-red-500">*</span>
+                {t("Password")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="password"
@@ -229,7 +231,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">
-                Confirm Password <span className="text-red-500">*</span>
+                {t("Confirm Password")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="confirmPassword"
@@ -242,7 +244,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             </div>
             <div className="space-y-2">
               <Label htmlFor="branchId">
-                Branch <span className="text-red-500">*</span>
+                {t("Branch")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.branchId.toString()}
@@ -264,9 +266,9 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
             {/* VIP Status */}
             <div className="flex items-center justify-between space-x-2 border p-3 rounded-md">
               <div className="space-y-0.5">
-                <Label htmlFor="vip">VIP Seller</Label>
+                <Label htmlFor="vip">{t("VIP Seller")}</Label>
                 <div className="text-sm text-slate-500">
-                  Enable VIP status for this seller
+                  {t("Enable VIP status for this seller")}
                 </div>
               </div>
               <Switch
@@ -285,7 +287,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="submit"
@@ -298,7 +300,7 @@ export function AddSellerModal({ open, onOpenChange, onSuccess }: AddSellerModal
                   Adding...
                 </>
               ) : (
-                'Add Seller'
+                t("Add Seller")
               )}
             </Button>
           </DialogFooter>

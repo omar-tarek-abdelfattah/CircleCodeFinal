@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
@@ -42,6 +43,7 @@ import { usersAPI } from '../services/api';
 import { UserRole } from '@/contexts/AuthContext';
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<AdminResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -363,9 +365,9 @@ export default function UsersPage() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-slate-900 dark:text-slate-100">User Management</h1>
+        <h1 className="text-slate-900 dark:text-slate-100">{t("Admins Management")}</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Manage users and their access to the system
+          {t("Manage Admin and their access to the system")}
         </p>
       </div>
 
@@ -380,10 +382,10 @@ export default function UsersPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Admins</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t("Total Admins")}</p>
                   <h2 className="text-slate-900 dark:text-slate-100">{totalUsers}</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    All Admins in system
+                    {t("All Admins in system")}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
@@ -468,8 +470,8 @@ export default function UsersPage() {
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <CardTitle>Admin Management</CardTitle>
-                <CardDescription>Manage Admins and their access permissions</CardDescription>
+                <CardTitle>{t("Admin Management")}</CardTitle>
+                <CardDescription>{t("Manage Admins and their access permissions")}</CardDescription>
               </div>
               <div className="flex gap-2">
                 {hiddenUserIds.size > 0 && (
@@ -485,7 +487,7 @@ export default function UsersPage() {
                 )}
                 <Button variant="outline" size="sm" onClick={loadUsers}>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
+                  {t("Refresh")}
                 </Button>
                 <Button
                   size="sm"
@@ -493,7 +495,7 @@ export default function UsersPage() {
                   className="bg-gradient-to-r from-purple-500 to-indigo-600"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Admin
+                  {t("Add Admin")}
                 </Button>
                 {/* <Button
                   size="sm"
@@ -512,7 +514,7 @@ export default function UsersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder={t("Search Admins...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -561,13 +563,13 @@ export default function UsersPage() {
 
                 <Button variant="default" size="sm" onClick={() => { }}>
                   <Filter className="w-4 h-4 mr-2" />
-                  Apply Filter
+                  {t("Apply Filter")}
                 </Button>
 
                 {activeFiltersCount > 0 && (
                   <Button variant="outline" size="sm" onClick={handleResetFilters}>
                     <X className="w-4 h-4 mr-2" />
-                    Reset
+                    {t("Reset")}
                   </Button>
                 )}
               </div>
@@ -575,7 +577,7 @@ export default function UsersPage() {
               {/* Role Filter Tabs */}
               <Tabs value={roleFilter} onValueChange={(value) => setRoleFilter(value as any)}>
                 <TabsList>
-                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="all">{t("All")}</TabsTrigger>
                   {/* <TabsTrigger value="admin">Admins</TabsTrigger> */}
                   {/* <TabsTrigger value="seller">Sellers</TabsTrigger> */}
                   {/* <TabsTrigger value="agent">Agents</TabsTrigger> */}
@@ -589,14 +591,14 @@ export default function UsersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>NAME</TableHead>
-                      <TableHead>EMAIL</TableHead>
-                      <TableHead>BRANCHES</TableHead>
-                      <TableHead>ADDRESS</TableHead>
-                      <TableHead>SALARY</TableHead>
-                      <TableHead>HIRING DATE</TableHead>
-                      <TableHead>STATUS</TableHead>
-                      <TableHead className="text-right">ACTIONS</TableHead>
+                      <TableHead>{t("NAME")}</TableHead>
+                      <TableHead>{t("EMAIL")}</TableHead>
+                      <TableHead>{t("BRANCHES")}</TableHead>
+                      <TableHead>{t("ADDRESS")}</TableHead>
+                      <TableHead>{t("SALARY")}</TableHead>
+                      <TableHead>{t("HIRING DATE")}</TableHead>
+                      <TableHead>{t("STATUS")}</TableHead>
+                      <TableHead className="text-right">{t("ACTIONS")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -632,7 +634,7 @@ export default function UsersPage() {
                             <div className="flex flex-wrap gap-1">
                               {user.email === 'SuperAdminUser@gmail.com' ? (
                                 <Badge variant="secondary" className="text-xs">
-                                  all branches
+                                  {t("all branches")}
                                 </Badge>
                               ) : (
                                 user.branshName?.map((branch, index) => (
@@ -644,7 +646,7 @@ export default function UsersPage() {
                             </div>
                           </TableCell>
                           <TableCell>{user.address || <span className="text-slate-400">-</span>}</TableCell>
-                          <TableCell>${user.salary?.toLocaleString()}</TableCell>
+                          <TableCell>{t("EGP")} {user.salary?.toLocaleString()}</TableCell>
                           <TableCell>
                             {user.hiringDate ? new Date(user.hiringDate).toLocaleDateString('en-US', {
                               month: 'short',
@@ -664,7 +666,7 @@ export default function UsersPage() {
                                   ? 'text-green-600 dark:text-green-400'
                                   : 'text-red-600 dark:text-red-400'
                                   }`}>
-                                  {user.isLock === false && !isTemporarilyDeactivated(user) ? 'Active' : 'Inactive'}
+                                  {user.isLock === false && !isTemporarilyDeactivated(user) ? t('Active') : t('Inactive')}
                                 </span>
                               </div>
                               {isTemporarilyDeactivated(user) && user.isLock && (
@@ -741,7 +743,7 @@ export default function UsersPage() {
 
             {/* Results Count */}
             <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-              Showing {filteredUsers.length} of {users.length} users
+              {t("Showing")} {filteredUsers.length} {t("of")} {users.length} {t("Admins")}
             </div>
           </CardContent>
         </Card>

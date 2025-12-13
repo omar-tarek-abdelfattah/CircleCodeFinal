@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Package, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
@@ -12,7 +13,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authAPI } from '@/services/api';
 
 export function LoginPage() {
-
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -123,7 +124,7 @@ export function LoginPage() {
             <div>
               <CardTitle className="text-3xl">Circle Code</CardTitle>
               <CardDescription>
-                Sign in to access your dashboard
+                {t("Sign in to access your dashboard")}
               </CardDescription>
             </div>
           </CardHeader>
@@ -138,7 +139,7 @@ export function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("EMAIL")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <Input
@@ -154,7 +155,7 @@ export function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("Password")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <Input
@@ -180,7 +181,7 @@ export function LoginPage() {
                     Signing in...
                   </>
                 ) : (
-                  'Sign In'
+                  t("Sign In")
                 )}
               </Button>
 
@@ -211,14 +212,14 @@ export function LoginPage() {
                 className="text-center text-sm text-slate-500 cursor-pointer hover:text-blue-500"
                 onClick={() => setShowForget(true)}
               >
-                Forgot your password?
+                {t("Forgot your password?")}
               </Label>
 
               {/* 🔹 Forget Password / Reset Password */}
               {/* 🔹 Forget Password / Send Reset Link only */}
               {showForget && (
                 <div className="mt-4 p-4 bg-gray-100 dark:bg-slate-800 rounded-lg space-y-2">
-                  <Label>Email for password reset:</Label>
+                  <Label>{t("Email for password reset:")}</Label>
                   <Input
                     type="email"
                     placeholder="your.email@circlecode.com"
@@ -269,7 +270,7 @@ export function LoginPage() {
               )}
 
               <p className="text-blue-500 cursor-pointer" onClick={() => navigate('/signup')}>
-                Don't have an account? Sign Up
+                {t("Don't have an account? Sign Up")}
               </p>
 
             </form>

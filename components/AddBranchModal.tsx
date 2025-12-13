@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -30,6 +31,7 @@ interface AddBranchModalProps {
 }
 
 export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<NewBranchRequest>({
     name: '',
@@ -136,7 +138,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add New Branch</DialogTitle>
+          <DialogTitle>{t("Add New Branch")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -144,19 +146,19 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Branch Name <span className="text-red-500">*</span>
+                {t("Branch Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter branch name"
+                placeholder={t("Enter branch name")}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="managerId">
-                Manager <span className="text-red-500">*</span>
+                {t("Manager")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.managerId === 0 ? '' : String(formData.managerId)}
@@ -171,7 +173,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
                 }
               >
                 <SelectTrigger id="managerId">
-                  <SelectValue placeholder="Select Manager" />
+                  <SelectValue placeholder={t("Select Manager")} />
                 </SelectTrigger>
                 <SelectContent>
                   {admins
@@ -188,13 +190,13 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
           {/* Address */}
           <div className="space-y-2">
             <Label htmlFor="address">
-              Address <span className="text-red-500">*</span>
+              {t("Address")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="address"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Enter branch address"
+              placeholder={t("Enter branch address")}
             />
           </div>
 
@@ -202,18 +204,18 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="country">
-                Country <span className="text-red-500">*</span>
+                {t("Country")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="country"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                placeholder="Enter country name"
+                placeholder={t("Enter country name")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t("Status")}</Label>
               <div className="flex items-center h-10 space-x-2">
                 <Checkbox
                   id="status"
@@ -226,7 +228,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
                   htmlFor="status"
                   className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Active
+                  {t("Active")}
                 </label>
               </div>
             </div>
@@ -236,7 +238,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="openingTime">
-                Opening Time <span className="text-red-500">*</span>
+                {t("Opening Time")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="openingTime"
@@ -248,7 +250,7 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
 
             <div className="space-y-2">
               <Label htmlFor="closingTime">
-                Closing Time <span className="text-red-500">*</span>
+                {t("Closing Time")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="closingTime"
@@ -266,11 +268,11 @@ export function AddBranchModal({ open, onOpenChange, onSuccess }: AddBranchModal
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Branch
+              {t("Create Branch")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from 'react';
 import { motion } from 'motion/react';
 import {
@@ -19,6 +20,7 @@ interface RecentActivityProps {
 }
 
 export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps) {
+      const { t } = useTranslation();
   // Filter last 7 days
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -34,6 +36,7 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
 
     let activityDate = new Date(timestamp);
     const now = new Date();
+
 
     // Fix for server sending PST time (UTC-8) without timezone offset
     // If the timestamp doesn't end with Z and doesn't have an offset, assume it's UTC-8
@@ -101,9 +104,9 @@ export function RecentActivity({ activities, maxItems = 7 }: RecentActivityProps
         <div>
           <CardTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
-            Recent Activity
+            {t("Recent Activity")}
           </CardTitle>
-          <CardDescription>Last 7 actions on the system</CardDescription>
+          <CardDescription>{t("Last 7 actions on the system")}</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
